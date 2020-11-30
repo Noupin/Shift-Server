@@ -23,7 +23,7 @@ portOpen = False
 port = ServerData.port
 
 #Create app
-app = flask.Flask("__main__")
+app = flask.Flask(__name__)
 private_key = open('../keys/jwt-key').read()
 public_key = open('../keys/jwt-key.pub').read()
 
