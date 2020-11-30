@@ -1,235 +1,176 @@
 #pylint: disable=C0103, C0301
 """
-Finds open port can creates a data server to pass between front-end and backend
+Finds open port can creates a data server to pass between front-end and
+backend.
 """
 __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import json
+import sys
+import jwt
 import flask
-import flask_cors
-import numpy as np
+import datetime
+import functools
+import time
+
 
 #First Party Imports
-from constants import Constants
-from preprocess import Preprocess
-from tunable import Tunable
-from shift import Shift
-import utilities
+from ServerData import ServerData
 
 
 #Port serving variables
 portOpen = False
-port = 3000
-
-#Picking open port
-while not portOpen and port <= 9999:
-    portOpen = utilities.checkPortOpen(port)
-    if not portOpen:
-        port += 1
-
-#Save port to json for IPC
-utilities.changeJSON('port', port)
-
-#External variables
-shiftVars = Shift()
-preproVars = Preprocess()
+port = ServerData.port
 
 #Create app
-app = flask.Flask("Shift")
-cors = flask_cors.CORS(app)
-app.config["CORS_HEADERS"] = "Content-Type"
+app = flask.Flask(__name__)
 
-@app.route('/load', methods=["GET", "POST"])
-def load():
+private_key = open('keys/jwt-key').read()
+public_key = open('keys/jwt-key.pub').read()
+
+def checkToken(f):
     """
-    Server sided calls for the load page of the Shift GUI
+    Checks the validity and expiration of the JWT
     """
 
-    if flask.request.method == "POST":
-        apiIn = flask.request.get_json()
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        authorization = flask.request.headers['Authorization'].split(' ')
 
-        preproVars.exhibitShiftImg = np.zeros([Tunable.tunableDict["imgX"], Tunable.tunableDict["imgY"], 3])
-        preproVars.exhibitMaskImg = np.zeros([Tunable.tunableDict["imgX"], Tunable.tunableDict["imgY"], 3])
-        preproVars.exhibitBaseImg = np.zeros([Tunable.tunableDict["imgX"], Tunable.tunableDict["imgY"], 3])
+        if len(authorization) <= 1:
+            return flask.jsonify({'message': 'Token missing.'}), 403
 
-        preproVars.maskName = apiIn["maskName"][:apiIn["maskName"].find('.')]
-        preproVars.maskPath = apiIn["maskPath"][8:].replace('%20', ' ')
+        token = authorization[1]
 
-        preproVars.baseName = apiIn["baseName"][:apiIn["baseName"].find('.')]
-        preproVars.basePath = apiIn["basePath"][8:].replace('%20', ' ')
+        if len(token) == 0:
+            return flask.jsonify({'message': 'Token empty.'}), 403
+        
+        try: 
+            data = jwt.decode(token, public_key, algorithms="RS256")
+        except jwt.ExpiredSignatureError:
+            return flask.jsonify({'message': 'Token has timed out.'}), 403
+        except:
+            return flask.jsonify({'message': 'Signature invalid.'}), 403
 
-        makeOrLoad = apiIn["makeOrLoad"]
-        modelID = apiIn["modelID"]
+        return f(*args, **kwargs)
+
+    return decorated
 
 
-        print(f"\nMask Name: {preproVars.maskName}\nBase Name: {preproVars.baseName}")
-        preproVars.projectDataPath = os.path.join(Constants.userDataPath,
-                                                  f"{preproVars.maskName}-shift-{preproVars.baseName}")
-        #Project data path
-        utilities.checkPathExistsAndMake(preproVars.projectDataPath, full=True)
+@app.route('/time')
+def gerCurrentTime():
+    return {"time", time.time()}
 
-        #Project model path
-        preproVars.modelPath = os.path.join(preproVars.projectDataPath, "models")
-        utilities.checkPathExistsAndMake(preproVars.modelPath, full=True)
+@app.route('/login', methods=["POST"])
+def login():
+    """
+    The login for the user and distributes the JWT.
 
-        #Project mask and base images paths
-        preproVars.maskImgPath = os.path.join(preproVars.projectDataPath, "maskImages")
-        utilities.checkPathExistsAndMake(preproVars.maskImgPath, full=True)
+    Returns:
+        JSON: A JWT token for future authorization.
+    """
 
-        preproVars.baseImgPath = os.path.join(preproVars.projectDataPath, "baseImages")
-        utilities.checkPathExistsAndMake(preproVars.baseImgPath, full=True)
+    data = flask.request.get_json()
 
-        if makeOrLoad == 0:
-            print("Creating & Loading Data.")
-            preproVars.imageBufferSize = utilities.getImageMemBufferSize([preproVars.imgSize, preproVars.imgSize])
-            preproVars.imageBufferSizeRAMCheck = preproVars.imageBufferSize
+    if data['username'] and data['password']:
+        token = jwt.encode({'username' : data['username'],
+                            'claims': ['Shift', 'Forge'],
+                            'exp' : (datetime.datetime.utcnow()+datetime.timedelta(seconds=1))},
+                           private_key,
+                           algorithm='RS256').decode('utf-8')
 
-            preproVars.saveAndPreproImgs(preproVars.maskPath,
-                                         preproVars.maskImgPath,
-                                         1, 2,
-                                         Tunable.tunableDict["imgX"],
-                                         Tunable.tunableDict["imgY"])
-            preproVars.saveAndPreproImgs(preproVars.basePath,
-                                         preproVars.baseImgPath,
-                                         2, 2,
-                                         Tunable.tunableDict["imgX"],
-                                         Tunable.tunableDict["imgY"])
-            with open(os.path.join(preproVars.projectDataPath, "data.json"), 'w') as jsonFile:
-                json.dump({"maskName": preproVars.maskName,
-                           "baseName": preproVars.baseName,
-                           "maskPath": preproVars.maskPath,
-                           "basePath": preproVars.basePath,
-                           "vidFPS": Tunable.tunableDict["vidOutFPS"],
-                           "maxTrainableImages": preproVars.maxTrainableImages,
-                           "audioPath": preproVars.projectDataPath}, jsonFile)
+        return flask.jsonify({'jwt' : token})
+    
+    return "Login Invalid.", 403
 
-        elif makeOrLoad == 1:
-            print("Loading Data.")
-            preproVars.imageBufferSize = utilities.getImageMemBufferSize([preproVars.imgSize, preproVars.imgSize])
-            preproVars.imageBufferSizeRAMCheck = preproVars.imageBufferSize
-
-            preproVars.preproImgs(preproVars.maskImgPath)
-            preproVars.preproImgs(preproVars.baseImgPath)
-
-            shiftVars.Enc.load(preproVars.modelPath, f"{preproVars.maskName}-{preproVars.baseName}")
-            shiftVars.DecMask.load(preproVars.modelPath, f"{preproVars.maskName}")
-            shiftVars.DecBase.load(preproVars.modelPath, f"{preproVars.baseName}")
-
-            shiftVars.updateAEMask(shiftVars.Enc.model, shiftVars.DecMask.model)
-            shiftVars.updateAEBase(shiftVars.Enc.model, shiftVars.DecBase.model)
-
-        preproVars.progress = 100
-        return json.dumps("Success. Got Paths")
-
-    #Else
-    return json.dumps(preproVars.progress)
-
-@app.route('/train', methods=["GET", "POST"])
+@app.route("/train", methods=["POST"])
+@checkToken
 def train():
     """
-    Server sided calls for the train page of the Shift GUI
+    Given training data Shift specializes a model for the training data. Yeilds
+    more relaisitic results than just an inference though it takes longer. 
+
+    Returns:
+        Shifted Media: The media that has been shifted by the specialized model.
     """
 
-    preproVars.progress = 0
+    authorization = flask.request.headers['Authorization'].split(' ')
+    token = authorization[1]
+    data = jwt.decode(token, public_key, algorithms="RS256")
 
-    if flask.request.method == "POST":
-        apiIn = flask.request.get_json()
+    return data
 
-        shiftVars.stopTrain = apiIn["stopTrain"]
-        convertToVid = apiIn["convertToVid"]
-
-        preproVars.progress = 0
-
-        if shiftVars.stopTrain == 0:
-            print("Got POST Saving Models.")
-            shiftVars.Enc.save(preproVars.modelPath, f"{preproVars.maskName}-{preproVars.baseName}")
-            shiftVars.DecMask.save(preproVars.modelPath, f"{preproVars.maskName}")
-            shiftVars.DecBase.save(preproVars.modelPath, f"{preproVars.baseName}")
-
-        if convertToVid == 1:
-            print("Got POST Convert To Video.")
-
-            preproVars.imgs2vid(preproVars.baseImgPath, preproVars.projectDataPath, shiftVars)
-            preproVars.progress = 100
-
-            return apiIn
-
-        while shiftVars.stopTrain != 0:
-            print("Training.")
-            shiftVars.train(preproVars)
-            shiftVars.updateModels()
-
-            predictedImg = shiftVars.AEMask.predict(preproVars.originalBaseImg)
-            preproVars.exhibitShiftImg = preproVars.shiftFace(preproVars.exhibitFullFrame, predictedImg)
-
-
-        return json.dumps("Training Finished.")
-
-    return json.dumps([preproVars.encodeRawImage(preproVars.exhibitShiftImg), preproVars.progress])
-
-@app.route('/advTrain', methods=["GET", "POST"])
-def advTrain():
+@app.route("/inference", methods=["POST"])
+@checkToken
+def inference():
     """
-    Server sided calls for the advanced train page of the Shift GUI
+    Inferenceing based on a specialized pretrained model(PTM) where, the input is
+    the face to be put on the media and inferenced with PTM. Alternativley inferencing
+    with a given base video and shift face with a non specialized PTM.
+
+    Returns:
+        Shifted Media: The media that has been shifted by the pretrained model.
     """
 
-    preproVars.progress = 0
+    authorization = flask.request.headers['Authorization'].split(' ')
+    token = authorization[1]
+    data = jwt.decode(token, public_key, algorithms="RS256")
 
-    if flask.request.method == "POST":
-        apiIn = flask.request.get_json()
+    return data
 
-        shiftVars.stopTrain = apiIn["stopTrain"]
-        convertToVid = apiIn["convertToVid"]
-
-        preproVars.progress = 0
-
-        if shiftVars.stopTrain == 0:
-            print("Got POST Saving Models.")
-            shiftVars.Enc.save(preproVars.modelPath, f"{preproVars.maskName}-{preproVars.baseName}")
-            shiftVars.DecMask.save(preproVars.modelPath, f"{preproVars.maskName}")
-            shiftVars.DecBase.save(preproVars.modelPath, f"{preproVars.baseName}")
-
-        if convertToVid == 1:
-            print("Got POST Converting To Video.")
-
-            preproVars.imgs2vid(preproVars.baseImgPath, preproVars.projectDataPath, shiftVars)
-            preproVars.progress = 100
-
-            return json.dumps('Success. Video Compiled.')
-
-        while shiftVars.stopTrain != 0:
-            print("Training.")
-            shiftVars.train(preproVars)
-            shiftVars.updateModels()
-
-            preproVars.exhibitMaskImg = shiftVars.AEMask.predict(preproVars.originalMaskImg)
-            preproVars.exhibitBaseImg = shiftVars.AEBase.predict(preproVars.originalBaseImg)
-
-            shiftPredictedImg = shiftVars.AEMask.predict(preproVars.originalBaseImg)
-            preproVars.exhibitShiftImg = preproVars.shiftFace(preproVars.exhibitFullFrame, shiftPredictedImg)
-
-        return json.dumps('Success. Trained.')
-
-    return json.dumps([preproVars.encodeRawImage(preproVars.exhibitMaskImg),
-                       preproVars.encodeRawImage(preproVars.originalMaskImg),
-                       preproVars.encodeRawImage(preproVars.exhibitBaseImg),
-                       preproVars.encodeRawImage(preproVars.originalBaseImg),
-                       preproVars.encodeRawImage(preproVars.exhibitShiftImg),
-                       preproVars.progress])
-
-@app.route('/view', methods=["GET"])
-def view():
+@app.route('/featured', methods=["POST", "GET"])
+def featured():
     """
-    Server sided calls for the view page of the Shift GUI
+    Uses TCP to send the data of the two featured models.
+
+    Returns:
+        JSON: Contains the list of the featured models.
     """
 
-    if flask.request.method == "GET":
-        return json.dumps([preproVars.maskPath, preproVars.basePath, preproVars.projectDataPath])
+    return flask.jsonify({"data": ["Alpha + Beta\nBetter together", "Eta & Iota\nBetter Apart"]})
 
-    return "No Data Transfer."
+@app.route('/popular', methods=["POST", "GET"])
+def popular():
+    """
+    Uses TCP to send the data of the top 10 most popular models.
+
+    Returns:
+        JSON: Contains the list of the popular models.
+    """
+
+    return flask.jsonify({"data": ["Black Panther", 
+                                   "Tony Stark",
+                                   "Captain America",
+                                   "Thor",
+                                   "Captain Marvel",
+                                   "Spider-Man",
+                                   "Robert Pattinson",
+                                   "Jesse Eisenberg",
+                                   "Andrew Garfield",
+                                   "Eleven"]})
+
+@app.route('/new', methods=["POST", "GET"])
+def new():
+    """
+    Uses TCP to send the data of the 10 newest models.
+
+    Returns:
+        JSON: Contains the list of the new models.
+    """
+
+    return flask.jsonify({"data": ["The Protagonist",
+                                   "Robert Pattinson",
+                                   "Timothy Chalamet",
+                                   "Tony Stark",
+                                   "Jimmy Falon",
+                                   "Black Panther",
+                                   "Andrew Garfield",
+                                   "Jesse Eisenberg",
+                                   "Black Panther",
+                                   "Chrisjen Ava Sarala"]})
 
 
 #Run server
-app.run(port=port)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=port, debug=True)

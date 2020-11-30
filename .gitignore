@@ -3,3 +3,4 @@
 /shift-env
 /keys
 codeTest.*
+**/__pycache__
