@@ -1,3 +1,4 @@
 /.vscode
 **/static
 /shift-env
+/keys

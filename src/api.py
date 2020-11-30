@@ -12,12 +12,7 @@ import jwt
 import flask
 import datetime
 import functools
-import flask_cors
 
-#Allow for Python. relative imports
-dir_path = os.path.dirname(os.path.realpath(__file__))
-parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
-sys.path.insert(0, parent_dir_path)
 
 #First Party Imports
 from ServerData import ServerData
@@ -28,10 +23,9 @@ portOpen = False
 port = ServerData.port
 
 #Create app
-app = flask.Flask("Shift")
-cors = flask_cors.CORS(app)
-private_key = open('Keys/jwt-key').read()
-public_key = open('Keys/jwt-key.pub').read()
+app = flask.Flask("__main__")
+private_key = open('../keys/jwt-key').read()
+public_key = open('../keys/jwt-key.pub').read()
 
 def checkToken(f):
     """
