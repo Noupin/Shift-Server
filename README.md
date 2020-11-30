@@ -1,2 +1,2 @@
 # Shift API
-This is built using Flask and authorizes users based on a JWT.
+This is the server side Shift applciation using Flask as a micro framework.
