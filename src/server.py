@@ -10,6 +10,7 @@ import os
 import sys
 import jwt
 import flask
+import flask_cors
 import datetime
 import functools
 import time
@@ -24,7 +25,8 @@ portOpen = False
 port = ServerData.port
 
 #Create app
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, static_folder="static/build", static_url_path="/")
+flask_cors.CORS(app)
 
 private_key = open('keys/jwt-key').read()
 public_key = open('keys/jwt-key.pub').read()
@@ -58,9 +60,13 @@ def checkToken(f):
     return decorated
 
 
-@app.route('/time')
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/api/time')
 def gerCurrentTime():
-    return {"time", time.time()}
+    return {'time': time.time()}
 
 @app.route('/login', methods=["POST"])
 def login():
