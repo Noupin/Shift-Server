@@ -13,10 +13,9 @@ from src import PUBLIC_KEY
 
 
 api = Blueprint('api', __name__)
-urlPrefix = '/api'
 
 
-@api.route(urlPrefix+"/train", methods=["POST"])
+@api.route("/train", methods=["POST"])
 @checkToken
 def train():
     """
@@ -34,7 +33,7 @@ def train():
     return data
 
 
-@api.route(urlPrefix+"/inference", methods=["POST"])
+@api.route("/inference", methods=["POST"])
 @checkToken
 def inference():
     """
@@ -53,7 +52,7 @@ def inference():
     return data
 
 
-@api.route(urlPrefix+'/featured', methods=["POST", "GET"])
+@api.route('/featured', methods=["POST", "GET"])
 def featured():
     """
     Uses TCP to send the data of the two featured models.
@@ -65,7 +64,7 @@ def featured():
     return {"data": ["Alpha + Beta\nBetter together", "Eta & Iota\nBetter Apart"]}
 
 
-@api.route(urlPrefix+'/popular', methods=["POST", "GET"])
+@api.route('/popular', methods=["POST", "GET"])
 def popular():
     """
     Uses TCP to send the data of the top 10 most popular models.
@@ -86,7 +85,7 @@ def popular():
                      "Eleven"]}
 
 
-@api.route(urlPrefix+'/new', methods=["POST", "GET"])
+@api.route('/new', methods=["POST", "GET"])
 def new():
     """
     Uses TCP to send the data of the 10 newest models.

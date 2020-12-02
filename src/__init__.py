@@ -21,12 +21,13 @@ def createApp(configClass=Config):
     CORS(app)
     app.config.from_object(configClass)
 
-    from src.users.routes import users
     from src.main.routes import main
     from src.api.routes import api
+    from src.api.users.routes import users
 
-    app.register_blueprint(users)
+
     app.register_blueprint(main)
-    app.register_blueprint(api)
+    app.register_blueprint(api, url_prefix="/api")
+    app.register_blueprint(users, url_prefix='/api/users')
 
     return app

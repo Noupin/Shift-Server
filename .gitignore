@@ -4,3 +4,4 @@
 /keys
 codeTest.*
 **/__pycache__
+ServerData.py

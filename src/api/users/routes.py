@@ -12,7 +12,6 @@ from src import PRIVATE_KEY
 
 
 users = Blueprint('users', __name__)
-urlPrefix = '/users'
 
 
 @users.route('/login', methods=["POST"])
