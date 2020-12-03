@@ -9,4 +9,4 @@ import os
 
 
 class Config:
-    pass
+    JWT_SECRET_KEY = open('keys/jwt-key').read()

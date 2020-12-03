@@ -7,19 +7,23 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask import Flask
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 #First Party Imports
 from src.config import Config
 
 
-PRIVATE_KEY = open('keys/jwt-key').read()
-PUBLIC_KEY = open('keys/jwt-key.pub').read()
+cors = CORS()
+jwt = JWTManager()
 
 
 def createApp(configClass=Config):
     app = Flask(__name__, static_folder="static/build", static_url_path="/")
-    CORS(app)
     app.config.from_object(configClass)
+
+    cors.init_app(app)
+    jwt.init_app(app)
+
 
     from src.main.routes import main
     from src.api.routes import api

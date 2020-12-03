@@ -6,17 +6,14 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
-
-#First Party Imports
-from src.utils.server import checkToken
-from src import PUBLIC_KEY
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 api = Blueprint('api', __name__)
 
 
 @api.route("/train", methods=["POST"])
-@checkToken
+@jwt_required
 def train():
     """
     Given training data Shift specializes a model for the training data. Yeilds
@@ -26,15 +23,11 @@ def train():
         Shifted Media: The media that has been shifted by the specialized model.
     """
 
-    authorization = flask.request.headers['Authorization'].split(' ')
-    token = authorization[1]
-    data = jwt.decode(token, PUBLIC_KEY, algorithms="RS256")
-
-    return data
+    return {'msg': f"Training as {get_jwt_identity()}"}
 
 
 @api.route("/inference", methods=["POST"])
-@checkToken
+@jwt_required
 def inference():
     """
     Inferenceing based on a specialized pretrained model(PTM) where, the input is
@@ -45,11 +38,7 @@ def inference():
         Shifted Media: The media that has been shifted by the pretrained model.
     """
 
-    authorization = flask.request.headers['Authorization'].split(' ')
-    token = authorization[1]
-    data = jwt.decode(token, PUBLIC_KEY, algorithms="RS256")
-
-    return data
+    return {'msg': f"Inferencing as {get_jwt_identity()}"}
 
 
 @api.route('/featured', methods=["POST", "GET"])

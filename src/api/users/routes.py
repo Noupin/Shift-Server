@@ -5,10 +5,10 @@ Routes for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask import Blueprint
-
-#First Party Imports
-from src import PRIVATE_KEY
+import jwt
+import datetime
+from flask import Blueprint, request, make_response
+from flask_jwt_extended import create_access_token
 
 
 users = Blueprint('users', __name__)
@@ -23,15 +23,20 @@ def login():
         JSON: A JWT token for future authorization.
     """
 
-    data = flask.request.get_json()
+    if not request.is_json:
+        return {"msg": "Missing JSON in request"}
 
-    if data['username'] and data['password']:
-        token = jwt.encode({'username' : data['username'],
-                            'claims': ['Shift', 'Forge'],
-                            'exp' : (datetime.datetime.utcnow()+datetime.timedelta(seconds=30))},
-                           PRIVATE_KEY,
-                           algorithm='RS256').decode('utf-8')
+    auth = request.get_json()
 
-        return {'jwt' : token}
+    if not auth["username"]:
+        return {"msg": "Missing username"}
+    if not auth["password"]:
+        return {"msg": "Missing password"}
+
+    if auth["username"] != 'Noupin' or auth["password"] != 'pass':
+        return {"msg": "Username or Password incorrect"}
     
-    return "Login Invalid.", 403
+    token = create_access_token(identity=auth['username'], expires_delta=datetime.timedelta(seconds=10))
+    return {'jwt' : token}
+    
+    return make_response("Could not verify!", 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
