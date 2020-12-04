@@ -5,3 +5,4 @@
 codeTest.*
 **/__pycache__
 ServerData.py
+.env

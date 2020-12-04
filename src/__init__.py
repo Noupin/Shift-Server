@@ -7,22 +7,31 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask import Flask
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_login import LoginManager
+from flask_mongoengine import MongoEngine
+from flask_bcrypt import Bcrypt
 
 #First Party Imports
 from src.config import Config
+from src.utils.MJSONEncoder import MongoJSONEncoder
+from src.utils.ObjectIdConverter import ObjectIdConverter
 
 
 cors = CORS()
-jwt = JWTManager()
+login_manager = LoginManager()
+db = MongoEngine()
+bcrypt = Bcrypt()
 
 
 def createApp(configClass=Config):
     app = Flask(__name__, static_folder="static/build", static_url_path="/")
-    app.config.from_object(configClass)
+    app.json_encoder = MongoJSONEncoder
 
+    app.config.from_object(configClass)
     cors.init_app(app)
-    jwt.init_app(app)
+    login_manager.init_app(app)
+    db.init_app(app)
+    bcrypt.init_app(app)
 
 
     from src.main.routes import main
