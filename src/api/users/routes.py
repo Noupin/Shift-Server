@@ -8,7 +8,7 @@ __author__ = "Noupin"
 import jwt
 import datetime
 from flask import Blueprint, request, make_response, jsonify
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 
 #First Party Imports
 from src import bcrypt
@@ -27,6 +27,12 @@ def register():
         return {'msg': "Your login had no JSON payload"}
     
     requestData = request.get_json()
+
+    if User.objects(username=requestData["username"]).first():
+        return {'msg': "A user with that username already exists"}
+    if User.objects(email=requestData["email"]).first():
+        return {'msg': "A user with that email already exists"}
+
     hashed_password = bcrypt.generate_password_hash(requestData['password'])
     user = User(username=requestData['username'], email=requestData['email'], password=hashed_password)
     user.save()
@@ -51,10 +57,13 @@ def login():
         return {'msg': "Your login had no JSON payload"}
     
     requestData = request.get_json()
-    if requestData['email']:
-        user = User.objects(email=requestData["email"]).first()
-    elif requestData['username']:
-        user = User.objects(username=requestData["username"]).first()
+    if not requestData['usernameOrEmail']:
+        return {'msg': "Username or Email incorrect"}
+    
+    if User.objects(email=requestData["usernameOrEmail"]).first():
+        user = User.objects(email=requestData["usernameOrEmail"]).first()
+    elif User.objects(username=requestData["usernameOrEmail"]).first():
+        user = User.objects(username=requestData["usernameOrEmail"]).first()
     else:
         return {'msg': "Username or Email incorrect"}
 
@@ -66,15 +75,18 @@ def login():
     return {'msg': "Login success."}
 
 
-@users.route('/logout', methods=["POST"])
+@users.route('/logout')
+@login_required
 def logout():
     """
-    The logout for the user .
+    The logout for the user.
 
     Returns:
         str: A JSON with a msg.
     """
 
+    username = current_user.username
     logout_user()
 
-    return {"msg": "Logout Successful"}
+    return {"msg": f"Logout Successful as {username}"}
+

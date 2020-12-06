@@ -26,8 +26,8 @@ bcrypt = Bcrypt()
 def createApp(configClass=Config):
     app = Flask(__name__, static_folder="static/build", static_url_path="/")
     app.json_encoder = MongoJSONEncoder
-
     app.config.from_object(configClass)
+    
     cors.init_app(app)
     login_manager.init_app(app)
     db.init_app(app)

@@ -9,10 +9,16 @@ from datetime import datetime, date
 import isodate as iso
 from bson import ObjectId
 from flask.json import JSONEncoder
-from werkzeug.routing import BaseConverter
 
 
 class MongoJSONEncoder(JSONEncoder):
+    """
+    Working JSON/BSON encoder
+
+    Args:
+        JSONEncoder
+    """
+
     def default(self, o):
         if isinstance(o, (datetime, date)):
             return iso.datetime_isoformat(o)
