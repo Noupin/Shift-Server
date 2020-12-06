@@ -12,7 +12,8 @@ from flask_login import login_user, logout_user, current_user, login_required
 
 #First Party Imports
 from src import bcrypt
-from src.models import User, Shift
+from src.DataModels.Shift import Shift
+from src.DataModels.User import User
 
 
 users = Blueprint('users', __name__)
@@ -89,4 +90,3 @@ def logout():
     logout_user()
 
     return {"msg": f"Logout Successful as {username}"}
-
