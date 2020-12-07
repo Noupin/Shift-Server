@@ -16,6 +16,7 @@ class ObjectIdConverter(BaseConverter):
     Args:
         BaseConverter
     """
+
     def to_python(self, value):
         return ObjectId(value)
 

@@ -14,6 +14,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from src import bcrypt
 from src.DataModels.Shift import Shift
 from src.DataModels.User import User
+from src.utils.Validators import validateEmail, validatePassword
 
 
 users = Blueprint('users', __name__)
@@ -22,7 +23,7 @@ users = Blueprint('users', __name__)
 @users.route("/register", methods=["POST"])
 def register():
     if current_user.is_authenticated:
-        return {'msg': "You already have an account"}
+        return {'msg': "You're already logged in"}
     
     if not request.is_json:
         return {'msg': "Your login had no JSON payload"}
@@ -33,6 +34,13 @@ def register():
         return {'msg': "A user with that username already exists"}
     if User.objects(email=requestData["email"]).first():
         return {'msg': "A user with that email already exists"}
+
+    emailValid, emailMsg = validateEmail(requestData["email"])
+    if not emailValid:
+        return {'msg': emailMsg}
+    passwordValid, passwordMsg = validatePassword(requestData["password"])
+    if not passwordValid:
+        return {'msg': passwordMsg}
 
     hashed_password = bcrypt.generate_password_hash(requestData['password'])
     user = User(username=requestData['username'], email=requestData['email'], password=hashed_password)
@@ -72,7 +80,7 @@ def login():
         login_user(user, remember=requestData['remember'])
     else:
         return {'msg': 'Login unsuccesful, password incorrect'}
-    
+
     return {'msg': "Login success."}
 
 
