@@ -22,6 +22,13 @@ users = Blueprint('users', __name__)
 
 @users.route("/register", methods=["POST"])
 def register():
+    """
+    The regitration for the user
+
+    Returns:
+        JSON: A JSON with a success or failure msg.
+    """
+
     if current_user.is_authenticated:
         return {'msg': "You're already logged in"}
     
@@ -45,7 +52,7 @@ def register():
     hashed_password = bcrypt.generate_password_hash(requestData['password'])
     user = User(username=requestData['username'], email=requestData['email'], password=hashed_password)
     user.save()
-    login_user(user, remember=requestData['remember'])
+    login_user(user, remember=True)
     
     return {"msg": "You have been registered succesfully"}
 
@@ -56,7 +63,7 @@ def login():
     The login for the user.
 
     Returns:
-        str: A JSON with a msg.
+        JSON: A JSON with a success or failure msg.
     """
 
     if current_user.is_authenticated:
@@ -91,10 +98,23 @@ def logout():
     The logout for the user.
 
     Returns:
-        str: A JSON with a msg.
+        JSON: A JSON with a msg.
     """
 
     username = current_user.username
     logout_user()
 
     return {"msg": f"Logout Successful as {username}"}
+
+
+@users.route('/account')
+@login_required
+def account():
+    """
+    The data needed to display the users account page
+
+    Returns:
+        JSON: A JSON with the data needed to display on the users account page
+    """
+
+    return {"username": current_user.username}

@@ -23,7 +23,7 @@ def validatePassword(password):
     valid = True
     msg = "Success"
 
-    if len(password) < 8:
+    if len(password) < 6:
         valid, msg =  False, "Make sure your password is at lest 8 letters"
     elif not re.search('[0-9]', password):
         valid, msg = False, "Make sure your password has a number in it"
