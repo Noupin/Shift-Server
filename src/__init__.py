@@ -10,6 +10,7 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mongoengine import MongoEngine
 from flask_bcrypt import Bcrypt
+from flask_mail import Mail
 
 #First Party Imports
 from src.config import Config
@@ -21,6 +22,7 @@ cors = CORS()
 login_manager = LoginManager()
 db = MongoEngine()
 bcrypt = Bcrypt()
+mail = Mail()
 
 
 def createApp(configClass=Config):
@@ -32,6 +34,7 @@ def createApp(configClass=Config):
     login_manager.init_app(app)
     db.init_app(app)
     bcrypt.init_app(app)
+    mail.init_app(app)
 
 
     from src.main.routes import main

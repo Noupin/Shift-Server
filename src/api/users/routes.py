@@ -14,7 +14,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from src import bcrypt
 from src.DataModels.Shift import Shift
 from src.DataModels.User import User
-from src.utils.Validators import validateEmail, validatePassword
+from src.utils.validators import validateEmail, validatePassword
 
 
 users = Blueprint('users', __name__)

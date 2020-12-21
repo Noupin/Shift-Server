@@ -2,11 +2,17 @@
 """
 API Validator
 """
-__author__ = "https://stackoverflow.com/users/5811078/zipa"
+__author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 
 #Third Party Imports
 import re
 from email_validator import validate_email, EmailNotValidError
+
+#First Party Imports
+from ..constants import (
+    ALLOWED_EXTENSIONS, PASSWORD_LENGTH, ALLOWED_NUMBERS,
+    ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS
+    )
 
 
 def validatePassword(password):
@@ -23,16 +29,17 @@ def validatePassword(password):
     valid = True
     msg = "Success"
 
-    if len(password) < 6:
+    if len(password) < PASSWORD_LENGTH:
         valid, msg =  False, "Make sure your password is at lest 8 letters"
-    elif not re.search('[0-9]', password):
+    elif not re.search(ALLOWED_NUMBERS, password):
         valid, msg = False, "Make sure your password has a number in it"
-    elif not re.search('[A-Z]', password): 
+    elif not re.search(ALLOWED_CAPITALS, password): 
         valid, msg = False, "Make sure your password has a capital letter in it"
-    elif not re.search('[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]', password):
+    elif not re.search(ALLOWED_SPECIAL_CHARS, password):
         valid, msg = False, "Make sure your password has a special character in it"
 
     return valid, msg
+
 
 def validateEmail(email):
     """
@@ -50,3 +57,17 @@ def validateEmail(email):
         return True, email
     except EmailNotValidError as e:
         return False, str(e)
+
+
+def validateFilename(filename):
+    """
+    Given a filename it returns a boolean whether the file is allowed
+
+    Args:
+        filename (str): The filename to be checked
+
+    Returns:
+        bool: Whether or not the file is valid by the filename
+    """
+
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

@@ -8,35 +8,27 @@ __author__ = "Noupin"
 import tensorflow as tf
 
 #First Party Imports
-from tunable import Tunable
+from AI.TFModel import TFModel
+from AI.encoder import Encoder
+from AI.decoder import Decoder
 
 
-class AE:
+class AutoEncoder(TFModel):
     """
     The custom built decoder layer for Shift
     """
 
-    def __init__(self, encoder, decoder):
-        self.inputLayer = tf.keras.Input(shape=(Tunable.tunableDict["imgX"],
-                                                Tunable.tunableDict["imgY"],
-                                                Tunable.tunableDict["colorDim"]),
-                                         name="Image")
+    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder()):
+        super(AutoEncoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
+                                          outputLayer=decoder,
+                                          name="AutoEncoder")
 
-        self.encodedImg = encoder(self.inputLayer)
-        self.decodedImg = decoder(self.encodedImg)
+        self.inputLayer = tf.keras.Input(shape=inputShape, name=inputName)
+        self.encoderLayer = encoder
+        self.decoderLayer = decoder
 
-        self.model = tf.keras.models.Model(self.inputLayer, self.decodedImg, name="AE")
-        self.model.compile(optimizer=tf.optimizers.Adam(),
-                           loss=tf.losses.mean_squared_logarithmic_error)
+        self.addLayer(self.encoderLayer)
 
-    def compile(self):
-        """
-        Recompile the autoencoder model
-        """
-
-        self.model.compile(optimizer=tf.optimizers.Adam(),
-                           loss=tf.losses.mean_squared_logarithmic_error)
-        print("Recompiled Model.")
 
     def train(self, x_train, x_test, epochs):
         """
@@ -48,7 +40,7 @@ class AE:
                        validation_data=(x_test, x_test),
                        batch_size=32)
 
-    def predict(self, x_):
+    def pred(self, x_):
         """
         Given a certain input image and a model the model
         will inference and return an int array

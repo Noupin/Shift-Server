@@ -11,4 +11,4 @@ from .ServerData import ServerData
 app = createApp()
 
 if __name__ == '__main__':
-    app.run(debug=True, port=ServerData.port)
+    app.run(port=ServerData.port)
