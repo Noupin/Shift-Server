@@ -13,7 +13,7 @@ class LayerIndexOutOfRangeError(Exception):
     Exception raised for errors of inserting a layer at an index greater than the amount of current layers.
     """
 
-    def __init__(self, index, maxIndex, message="The index you are trying to insert the layer into is out of range of the current layers."):
+    def __init__(self, index: int, maxIndex: int, message="The index you are trying to insert the layer into is out of range of the current layers."):
         self.index = index
         self.maxIndex = maxIndex
         self.message = message
@@ -21,5 +21,5 @@ class LayerIndexOutOfRangeError(Exception):
         super().__init__(self.message)
     
 
-    def __str__(self):
+    def __str__(self) -> str:
         return Fore.RED + f"Index Out Of Range: {self.index} Max Index: {self.maxIndex} -> {self.message}" + Fore.RESET

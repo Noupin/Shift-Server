@@ -11,6 +11,7 @@ from colorama import Fore
 
 #First Party Imports
 from utils.memory import allowTFMemoryGrowth
+from Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
 from Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
 from Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
@@ -103,7 +104,7 @@ class TFModel(tf.keras.Model):
         """
 
         if self.modelBuilt:
-            print("Model already built this needs to be an error!")
+            raise ModelAlreadyBuiltError
 
         connectedLayers = [self.modelLayers[0]]
         
