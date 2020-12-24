@@ -53,7 +53,7 @@ class TFModel(tf.keras.Model):
         self.model = tf.keras.Sequential()
     
 
-    def call(self, layer):
+    def call(self, layer: tf.python.framework.ops.Tensor):
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
 
@@ -78,7 +78,7 @@ class TFModel(tf.keras.Model):
         return connectedLayers[-1]
     
 
-    def addLayer(self, layer, index=-1):
+    def addLayer(self, layer: tf.keras.layers.Layer, index=-1):
         """
         Adds the given layer to self.modelLayers at index.
 
@@ -119,7 +119,7 @@ class TFModel(tf.keras.Model):
         del connectedLayers
 
 
-    def load(self, path):
+    def load(self, path: str):
         """
         Load the encoder given a filepath and a filename to load from.
 
@@ -135,7 +135,7 @@ class TFModel(tf.keras.Model):
         Compiles self.model.
 
         Args:
-            optimizer (tensorflow.python.keras.optimizer_v2, optional): The optimizer to apply to self.model. Defaults to None.
+            optimizer (tf.optimizers.Optimizer, optional): The optimizer to apply to self.model. Defaults to None.
             loss (function, optional): The loss to apply to self.model. Defaults to None.
         """
 

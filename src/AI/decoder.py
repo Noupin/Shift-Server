@@ -48,16 +48,21 @@ class Decoder(TFModel):
     def addDecodingLayer(self, layers=[], filters=24, kernel_size=3, strides=2, activation=tf.nn.relu, padding="same", index=-2):
         """
         Given a list of tensorflow layers those layers are added to the decoder.
-        The default layers being a 2D convolutional layer and 2D upsampling layer
-        to learn and upsample the image respectivley.
+        The default layer being a 2D convolutional transposing layer to learn and upscale the image.
         Great image explanation here:
         https://miro.medium.com/max/3288/1*uAeANQIOQPqWZnnuH-VEyw.jpeg
 
         Args:
-            layers (list of tf.keras.layers.Layer, optional): The list of layers to add to the decoder as a decoding layer.
-                                       Defaults to [tf.keras.layers.Conv2D(5, (3, 3)), activation=tf.nn.relu, padding="same"),
-                                       tf.keras.layers.UpSampling2D((2,2)))]
-            index (int, optional): The position to insert each layer within layers. Defaults to -1.
+            layers (list, optional): The list of layers to add to the decoder as a decoding layer. Defaults to [].
+            filters (int, optional): The filters for the 2D convolutional transposing layer. Defaults to 24.
+            kernel_size (int, optional): The kernel size for the 2D convolutional transposing layer. Defaults to 3.
+            strides (int, optional): The factor by which the x and y dimensions will be multiplied by for the 2D convolutional transposing layer. Defaults to 2.
+            activation (function, optional): The activation function for the 2D convolutional transposing layer. Defaults to tf.nn.relu.
+            padding (str, optional): The padding for the 2D convolutional transposing layer. Defaults to "same".
+            index (int, optional): The position to insert each layer within layers. Defaults to -2.
+
+        Raises:
+            LayerIndexOutOfRangeError: If the layer trying to be added is at an index not within the list.
         """
 
         if abs(index) > len(self.modelLayers) -1 or abs(index) < 1:

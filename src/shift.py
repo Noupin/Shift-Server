@@ -22,12 +22,21 @@ from utils.image import (resizeImage, blendImageAndColor,
 class Shift:
     """
     Two custom built AutoEncoder TensorFlow models for Shifting objects within an image.
+
+    Args:
+        imageShape (tuple of int, optional): [description]. Defaults to (256, 256, 3).
+        latentSpaceDimension (int, optional): [description]. Defaults to 512.
+        latentReshape (tuple of int, optional): [description]. Defaults to (128, 128, 3).
+        optimizer (tf.optimizers.Optimizer, optional): [description]. Defaults to tf.optimizers.Adam().
+        loss (function, optional): [description]. Defaults to tf.losses.mean_absolute_error.
+        name (str, optional): [description]. Defaults to "Default".
+        convolutionFilters (int, optional): [description]. Defaults to 24.
+        codingLayers (int, optional): [description]. Defaults to 1.
     """
 
     def __init__(self, imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error, name="Default",
                        convolutionFilters=24, codingLayers=1):
-        
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -54,13 +63,31 @@ class Shift:
 
 
     def getMaxCodingLayers(self):
+        """
+        Depending on the incoming resolution of the image and the latent space dimensionality
+        the maximum number of coding layers will be found while keeping the magnitude of the
+        output of the final convolution above the magnitude of the latent space dimension.
+        """
+
         self.codingLayers = 1
         while (self.imageShape[0]/(2**(self.codingLayers+1)))*(self.imageShape[1]/(2**(self.codingLayers+1)))*self.convolutionFilters > self.latentSpaceDimension:
             self.codingLayers += 1
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images, objectClassifier, **kwargs):
+    def formatTrainingData(self, images: list(np.ndarray), objectClassifier, **kwargs):
+        """
+        Formats images with objectClassifier ready to train the Shift models.
+
+        Args:
+            images (list of numpy.ndarray): The images to be formatted for Shift model training
+            objectClassifier (function): The function used as a classifier on the images
+            **kwargs: The key word arguments to pass into detectObject function
+
+        Returns:
+            list of numpy.ndarray: The list of training images ready to be input to the Shift models
+        """
+
         trainingData = []
 
         for image in images:
@@ -79,14 +106,32 @@ class Shift:
         return trainingData
     
 
-    def addCodingLayers(self, count):
+    def addCodingLayers(self, count: int):
+        """
+        Adds count encoding and decoding layers to the encoder and each of the decoders.
+
+        Args:
+            count (int): The number of encoding and decoding layers to add
+        """
+
         for _ in range(count):
             self.encoder.addEncodingLayer(filters=self.convolutionFilters)
             self.baseDecoder.addDecodingLayer(filters=self.convolutionFilters)
             self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
     
 
-    def predict(self, model, image):
+    def predict(self, model: tf.keras.Model, image: np.ndarray):
+        """
+        Uses model to predict on image
+
+        Args:
+            model (tf.keras.Model): The model to be used for inferencing
+            image (numpy.ndarray): The image to be inferenced on
+
+        Returns:
+            numpy.ndarray: The predicted image
+        """
+
         image = model.predict(image.reshape(1, self.imageShape[0], self.imageShape[1], self.imageShape[2]))
         image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
 
@@ -94,6 +139,12 @@ class Shift:
     
 
     def build(self):
+        """
+        Builds each of the models used in Shift. Building a model can only happen once
+        and will raise an error if done multiple times. Building is helpful when using
+        .summary() but not needed.
+        """
+
         self.encoder.buildModel()
         self.baseDecoder.buildModel()
         self.maskDecoder.buildModel()
