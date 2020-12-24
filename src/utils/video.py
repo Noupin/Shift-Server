@@ -6,11 +6,13 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import cv2
+import moviepy
 import numpy as np
+from typing import List
 from moviepy import editor as mediaEditor
 
 
-def extractAudio(video):
+def extractAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip) -> moviepy.audio.io.AudioFileClip.AudioFileClip:
     """
     Given a video with an audio track the audio track is returned
 
@@ -27,7 +29,8 @@ def extractAudio(video):
     return mediaEditor.AudioClip(lambda t: [0], duration=video.duration, fps=video.fps)
 
 
-def insertAudio(video, audio):
+def insertAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip,
+                audio: moviepy.audio.io.AudioFileClip.AudioFileClip) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     """
     Given an audio and video path they will be combined.
 
@@ -42,7 +45,7 @@ def insertAudio(video, audio):
     return video.set_audio(audio)
 
 
-def videoToImages(path, interval=1, action=None, **kwargs):
+def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarray]:
     """
     Converts a video into image frames
 
@@ -80,7 +83,7 @@ def videoToImages(path, interval=1, action=None, **kwargs):
     return images
 
 
-def loadVideo(path):
+def loadVideo(path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     """
     Loads a video from path.
 
@@ -94,7 +97,7 @@ def loadVideo(path):
     return mediaEditor.VideoFileClip(path)
 
 
-def saveVideo(video, path, fps=None):
+def saveVideo(video: moviepy.video.io.VideoFileClip.VideoFileClip, path: str, fps=None) -> None:
     """
     Saves the video to path at fps frame rate
 

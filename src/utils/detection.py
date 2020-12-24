@@ -6,9 +6,11 @@ __author__ = "Noupin"
 
 #Third Party Import
 import cv2
+import numpy as np
+from typing import List
 
 
-def detectObject(classifier, image, **kwargs):
+def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
     """
     Returns the attributes from the classifier on the given
     image while passing in the kwargs to the classifier.

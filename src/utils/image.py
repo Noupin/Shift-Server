@@ -10,6 +10,7 @@ import cv2
 import base64
 import numpy as np
 from PIL import Image
+from typing import List, Tuple
 from colorama import Fore
 import matplotlib.pyplot as plt
 
@@ -17,7 +18,7 @@ import matplotlib.pyplot as plt
 from Exceptions.CVToPIL import CVToPILError
 
 
-def PILToCV(image):
+def PILToCV(image: Image.Image) -> np.ndarray:
     """
     Given a PIL image it will be converted to a CV image
 
@@ -33,7 +34,7 @@ def PILToCV(image):
     return image
 
 
-def CVToPIL(image):
+def CVToPIL(image: np.ndarray) -> Image.Image:
     """
     Given a CV image it will be converted to a PIL image
 
@@ -57,7 +58,7 @@ def CVToPIL(image):
     return image
 
 
-def loadImage(path):
+def loadImage(path: str) -> np.ndarray:
     """
     Given a path the image is loaded and converted to the RGB color space
 
@@ -74,7 +75,7 @@ def loadImage(path):
     return image
 
 
-def saveImage(image, path):
+def saveImage(image: np.ndarray, path: str) -> None:
     """
     Saves the image to the given path
 
@@ -86,13 +87,13 @@ def saveImage(image, path):
     cv2.imwrite(path, image)
 
 
-def resizeImage(image, size, keepAR=True):
+def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=True) -> np.ndarray:
     """
     Given a cv2 image it is resized to the given size
 
     Args:
         image (numpy.ndarray): The image object to be resized
-        size ((int, int)): A tuple of the desired x and y dimension
+        size (tuple of int): A tuple of the desired x and y dimension
         keepAR (bool): Whether or not to keep the aspect ratio of the image
 
     Returns:
@@ -109,7 +110,7 @@ def resizeImage(image, size, keepAR=True):
     return image
 
 
-def cropImage(image, cropArea):
+def cropImage(image: np.ndarray, cropArea: Tuple[int]) -> np.ndarray:
     """
     Crops the crop area out of image
 
@@ -127,7 +128,7 @@ def cropImage(image, cropArea):
     return image[int(y):int(y+height), int(x):int(x+width)]
 
 
-def viewImage(image):
+def viewImage(image) -> None:
     """
     Given a CV image or a PIL image it will be previewed using matplotlib
 
@@ -139,7 +140,7 @@ def viewImage(image):
     plt.show()
 
 
-def encodeImage(image):
+def encodeImage(image) -> str:
     """
     Takes in an image array then encodes it as a bytestring to be streamed through JSON to JavaScript.
 
@@ -163,7 +164,7 @@ def encodeImage(image):
     return encodedImage
 
 
-def decodeImage(encodedImage):
+def decodeImage(encodedImage: str) -> np.ndarray:
     """
     Given an encoded image as a binary string it will be decoded into a CV image
 
@@ -180,7 +181,7 @@ def decodeImage(encodedImage):
     return image
 
 
-def blendImageAndColor(image, colorCode):
+def blendImageAndColor(image, colorCode: int) -> np.ndarray:
     """
     Given an input image an augmented image is returned.
 
@@ -213,7 +214,7 @@ def blendImageAndColor(image, colorCode):
     return image
 
 
-def flipImage(image, flipCode):
+def flipImage(image, flipCode: str) -> np.ndarray:
     """
     The image will be flipped by the corresponding flip code.
 
@@ -229,17 +230,18 @@ def flipImage(image, flipCode):
                "y": 1,
                "xy": -1,
                "yx": -1}
+    image = PILToCV(image)
 
     return cv2.flip(image, flipMap[flipCode])
 
 
-def imagesToVideo(images, outPath, fps):
+def imagesToVideo(images: List[np.ndarray], outPath: str, fps: float) -> None:
     """
     Given a path with all of the image arrays a .mp4 video will be exported
 
     Args:
-        images ([numpy.ndarray]): An array of cv images
-        outPath (string): The path to save the video to
+        images (list of numpy.ndarray): An array of cv images
+        outPath (str): The path to save the video to
         fps (float): The fps at which to combine the video at
     """
 

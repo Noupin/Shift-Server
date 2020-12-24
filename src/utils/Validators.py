@@ -6,6 +6,7 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 
 #Third Party Imports
 import re
+from typing import Tuple
 from email_validator import validate_email, EmailNotValidError
 
 #First Party Imports
@@ -15,7 +16,7 @@ from ..constants import (
     )
 
 
-def validatePassword(password):
+def validatePassword(password: str) -> Tuple[bool, str]:
     """
     The given password will be determined valid or invalid
 
@@ -23,7 +24,7 @@ def validatePassword(password):
         passsword (str): The password to validate
 
     Returns:
-        (bool, str): Whether or not the password is valid with a description message
+        tuple of bool, str: Whether or not the password is valid with a description message
     """
 
     valid = True
@@ -41,7 +42,7 @@ def validatePassword(password):
     return valid, msg
 
 
-def validateEmail(email):
+def validateEmail(email: str) -> Tuple[bool, str]:
     """
     The given email will be determined valid or invalid
 
@@ -49,7 +50,7 @@ def validateEmail(email):
         email (str): The email to validate
 
     Returns:
-        (bool, str): Whether or not the email is valid with a description message
+        tuple of bool, str: Whether or not the email is valid with a description message
     """
 
     try:
@@ -59,7 +60,7 @@ def validateEmail(email):
         return False, str(e)
 
 
-def validateFilename(filename):
+def validateFilename(filename: str) -> bool:
     """
     Given a filename it returns a boolean whether the file is allowed
 

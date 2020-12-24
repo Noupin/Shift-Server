@@ -45,7 +45,7 @@ class Decoder(TFModel):
         self.addDecodingLayer(filters=12, index=-1)
 
 
-    def addDecodingLayer(self, layers=[], filters=24, kernel_size=3, strides=2, activation=tf.nn.relu, padding="same", index=-2):
+    def addDecodingLayer(self, layers=[], filters=24, kernel_size=3, strides=2, activation=tf.nn.relu, padding="same", index=-2) -> None:
         """
         Given a list of tensorflow layers those layers are added to the decoder.
         The default layer being a 2D convolutional transposing layer to learn and upscale the image.

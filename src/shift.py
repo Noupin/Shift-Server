@@ -8,6 +8,7 @@ __author__ = "Noupin"
 import os
 import numpy as np
 import tensorflow as tf
+from typing import List
 
 #First Party Imports
 from AI.encoder import Encoder
@@ -62,7 +63,7 @@ class Shift:
                                   optimizer=optimizer, loss=loss)
 
 
-    def getMaxCodingLayers(self):
+    def getMaxCodingLayers(self) -> None:
         """
         Depending on the incoming resolution of the image and the latent space dimensionality
         the maximum number of coding layers will be found while keeping the magnitude of the
@@ -75,7 +76,7 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: list(np.ndarray), objectClassifier, **kwargs):
+    def formatTrainingData(self, images: List[np.ndarray], objectClassifier, **kwargs) -> List[np.ndarray]:
         """
         Formats images with objectClassifier ready to train the Shift models.
 
@@ -106,7 +107,7 @@ class Shift:
         return trainingData
     
 
-    def addCodingLayers(self, count: int):
+    def addCodingLayers(self, count: int) -> None:
         """
         Adds count encoding and decoding layers to the encoder and each of the decoders.
 
@@ -120,7 +121,7 @@ class Shift:
             self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
     
 
-    def predict(self, model: tf.keras.Model, image: np.ndarray):
+    def predict(self, model: tf.keras.Model, image: np.ndarray) -> np.ndarray:
         """
         Uses model to predict on image
 

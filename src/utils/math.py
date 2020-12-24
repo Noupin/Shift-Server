@@ -5,11 +5,12 @@ The custom decoder class for Shift
 __author__ = "Noupin"
 
 #Third Party Imports
-from functools import reduce  # Required in Python 3
 import operator
+from typing import List, Tuple, Iterable
+from functools import reduce
 
 
-def prod(iterable):
+def prod(iterable: Iterable) -> int:
     """
     Multiplies each element of the iterable.
 
@@ -23,7 +24,7 @@ def prod(iterable):
     return reduce(operator.mul, iterable, 1)
 
 
-def rectangleArea(rectangle):
+def rectangleArea(rectangle: Tuple[int]) -> int:
     """
     Gets the area of rectangle
 
@@ -39,7 +40,7 @@ def rectangleArea(rectangle):
     return width*height
 
 
-def getLargestRectangle(rectangles):
+def getLargestRectangle(rectangles: List[Tuple[int]]) -> Tuple[int]:
     """
     Given a list of rectangles the largest rectangle is returned
 

@@ -53,7 +53,7 @@ class TFModel(tf.keras.Model):
         self.model = tf.keras.Sequential()
     
 
-    def call(self, layer: tf.python.framework.ops.Tensor):
+    def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
 
@@ -78,7 +78,7 @@ class TFModel(tf.keras.Model):
         return connectedLayers[-1]
     
 
-    def addLayer(self, layer: tf.keras.layers.Layer, index=-1):
+    def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:
         """
         Adds the given layer to self.modelLayers at index.
 
@@ -93,7 +93,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers.insert(index, layer)
     
 
-    def buildModel(self):
+    def buildModel(self) -> None:
         """
         \t*Model can only be made once. Once the model is made no more layers can be added.*\n
         Creates a tensorflow model from the layers in self.modelLayers and assigns that model to self.model.
@@ -119,7 +119,7 @@ class TFModel(tf.keras.Model):
         del connectedLayers
 
 
-    def load(self, path: str):
+    def load(self, path: str) -> None:
         """
         Load the encoder given a filepath and a filename to load from.
 
@@ -130,7 +130,7 @@ class TFModel(tf.keras.Model):
         self.model = tf.keras.models.load_model(path)
     
 
-    def compileModel(self, optimizer=None, loss=None):
+    def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
         """
         Compiles self.model.
 

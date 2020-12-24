@@ -5,10 +5,11 @@ The utility functions related to audio
 __author__ = "Noupin"
 
 #Third Party Imports
+import moviepy
 from moviepy import editor as mediaEditor
 
 
-def loadAudio(path):
+def loadAudio(path: str) -> moviepy.video.io.AudioFileClip.AudioFileClip:
     """
     Loads audio from path.
 
@@ -22,7 +23,7 @@ def loadAudio(path):
     return mediaEditor.AudioFileClip(path)
 
 
-def saveAudio(audio, path):
+def saveAudio(audio: moviepy.audio.io.AudioFileClip.AudioFileClip, path: str):
     """
     Saves audio to path.
 

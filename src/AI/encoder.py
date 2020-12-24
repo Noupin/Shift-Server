@@ -41,7 +41,7 @@ class Encoder(TFModel):
         self.addLayer(tf.keras.layers.Flatten(), -1)
 
     
-    def addEncodingLayer(self, layers=[], filters=24, kernel_size=3, strides=2, activation=tf.nn.relu, padding="same", index=-2):
+    def addEncodingLayer(self, layers=[], filters=24, kernel_size=3, strides=2, activation=tf.nn.relu, padding="same", index=-2) -> None:
         """
         Given a list of tensorflow layers those layers are added to the encoder.
         The default layer being a 2D convolutional layer to learn and downscale the image.

@@ -8,7 +8,7 @@ __author__ = "Noupin"
 import tensorflow as tf
 
 
-def allowTFMemoryGrowth():
+def allowTFMemoryGrowth() -> None:
     """
     Allows the memory to be allocated for tensorflow GPU and cudNN
     """
