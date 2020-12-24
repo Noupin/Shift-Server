@@ -6,90 +6,96 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import numpy as np
+import tensorflow as tf
 
 #First Party Imports
-import utilities
-from tunable import Tunable
-from autoencoder import AE
-from encoder import Encoder
-from decoder import Decoder
+from AI.encoder import Encoder
+from AI.decoder import Decoder
+from AI.autoencoder import AutoEncoder
+from utils.detection import detectObject
+from utils.math import getLargestRectangle
+from utils.image import (resizeImage, blendImageAndColor,
+                         flipImage, cropImage)
 
 
 class Shift:
     """
-    Master class for Shift
+    Two custom built AutoEncoder TensorFlow models for Shifting objects within an image.
     """
 
-    def __init__(self):
-        self.stopTrain = 0
+    def __init__(self, imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
+                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error, name="Default",
+                       convolutionFilters=24, codingLayers=1):
+        
+        self.imageShape = imageShape
+        self.latentSpaceDimension = latentSpaceDimension
+        self.convolutionFilters = convolutionFilters
 
-        utilities.memoryGrowth()
+        self.codingLayers = codingLayers
+        if self.codingLayers == -1:
+            self.getMaxCodingLayers()
+        
+        latentReshapeX = int(imageShape[0]/(2**(self.codingLayers+1)))
+        latentReshapeY = int(imageShape[1]/(2**(self.codingLayers+1)))
 
-        self.Enc = Encoder()
 
-        self.DecMask = Decoder()
-        self.AEMask = AE(self.Enc.model, self.DecMask.model)
+        self.encoder = Encoder(inputShape=imageShape, outputDimension=latentSpaceDimension)
+
+        self.baseDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.maskDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
+
+        self.addCodingLayers(self.codingLayers)
+
+        self.baseAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
+                                  optimizer=optimizer, loss=loss)
+        self.maskAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+                                  optimizer=optimizer, loss=loss)
 
 
-        self.DecBase = Decoder()
-        self.AEBase = AE(self.Enc.model, self.DecBase.model)
+    def getMaxCodingLayers(self):
+        self.codingLayers = 1
+        while (self.imageShape[0]/(2**(self.codingLayers+1)))*(self.imageShape[1]/(2**(self.codingLayers+1)))*self.convolutionFilters > self.latentSpaceDimension:
+            self.codingLayers += 1
+        self.codingLayers -= 1
 
-        self.modMask = self.AEMask.model
-        self.modBase = self.AEBase.model
 
-    def updateModels(self):
-        """
-        Update the autoencoders models
-        """
+    def formatTrainingData(self, images, objectClassifier, **kwargs):
+        trainingData = []
 
-        self.modMask = self.AEMask.model
-        self.modBase = self.AEBase.model
+        for image in images:
+            objects = detectObject(objectClassifier, image=image, **kwargs)
+            if type(objects) != tuple:
+                image = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]), keepAR=False)
+                for ccode in range(5):
+                    trainingData.append(blendImageAndColor(image, ccode))
+                    for fcode in ["x", "y"]:
+                        trainingData.append(flipImage(blendImageAndColor(image, ccode), fcode))
+                trainingData.append(image)
 
-    def updateAEMask(self, encModel, decModel):
-        """
-        Update the masks autoencoder object
-        """
+        trainingData = np.array(trainingData).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2])
+        trainingData = trainingData.astype('float32') / 255.
 
-        self.AEMask = AE(encModel, decModel)
-
-    def updateAEBase(self, encModel, decModel):
-        """
-        Update the bases autoencoder object
-        """
-
-        self.AEBase = AE(encModel, decModel)
+        return trainingData
     
-    def train(self, preproVars):
-        """
-        A shuffled train for the Autoencoders
-        """
 
-        maskTrainingFolder = os.path.join(preproVars.maskImgPath, "trainingArrays")
-        baseTrainingFolder = os.path.join(preproVars.baseImgPath, "trainingArrays")
+    def addCodingLayers(self, count):
+        for _ in range(count):
+            self.encoder.addEncodingLayer(filters=self.convolutionFilters)
+            self.baseDecoder.addDecodingLayer(filters=self.convolutionFilters)
+            self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
+    
 
-        for window in range(preproVars.totalBufferWindows):
-            maskTrain = True
-            baseTrain = True
+    def predict(self, model, image):
+        image = model.predict(image.reshape(1, self.imageShape[0], self.imageShape[1], self.imageShape[2]))
+        image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
 
-            print(f"\n\nWindow: {window+1}/{preproVars.totalBufferWindows}")
-            maskTrainingData = preproVars.bufferImages(maskTrainingFolder, preproVars.bufferWindow)
-            if maskTrainingData is None:
-                maskTrain = False
-            print("Mask: ")
-            if maskTrain:
-                self.AEMask.train(maskTrainingData[:-1], maskTrainingData[-1:], Tunable.tunableDict["epochs"])
-            if not preproVars.enoughRAM:
-                del maskTrainingData
-            
-            print(f"Window: {window+1}/{preproVars.totalBufferWindows}")
-            baseTrainingData = preproVars.bufferImages(baseTrainingFolder, preproVars.bufferWindow)
-            if baseTrainingData is None:
-                baseTrain = False
-            print("Base: ")
-            if baseTrain:
-                self.AEBase.train(baseTrainingData[:-1], baseTrainingData[-1:], Tunable.tunableDict["epochs"])
-            if not preproVars.enoughRAM:
-                del trainingData
+        return image
+    
 
-            preproVars.bufferWindow += 1
-        preproVars.bufferWindow = 0
+    def build(self):
+        self.encoder.buildModel()
+        self.baseDecoder.buildModel()
+        self.maskDecoder.buildModel()
+        self.baseAE.buildModel()
+        self.maskAE.buildModel()

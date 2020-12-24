@@ -10,19 +10,34 @@ import tensorflow as tf
 from colorama import Fore
 
 #First Party Imports
+from utils.memory import allowTFMemoryGrowth
 from Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
 from Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 
 class TFModel(tf.keras.Model):
     """
-    The custom built encoder layer for Shift.
+    A Base TensorFlow model for Vardia projects.
+
+    Args:
+        inputLayer (tf.keras.layers.Layer, optional): The input layer of the model. Defaults to
+                                                      tf.keras.Input(shape=(128, 128, 3), name="Input").
+        outputLayer (tf.keras.layers.Layer, optional): The output layer of the model. Defaults to
+                                                       tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output").
+        activation (function, optional): The default activaiton function for each layer of the model.
+                                         Defaults to tf.nn.relu.
+        optimizer (tf.optimizers.Optimizer, optional): The optimizer when compiling the model.
+                                                       Defaults to tf.optimizers.Adam().
+        loss (function, optional): The loss function when compliling the model.
+                                   Defaults to tf.losses.mean_squared_logarithmic_error.
+        name (str, optional): The name of the model. Defaults to "TFModel".
     """
 
     def __init__(self, inputLayer=tf.keras.Input(shape=(128, 128, 3), name="Input"),
                        outputLayer=tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output"),
                        activation=tf.nn.relu, optimizer=tf.optimizers.Adam(),
                        loss=tf.losses.mean_squared_logarithmic_error, name="TFModel"):
+        allowTFMemoryGrowth()
         super(TFModel, self).__init__()
 
         self.loss = loss
@@ -35,7 +50,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
 
-        self.model = None
+        self.model = tf.keras.Sequential()
     
 
     def call(self, layer):
@@ -78,7 +93,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers.insert(index, layer)
     
 
-    def makeModel(self, layer=None):
+    def buildModel(self):
         """
         \t*Model can only be made once. Once the model is made no more layers can be added.*\n
         Creates a tensorflow model from the layers in self.modelLayers and assigns that model to self.model.
@@ -86,6 +101,9 @@ class TFModel(tf.keras.Model):
         Raises:
             IncompatibleTFLayerError: One or more of the layers in self.modelLayers are incompatible
         """
+
+        if self.modelBuilt:
+            print("Model already built this needs to be an error!")
 
         connectedLayers = [self.modelLayers[0]]
         
@@ -97,6 +115,7 @@ class TFModel(tf.keras.Model):
 
         self.model = tf.keras.Model(inputs=connectedLayers[0], outputs=connectedLayers[-1], name=self.modelName)
         self.modelBuilt = True
+
         del connectedLayers
 
 

@@ -42,7 +42,7 @@ def insertAudio(video, audio):
     return video.set_audio(audio)
 
 
-def videoToImages(path, action=None):
+def videoToImages(path, interval=1, action=None, **kwargs):
     """
     Converts a video into image frames
 
@@ -55,14 +55,27 @@ def videoToImages(path, action=None):
     """
 
     images = []
+    frame = 0
     video = cv2.VideoCapture(path)
 
+    print("Total frames:", video.get(cv2.CAP_PROP_FRAME_COUNT))
     for frame in range(int(video.get(cv2.CAP_PROP_FRAME_COUNT))):
         check, image = video.read()
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        images.append(image)
-        if action:
-            action(image)
+        try:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        except cv2.error as e:
+            print("Frame unable to be converted to an image.")
+            continue
+        if action and frame % interval == 0:
+            returnData = action(image=image, **kwargs)
+            if type(returnData) == list:
+                images += returnData
+            else:
+                images.append(returnData)
+        elif frame % interval == 0:
+            images.append(image)
+    
+    print("Frames grabbed:", len(images))
     
     return images
 
