@@ -43,7 +43,7 @@ class Shift:
         self.convolutionFilters = convolutionFilters
 
         self.codingLayers = codingLayers
-        if self.codingLayers == -1:
+        if self.codingLayers < 0:
             self.getMaxCodingLayers()
         
         latentReshapeX = int(imageShape[0]/(2**(self.codingLayers+1)))

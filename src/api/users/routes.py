@@ -21,7 +21,7 @@ users = Blueprint('users', __name__)
 
 
 @users.route("/register", methods=["POST"])
-def register():
+def register() -> dict:
     """
     The regitration for the user
 
@@ -58,7 +58,7 @@ def register():
 
 
 @users.route('/login', methods=["POST"])
-def login():
+def login() -> dict:
     """
     The login for the user.
 
@@ -93,7 +93,7 @@ def login():
 
 @users.route('/logout')
 @login_required
-def logout():
+def logout() -> dict:
     """
     The logout for the user.
 
@@ -109,7 +109,7 @@ def logout():
 
 @users.route('/account')
 @login_required
-def account():
+def account() -> dict:
     """
     The data needed to display the users account page
 

@@ -20,4 +20,4 @@ class Config:
         'port': int(os.environ.get('DB_PORT'))
     }
     OBJECTID = ObjectIdConverter
-    UPLOAD_FOLDER = r"/userData"
+    UPLOAD_FOLDER = r"userData"

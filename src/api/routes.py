@@ -5,8 +5,13 @@ Routes for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask import Blueprint
+import os
+from flask import Blueprint, request, current_app
+from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
+
+#First Party Imports
+from src.utils.validators import validateFilename
 
 
 api = Blueprint('api', __name__)
@@ -14,7 +19,7 @@ api = Blueprint('api', __name__)
 
 @api.route("/train", methods=["POST"])
 @login_required
-def train():
+def train() -> dict:
     """
     Given training data Shift specializes a model for the training data. Yeilds
     more relaisitic results than just an inference though it takes longer. 
@@ -23,12 +28,23 @@ def train():
         Shifted Media: The media that has been shifted by the specialized model.
     """
 
+    if 'file' not in request.files:
+        return {'msg': "The request payload had no file"}
+
+    data = request.files['file']
+    if data.filename == '':
+        return {'msg': "The request had no selected file"}
+    
+    if data and validateFilename(data.filename):
+        filename = secure_filename(data.filename)
+        data.save(os.path.join(current_app.config["UPLOAD_FOLDER"], "videos", filename))
+ 
     return {'msg': f"Training as {current_user}"}
 
 
 @api.route("/inference", methods=["POST"])
 @login_required
-def inference():
+def inference() -> dict:
     """
     Inferenceing based on a specialized pretrained model(PTM) where, the input is
     the face to be put on the media and inferenced with PTM. Alternativley inferencing
@@ -42,7 +58,7 @@ def inference():
 
 
 @api.route('/featured', methods=["POST", "GET"])
-def featured():
+def featured() -> dict:
     """
     Uses TCP to send the data of the two featured models.
 
@@ -54,7 +70,7 @@ def featured():
 
 
 @api.route('/popular', methods=["POST", "GET"])
-def popular():
+def popular() -> dict:
     """
     Uses TCP to send the data of the top 10 most popular models.
 
@@ -75,7 +91,7 @@ def popular():
 
 
 @api.route('/new', methods=["POST", "GET"])
-def new():
+def new() -> dict:
     """
     Uses TCP to send the data of the 10 newest models.
 

@@ -19,5 +19,5 @@ class Shift(db.EmbeddedDocument):
     encoderFile = StringField(required=True)
     decoderFile = StringField(required=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Shift('{self.title}, {self.datePosted}, {self.imageFile}, {self.encoderFile}, {self.decoderFile}')"
