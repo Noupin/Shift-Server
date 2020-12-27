@@ -52,7 +52,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers.append(outputLayer)
 
         self.model = tf.keras.Sequential()
-    
+
 
     def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
         """
@@ -77,7 +77,7 @@ class TFModel(tf.keras.Model):
                 raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer])
 
         return connectedLayers[-1]
-    
+
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:
         """
@@ -92,7 +92,7 @@ class TFModel(tf.keras.Model):
             raise LayerIndexOutOfRangeError(index, len(self.modelLayers))
 
         self.modelLayers.insert(index, layer)
-    
+
 
     def buildModel(self) -> None:
         """
@@ -129,7 +129,7 @@ class TFModel(tf.keras.Model):
         """
 
         self.model = tf.keras.models.load_model(path)
-    
+
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
         """

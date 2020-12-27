@@ -5,8 +5,9 @@ Routes for the Shift webapp
 __author__ = "Noupin"
 
 #Third Party Imports
+import os
 import flask
-from flask import Blueprint
+from flask import Blueprint, request
 
 
 main = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")
@@ -14,4 +15,9 @@ main = Blueprint('main', __name__, static_folder="../static/build", static_url_p
 
 @main.route('/')
 def index() -> flask.wrappers.Response:
+    return main.send_static_file('index.html')
+
+
+@main.app_errorhandler(404)
+def error404(error) -> flask.wrappers.Response:
     return main.send_static_file('index.html')

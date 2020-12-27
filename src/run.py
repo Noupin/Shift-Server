@@ -6,9 +6,9 @@ __author__ = "Noupin"
 
 #First Party Imports
 from . import createApp
-from .ServerData import ServerData
+
 
 app = createApp()
 
 if __name__ == '__main__':
-    app.run(port=ServerData.port)
+    app.run()
