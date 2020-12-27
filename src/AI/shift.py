@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import random
 import numpy as np
 import tensorflow as tf
 from typing import List
@@ -15,7 +16,7 @@ from AI.encoder import Encoder
 from AI.decoder import Decoder
 from AI.autoencoder import AutoEncoder
 from utils.detection import detectObject
-from utils.math import getLargestRectangle
+from utils.math import getLargestRectangle, flattenList
 from utils.image import (resizeImage, blendImageAndColor,
                          flipImage, cropImage)
 
@@ -37,7 +38,7 @@ class Shift:
 
     def __init__(self, imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error, name="Default",
-                       convolutionFilters=24, codingLayers=1):
+                       convolutionFilters=24, codingLayers=-1):
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -76,13 +77,14 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: List[np.ndarray], objectClassifier, **kwargs) -> List[np.ndarray]:
+    def formatTrainingData(self, images: List[np.ndarray], objectClassifier, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
         """
-        Formats images with objectClassifier ready to train the Shift models.
+        Formats and shuffles images with objectClassifier ready to train the Shift models.
 
         Args:
             images (list of numpy.ndarray): The images to be formatted for Shift model training
             objectClassifier (function): The function used as a classifier on the images
+            flipCodes (list of str): The codes to flip the image for augmentation. Defaults to ["x"].
             **kwargs: The key word arguments to pass into detectObject function
 
         Returns:
@@ -94,14 +96,33 @@ class Shift:
         for image in images:
             objects = detectObject(objectClassifier, image=image, **kwargs)
             if type(objects) != tuple:
+                augmented = []
+                augmentedItems = 0
                 image = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]), keepAR=False)
-                for ccode in range(5):
-                    trainingData.append(blendImageAndColor(image, ccode))
-                    for fcode in ["x", "y"]:
-                        trainingData.append(flipImage(blendImageAndColor(image, ccode), fcode))
-                trainingData.append(image)
+                
+                coloredImages = [image]
+                for colorCode in range(5):
+                    coloredImages.append(blendImageAndColor(image, colorCode))
 
-        trainingData = np.array(trainingData).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2])
+                randomColored = coloredImages.copy()
+                random.shuffle(randomColored)
+                augmentedItems += len(randomColored)
+                augmented.append(randomColored)
+
+                for flipCode in flipCodes:
+                    flippedImages = []
+                    for coloredImage in coloredImages:
+                        flippedImages.append(flipImage(coloredImage, flipCode))
+
+                    random.shuffle(flippedImages)
+                    augmentedItems += len(flippedImages)
+                    augmented.append(flippedImages)
+
+                shuffledAugmented = random.sample(flattenList(augmented), augmentedItems)
+                trainingData.append(shuffledAugmented)
+
+        random.shuffle(trainingData)
+        trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2])
         trainingData = trainingData.astype('float32') / 255.
 
         return trainingData

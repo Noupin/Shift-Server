@@ -6,7 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import operator
-from typing import List, Tuple, Iterable
+from typing import List, Tuple, Iterable, Any
 from functools import reduce
 
 
@@ -22,6 +22,20 @@ def prod(iterable: Iterable) -> int:
     """
 
     return reduce(operator.mul, iterable, 1)
+
+
+def flattenList(multiDimList: List[List[Any]]) -> List[Any]:
+    """
+    Given a multi-dimensional list it will be flattened by one dimension.
+
+    Args:
+        multiDimList (list of list of any): The list to be flattened
+
+    Returns:
+        list of any: The flattened list
+    """
+
+    return reduce(operator.iconcat, multiDimList, [])
 
 
 def rectangleArea(rectangle: Tuple[int]) -> int:

@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301, R0903, E1101
 """
-Creates the flaks server
+The configuration variables for the Shift server
 """
 __author__ = "Noupin"
 

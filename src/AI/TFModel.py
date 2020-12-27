@@ -51,7 +51,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
 
-        self.model = tf.keras.Sequential()
+        self.model = None
 
 
     def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
