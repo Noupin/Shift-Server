@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import numpy as np
 import tensorflow as tf
 from colorama import Fore
 
@@ -47,6 +48,7 @@ class TFModel(tf.keras.Model):
         self.modelLayers = []
         self.modelName = name
         self.modelBuilt = False
+        self.modelLoaded = False
 
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
@@ -106,6 +108,7 @@ class TFModel(tf.keras.Model):
         if self.modelBuilt:
             raise ModelAlreadyBuiltError
 
+        self.modelLayers = tuple(self.modelLayers)
         connectedLayers = [self.modelLayers[0]]
         
         for modelLayer in range(1, len(self.modelLayers)):
@@ -128,7 +131,7 @@ class TFModel(tf.keras.Model):
             path (str): Filepath to a tensorflow model to be loaded.
         """
 
-        self.model = tf.keras.models.load_model(path)
+        self.load_weights(path)
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:

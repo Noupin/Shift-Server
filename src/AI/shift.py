@@ -42,6 +42,8 @@ class Shift:
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
+        self.optimizer = optimizer
+        self.loss = loss
 
         self.codingLayers = codingLayers
         if self.codingLayers < 0:
@@ -62,6 +64,7 @@ class Shift:
                                   optimizer=optimizer, loss=loss)
         self.maskAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
                                   optimizer=optimizer, loss=loss)
+        self.shifter = None
 
 
     def getMaxCodingLayers(self) -> None:
@@ -172,3 +175,29 @@ class Shift:
         self.maskDecoder.buildModel()
         self.baseAE.buildModel()
         self.maskAE.buildModel()
+    
+
+    def buildShifter(self):
+        self.shifter = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+                                   optimizer=self.optimizer, loss=self.loss)
+    
+    
+    def load(self, encoderPath: str, basePath: str, maskPath: str):
+        """
+        Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
+
+        Args:
+            encoderPath (str): The path to the encoder to be loaded
+            basePath (str): The path to the base decoder to be loaded
+            maskPath (str): The path to the mask decoder to be loaded
+        """
+
+        self.encoder = tf.keras.models.load_model(encoderPath)
+
+        self.baseDecoder = tf.keras.models.load_model(basePath)
+        self.maskDecoder = tf.keras.models.load_model(maskPath)
+
+        self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
+                                  optimizer=self.optimizer, loss=self.loss)
+        self.maskAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+                                  optimizer=self.optimizer, loss=self.loss)
