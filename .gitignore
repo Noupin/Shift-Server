@@ -8,4 +8,4 @@ ServerData.py
 .env
 /userData
 openh264-1.8.0-win64.dll
-output.mp4
+/videos

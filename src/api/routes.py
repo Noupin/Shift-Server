@@ -6,20 +6,24 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import flask
 from flask import Blueprint, request, current_app
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 
 #First Party Imports
+from AI.shift import Shift
+from src.constants import FILE_NAME_BYTE_SIZE
 from src.utils.validators import validateFilename
+from src.utils.files import generateUniqueFilename
 
 
 api = Blueprint('api', __name__)
 
 
-@api.route("/train", methods=["POST"])
+@api.route("/loadData", methods=["POST"])
 @login_required
-def train() -> dict:
+def loadData() -> dict:
     """
     Given training data Shift specializes a model for the training data. Yeilds
     more relaisitic results than just an inference though it takes longer. 
@@ -37,7 +41,48 @@ def train() -> dict:
     
     if data and validateFilename(data.filename):
         filename = secure_filename(data.filename)
-        data.save(os.path.join(current_app.config["UPLOAD_FOLDER"], "videos", filename))
+        _, extension = os.path.splitext(filename)
+        uuid_ = generateUniqueFilename()
+
+        data.save(os.path.join(current_app.config["USER_DATA_FOLDER"],
+                               "videos",
+                               f"{uuid_}{extension}"))
+    else:
+        return {'msg': 'File not valid'}
+ 
+    return {'msg': f"Loaded data as {current_user}", "uuid": generateUniqueFilename()}
+
+
+@api.route("/train", methods=["POST"])
+@login_required
+def train() -> dict:
+    """
+    Given training data Shift specializes a model for the training data. Yeilds
+    more relaisitic results than just an inference though it takes longer. 
+
+    Returns:
+        Shifted Media: The media that has been shifted by the specialized model.
+    """
+
+    if not request.is_json:
+        return {'msg': "Your train request had no JSON payload"}
+    
+    requestData = request.get_json()
+    
+    if not requestData["uuid"]:
+        return {'msg': "Your train request had no uuid"}
+
+    shft = Shift(id=requestData["uuid"])
+
+    if requestData["shiftModel"]:
+        try:
+            shft.load(os.path.join(current_app.config["USER_DATA_FOLDER"],
+                                   "shiftModels", "encoders", f"enc{requestData["uuid"]}"),
+                      os.path.join(current_app.config["USER_DATA_FOLDER"],
+                                   "shiftModels", "decoders", f"base{requestData["uuid"]}"))
+        except OSError:
+            return {'msg': "That model does not exist"}
+
  
     return {'msg': f"Training as {current_user}"}
 

@@ -16,6 +16,14 @@ from AI.decoder import Decoder
 class AutoEncoder(TFModel):
     """
     An AutoEncoder TensorFlow model for Vardia projects.
+
+    Args:
+        inputShape (tuple, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
+        inputName (str, optional): The name of the input layer. Defaults to "InputImage".
+        encoder (AI.encoder.Encoder, optional): The encoder. Defaults to Encoder().
+        decoder (AI.encoder.Decoder, optional): The decoder. Defaults to Decoder().
+        optimizer (tf.optimizers.Optimizer, optional): The optimizer to use when compiling the model. Defaults to tf.optimizers.Adam().
+        loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
     """
 
     def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder(),

@@ -74,7 +74,7 @@ def login() -> dict:
     
     requestData = request.get_json()
     if not requestData['usernameOrEmail']:
-        return {'msg': "Username or Email incorrect"}
+        return {'msg': "Username or Email missing"}
     
     if User.objects(email=requestData["usernameOrEmail"]).first():
         user = User.objects(email=requestData["usernameOrEmail"]).first()

@@ -10,3 +10,4 @@ PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
 ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
+FILE_NAME_BYTE_SIZE = 8

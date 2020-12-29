@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301, R0903
 """
-The custom decoder class for Shift
+The utility functions related to math
 """
 __author__ = "Noupin"
 

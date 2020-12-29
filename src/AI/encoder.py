@@ -27,7 +27,7 @@ class Encoder(TFModel):
         name (str, optional): The name for model. Defaults to "Encoder".
     """
 
-    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage",
+    def __init__(self, inputShape=(None, None, 3), inputName="InputImage",
                        outputDimension=512, outputName="LatentOutput", outputActivation=tf.nn.relu,
                        name="Encoder"):
         super(Encoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
@@ -36,7 +36,6 @@ class Encoder(TFModel):
      
         self.encodingLayers = 0
         
-        #self.addLayer(tf.keras.layers.Reshape(inputShape), 1)
         self.addEncodingLayer(filters=12, index=-1)
         self.addLayer(tf.keras.layers.Flatten(), -1)
 
@@ -53,7 +52,7 @@ class Encoder(TFModel):
             filters (int, optional): The filters for the 2D convolutional layer. Defaults to 24.
             kernel_size (int, optional): The kernel size for the 2D convolutional layer. Defaults to 3.
             strides (int, optional): The factor by which the x and y dimensions will be divided by for the 2D convolutional layer. Defaults to 2.
-            activation ([type], optional): The activation function for the 2D convolutional layer. Defaults to tf.nn.relu.
+            activation (function, optional): The activation function for the 2D convolutional layer. Defaults to tf.nn.relu.
             padding (str, optional): The padding for the 2D convolutional layer. Defaults to "same".
             index (int, optional): The position to insert each layer within layers. Defaults to -2.
 

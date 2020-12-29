@@ -16,6 +16,8 @@ from AI.encoder import Encoder
 from AI.decoder import Decoder
 from AI.autoencoder import AutoEncoder
 from utils.detection import detectObject
+from constants import FILE_NAME_BYTE_SIZE
+from utils.files import generateUniqueFilename
 from utils.math import getLargestRectangle, flattenList
 from utils.image import (resizeImage, blendImageAndColor,
                          flipImage, cropImage)
@@ -26,19 +28,22 @@ class Shift:
     Two custom built AutoEncoder TensorFlow models for Shifting objects within an image.
 
     Args:
-        imageShape (tuple of int, optional): [description]. Defaults to (256, 256, 3).
-        latentSpaceDimension (int, optional): [description]. Defaults to 512.
-        latentReshape (tuple of int, optional): [description]. Defaults to (128, 128, 3).
-        optimizer (tf.optimizers.Optimizer, optional): [description]. Defaults to tf.optimizers.Adam().
-        loss (function, optional): [description]. Defaults to tf.losses.mean_absolute_error.
-        name (str, optional): [description]. Defaults to "Default".
-        convolutionFilters (int, optional): [description]. Defaults to 24.
-        codingLayers (int, optional): [description]. Defaults to 1.
+        id_ (str): A unique identifier for the shift model. Defaults to generateUniqueFilename(FILE_NAME_BYTE_SIZE).
+        imageShape (tuple of int, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
+        latentSpaceDimension (int, optional): The dimensionality of the latent space for the compression. Defaults to 512.
+        latentReshape (tuple of int, optional): The shape to reshape the latent space into. Defaults to (128, 128, 3).
+        optimizer (tf.optimizers.Optimizer, optional): The optimizer to use when compiling the model. Defaults to tf.optimizers.Adam().
+        loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
+        convolutionFilters (int, optional): The amount of filters for the coding layers. Defaults to 24.
+        codingLayers (int, optional): The number of coding layers to add to the encoder and decoders. Defaults to 1.
+        name (str, optional): The name of the model. Defaults to "Default".
     """
 
-    def __init__(self, imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error, name="Default",
-                       convolutionFilters=24, codingLayers=-1):
+    def __init__(self, id_=generateUniqueFilename(),
+                       imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
+                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
+                       convolutionFilters=24, codingLayers=-1, name="Default"):
+        self.id = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -53,7 +58,7 @@ class Shift:
         latentReshapeY = int(imageShape[1]/(2**(self.codingLayers+1)))
 
 
-        self.encoder = Encoder(inputShape=imageShape, outputDimension=latentSpaceDimension)
+        self.encoder = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
 
         self.baseDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
         self.maskDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
@@ -64,7 +69,7 @@ class Shift:
                                   optimizer=optimizer, loss=loss)
         self.maskAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
                                   optimizer=optimizer, loss=loss)
-        self.shifter = None
+        self.shifter = AutoEncoder()
 
 
     def getMaxCodingLayers(self) -> None:
@@ -163,7 +168,7 @@ class Shift:
         return image
     
 
-    def build(self):
+    def build(self) -> None:
         """
         Builds each of the models used in Shift. Building a model can only happen once
         and will raise an error if done multiple times. Building is helpful when using
@@ -177,12 +182,19 @@ class Shift:
         self.maskAE.buildModel()
     
 
-    def buildShifter(self):
-        self.shifter = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                   optimizer=self.optimizer, loss=self.loss)
+    def compile(self) -> None:
+        """
+        Compiles all the models to be trained.
+        """
+
+        self.encoder.compileModel()
+        self.baseDecoder.compileModel()
+        self.maskDecoder.compileModel()
+        self.baseAE.compileModel()
+        self.maskAE.compileModel()
     
     
-    def load(self, encoderPath: str, basePath: str, maskPath: str):
+    def load(self, encoderPath: str, basePath: str, maskPath: str) -> None:
         """
         Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
 
@@ -192,12 +204,30 @@ class Shift:
             maskPath (str): The path to the mask decoder to be loaded
         """
 
-        self.encoder = tf.keras.models.load_model(encoderPath)
+        if encoderPath:
+            self.encoder = tf.keras.models.load_model(encoderPath)
 
-        self.baseDecoder = tf.keras.models.load_model(basePath)
-        self.maskDecoder = tf.keras.models.load_model(maskPath)
+        if basePath:
+            self.baseDecoder = tf.keras.models.load_model(basePath)
+        if maskPath:
+            self.maskDecoder = tf.keras.models.load_model(maskPath)
 
         self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
                                   optimizer=self.optimizer, loss=self.loss)
         self.maskAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
                                   optimizer=self.optimizer, loss=self.loss)
+    
+
+    def save(self, encoderPath: str, basePath: str, maskPath: str) -> None:
+        """
+        Saves the encoder and both of the decoders to the given paths
+
+        Args:
+            encoderPath (str): The path to save self.encoder to
+            basePath (str): The path to save self.baseDecoder to
+            maskPath (str): The path to save self.maskDecoder to
+        """
+
+        self.encoder.save(os.path.join(encoderPath, f"enc{self.id}"))
+        self.baseDecoder.save(os.path.join(basePath, f"base{self.id}"))
+        self.maskDecoder.save(os.path.join(maskPath, f"mask{self.id}"))

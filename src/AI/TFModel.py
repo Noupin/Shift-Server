@@ -131,7 +131,7 @@ class TFModel(tf.keras.Model):
             path (str): Filepath to a tensorflow model to be loaded.
         """
 
-        self.load_weights(path)
+        self.model = tf.keras.models.load_model(path)
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
