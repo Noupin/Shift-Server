@@ -11,10 +11,10 @@ import tensorflow as tf
 from colorama import Fore
 
 #First Party Imports
-from utils.memory import allowTFMemoryGrowth
-from Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
-from Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
-from Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
+from src.utils.memory import allowTFMemoryGrowth
+from src.Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
+from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
+from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 
 class TFModel(tf.keras.Model):

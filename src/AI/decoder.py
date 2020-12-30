@@ -10,9 +10,9 @@ import tensorflow as tf
 from colorama import Fore
 
 #First Party Imports
-from utils.math import prod
-from AI.TFModel import TFModel
-from Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
+from src.utils.math import prod
+from src.AI.TFModel import TFModel
+from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 
 class Decoder(TFModel):

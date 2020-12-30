@@ -5,7 +5,9 @@ The utility functions related to detection
 __author__ = "Noupin"
 
 #Third Party Import
+import sys
 import tensorflow as tf
+from typing import List
 
 
 def allowTFMemoryGrowth() -> None:
@@ -22,3 +24,35 @@ def allowTFMemoryGrowth() -> None:
             tf.config.experimental.set_memory_growth(gpu, True)
     except RuntimeError as e:
         print(e)
+
+
+def getGPUMemory() -> List[int]:
+    """
+    Gets the unused VRAM of each graphics card on the system.
+
+    Returns:
+        list of int: A list of unused VRAM for each card.
+    """
+
+    _output_to_list = lambda x: x.decode('ascii').split('\n')[:-1]
+
+    ACCEPTABLE_AVAILABLE_MEMORY = 1024
+    COMMAND = "nvidia-smi --query-gpu=memory.free --format=csv"
+    memory_free_info = _output_to_list(sp.check_output(COMMAND.split()))[1:]
+    memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
+
+    return memory_free_values
+
+
+def getAmountForBuffer(data, bufferSize) -> int:
+    """
+    Gets the amount of items that can be stored in bufferSize.
+
+    Args:
+        data (any): The data to calculate how many items can fit in the given buffersize
+
+    Returns:
+        int: The number of items that can be stored in bufferSize
+    """
+
+    return int(bufferSize/sys.getsizeof(data))

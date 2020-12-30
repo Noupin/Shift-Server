@@ -7,15 +7,20 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import flask
+import numpy as np
 from flask import Blueprint, request, current_app
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 
 #First Party Imports
-from AI.shift import Shift
-from src.constants import FILE_NAME_BYTE_SIZE
+from src.AI.shift import Shift
+from src.utils.video import videoToImages
 from src.utils.validators import validateFilename
-from src.utils.files import generateUniqueFilename
+from src.utils.memory import getAmountForBuffer, getGPUMemory
+from src.constants import (FILE_NAME_BYTE_SIZE, FACE_CASCADE,
+                           LARGE_BATCH_SIZE)
+from src.utils.files import (generateUniqueFilename, checkPathExists,
+                             makeDir, getMediaType)
 
 
 api = Blueprint('api', __name__)
@@ -34,19 +39,28 @@ def loadData() -> dict:
 
     if 'file' not in request.files:
         return {'msg': "The request payload had no file"}
+    
+    if not request.headers["dataType"]:
+        return {'msg': "The request had no dataType item in the header"}
+    
+    if request.headers["dataType"] != "mask" and request.headers["dataType"] != "base":
+        return {'msg': "The dataType is incorrect"}
 
     data = request.files['file']
+
     if data.filename == '':
         return {'msg': "The request had no selected file"}
     
     if data and validateFilename(data.filename):
         filename = secure_filename(data.filename)
         _, extension = os.path.splitext(filename)
-        uuid_ = generateUniqueFilename()
+        uuid_ = generateUniqueFilename(urlSafe=True)
 
-        data.save(os.path.join(current_app.config["USER_DATA_FOLDER"],
-                               "videos",
-                               f"{uuid_}{extension}"))
+        folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid_)
+        makeDir(folderPath)
+        makeDir(os.path.join(folderPath, "tmp"))
+        data.save(os.path.join(folderPath, "tmp",
+                               "{}media{}".format(request.headers["dataType"], extension)))
     else:
         return {'msg': 'File not valid'}
  
@@ -71,20 +85,59 @@ def train() -> dict:
     
     if not requestData["uuid"]:
         return {'msg': "Your train request had no uuid"}
+    
+    if not requestData["usePrebuiltModel"]:
+        return {'msg': "Your train request had not indication to use the prebuilt model or not"}
 
-    shft = Shift(id=requestData["uuid"])
+    baseTrainingData = None
+    maskTrainingData = None
+    shft = Shift(id_=requestData["uuid"])
+    shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
 
     if requestData["shiftModel"]:
         try:
-            shft.load(os.path.join(current_app.config["USER_DATA_FOLDER"],
-                                   "shiftModels", "encoders", f"enc{requestData["uuid"]}"),
-                      os.path.join(current_app.config["USER_DATA_FOLDER"],
-                                   "shiftModels", "decoders", f"base{requestData["uuid"]}"))
+            shft.load(os.path.join(shiftFilePath, "encoder"),
+                      os.path.join(shiftFilePath, "baseDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
 
+        if requestData["usePrebuiltModel"]:
+            shft.load(maskPath=os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                                            "PTM", "maskDecoder"))
+            maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
+            maskTrainingData = shft.formatTrainingData(maskImages, FACE_CASCADE)
+        else:
+            maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
+            maskTrainingData = shft.formatTrainingData(maskImages, FACE_CASCADE)
+
+    elif requestData["usePrebuiltModel"]:
+        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                               "PTM", "encoder"),
+                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                               "PTM", "baseDecoder"),
+                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                               "PTM", "maskDecoder"))
+
+        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"))
+        baseTrainingData = shft.formatTrainingData(baseImages, FACE_CASCADE)
+
+        maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
+        maskTrainingData = shft.formatTrainingData(maskImages, FACE_CASCADE)
+    
+    shft.build()
+    shft.compile()
+
+    amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), getGPUMemory())
+    if maskTrainingData:
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=10,
+                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+    if baseTrainingData:
+        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=10,
+                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+    shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
+
  
-    return {'msg': f"Training as {current_user}"}
+    return {'msg': f"Trained as {current_user}"}
 
 
 @api.route("/inference", methods=["POST"])

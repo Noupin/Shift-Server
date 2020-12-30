@@ -8,9 +8,9 @@ __author__ = "Noupin"
 import tensorflow as tf
 
 #First Party Imports
-from AI.TFModel import TFModel
-from AI.encoder import Encoder
-from AI.decoder import Decoder
+from src.AI.TFModel import TFModel
+from src.AI.encoder import Encoder
+from src.AI.decoder import Decoder
 
 
 class AutoEncoder(TFModel):

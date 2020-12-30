@@ -5,7 +5,7 @@ Runs the server for Shift
 __author__ = "Noupin"
 
 #First Party Imports
-from . import createApp
+from src import createApp
 
 
 app = createApp()

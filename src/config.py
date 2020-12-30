@@ -20,4 +20,5 @@ class Config:
         'port': int(os.environ.get('DB_PORT'))
     }
     OBJECTID = ObjectIdConverter
-    USER_DATA_FOLDER = r"userData"
+    USER_DATA_FOLDER = "userData"
+    SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")

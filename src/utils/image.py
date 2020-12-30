@@ -15,7 +15,7 @@ from colorama import Fore
 import matplotlib.pyplot as plt
 
 #First Party Imports
-from Exceptions.CVToPIL import CVToPILError
+from src.Exceptions.CVToPIL import CVToPILError
 
 
 def PILToCV(image: Image.Image) -> np.ndarray:

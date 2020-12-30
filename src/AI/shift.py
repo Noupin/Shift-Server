@@ -12,15 +12,16 @@ import tensorflow as tf
 from typing import List
 
 #First Party Imports
-from AI.encoder import Encoder
-from AI.decoder import Decoder
-from AI.autoencoder import AutoEncoder
-from utils.detection import detectObject
-from constants import FILE_NAME_BYTE_SIZE
-from utils.files import generateUniqueFilename
-from utils.math import getLargestRectangle, flattenList
-from utils.image import (resizeImage, blendImageAndColor,
-                         flipImage, cropImage)
+from src.AI.encoder import Encoder
+from src.AI.decoder import Decoder
+from src.utils.video import videoToImages
+from src.AI.autoencoder import AutoEncoder
+from src.utils.detection import detectObject
+from src.constants import FILE_NAME_BYTE_SIZE, VIDEO_FRAME_GRAB_INTERVAL
+from src.utils.files import generateUniqueFilename, getMediaType
+from src.utils.math import getLargestRectangle, flattenList
+from src.utils.image import (resizeImage, blendImageAndColor,
+                             flipImage, cropImage, loadImage)
 
 
 class Shift:
@@ -43,7 +44,7 @@ class Shift:
                        imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
                        convolutionFilters=24, codingLayers=-1, name="Default"):
-        self.id = id_
+        self.id_ = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -218,6 +219,35 @@ class Shift:
                                   optimizer=self.optimizer, loss=self.loss)
     
 
+    def loadData(imageType: str, dataPath: str) -> List[np.ndarray]:
+        """
+        Loads the images and videos for either the mask or base model
+
+        Args:
+            imageType (str): Either 'mask' or 'base' to load the correct files
+            dataPath (str): The path to the folder holding the data
+
+        Returns:
+            list of np.ndarray: The images to load in
+        """
+        
+        loadedImages = []
+        files = os.listdir(dataPath)
+        print(files)
+        for media in files:
+            if media.find(imageType) == -1:
+                continue
+
+            mediaType = getMediaType(dataPath)
+
+            if mediaType == 'video':
+                loadedImages += videoToImages(media, interval=VIDEO_FRAME_GRAB_INTERVAL)
+            elif mediaType == "image":
+                loadedImages.append(loadImage(media))
+        
+        return loadedImages
+    
+
     def save(self, encoderPath: str, basePath: str, maskPath: str) -> None:
         """
         Saves the encoder and both of the decoders to the given paths
@@ -228,6 +258,6 @@ class Shift:
             maskPath (str): The path to save self.maskDecoder to
         """
 
-        self.encoder.save(os.path.join(encoderPath, f"enc{self.id}"))
-        self.baseDecoder.save(os.path.join(basePath, f"base{self.id}"))
-        self.maskDecoder.save(os.path.join(maskPath, f"mask{self.id}"))
+        self.encoder.save(os.path.join(encoderPath, f"encoder"))
+        self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"))
+        self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"))

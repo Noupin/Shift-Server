@@ -10,8 +10,8 @@ import tensorflow as tf
 from colorama import Fore
 
 #First Party Imports
-from AI.TFModel import TFModel
-from Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
+from src.AI.TFModel import TFModel
+from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 
 class Encoder(TFModel):

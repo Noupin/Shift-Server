@@ -5,6 +5,7 @@ Creates the flaks server
 __author__ = "Noupin"
 
 #Third Party Imports
+import flask
 from flask import Flask
 from flask_cors import CORS
 from flask_login import LoginManager
@@ -25,7 +26,7 @@ bcrypt = Bcrypt()
 mail = Mail()
 
 
-def createApp(configClass=Config):
+def createApp(configClass=Config) -> flask.app.Flask:
     app = Flask(__name__, static_folder="static/build", static_url_path="/")
     app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
