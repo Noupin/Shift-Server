@@ -26,9 +26,9 @@ def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> str:
     """
 
     uuid_ = generator()
-    finalUUID = (str(uuid_), str(base64.urlsafe_b64encode(uuid_.bytes)).replace('=', '')[2:-1])[urlSafe]
+    finalUUID = (uuid_, str(base64.urlsafe_b64encode(uuid_.bytes)).replace('=', '')[2:-1])[urlSafe]
 
-    return finalUUID
+    return finalUUID, str(finalUUID)
 
 
 def checkPathExists(folderPath: str) -> bool:
@@ -82,6 +82,6 @@ def getMediaType(filePath: str) -> str:
         str: The type of the file
     """
 
-    _, extension = os.path.splitext(filename)
+    _, extension = os.path.splitext(filePath)
 
-    return EXTENSION_FILE_TYPES[extension]
+    return EXTENSION_FILE_TYPES[extension[1:]]

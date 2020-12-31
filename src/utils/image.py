@@ -87,14 +87,15 @@ def saveImage(image: np.ndarray, path: str) -> None:
     cv2.imwrite(path, image)
 
 
-def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=True) -> np.ndarray:
+def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False) -> np.ndarray:
     """
     Given a cv2 image it is resized to the given size
 
     Args:
         image (numpy.ndarray): The image object to be resized
         size (tuple of int): A tuple of the desired x and y dimension
-        keepAR (bool): Whether or not to keep the aspect ratio of the image
+        keepAR (bool): Whether or not to keep the aspect ratio of the
+                       image. Defaults to False.
 
     Returns:
         numpy.ndarray: The resized CV image
@@ -126,6 +127,27 @@ def cropImage(image: np.ndarray, cropArea: Tuple[int]) -> np.ndarray:
     x, y, width, height = cropArea
 
     return image[int(y):int(y+height), int(x):int(x+width)]
+
+
+def replaceAreaOfImage(fullImage: np.ndarray, replaceArea: Tuple[int], replaceImage: np.ndarray) -> np.ndarray:
+    """
+    Replaces a certain area of an image with another image. Assuming that
+    the size of the replace image fits the dimensions of replaceArea.
+
+    Args:
+        fullImage (np.ndarray): The image to have an area replaced within
+        replaceArea (Tuple[int]): The x, y, width and height values of the
+                                  area to replace fullImage with replaceImage
+        replaceImage (np.ndarray): The image to replace the replaceArea of fullImage
+
+    Returns:
+        np.ndarray: The image with replace area replaced by replaceImage
+    """
+
+    x, y, width, height = replaceArea
+    fullImage[int(y):int(y+height), int(x):int(x+width)] = replaceImage
+
+    return fullImage
 
 
 def viewImage(image) -> None:

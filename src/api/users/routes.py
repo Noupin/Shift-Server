@@ -12,7 +12,6 @@ from flask_login import login_user, logout_user, current_user, login_required
 
 #First Party Imports
 from src import bcrypt
-from src.DataModels.Shift import Shift
 from src.DataModels.User import User
 from src.utils.validators import validateEmail, validatePassword
 

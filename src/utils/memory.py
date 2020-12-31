@@ -5,7 +5,9 @@ The utility functions related to detection
 __author__ = "Noupin"
 
 #Third Party Import
+import os
 import sys
+import subprocess
 import tensorflow as tf
 from typing import List
 
@@ -38,18 +40,19 @@ def getGPUMemory() -> List[int]:
 
     ACCEPTABLE_AVAILABLE_MEMORY = 1024
     COMMAND = "nvidia-smi --query-gpu=memory.free --format=csv"
-    memory_free_info = _output_to_list(sp.check_output(COMMAND.split()))[1:]
+    memory_free_info = _output_to_list(subprocess.check_output(COMMAND.split()))[1:]
     memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
 
     return memory_free_values
 
 
-def getAmountForBuffer(data, bufferSize) -> int:
+def getAmountForBuffer(data, bufferSize: int) -> int:
     """
     Gets the amount of items that can be stored in bufferSize.
 
     Args:
         data (any): The data to calculate how many items can fit in the given buffersize
+        bufferSize (int): The buffer size to cotnrict the amount of data
 
     Returns:
         int: The number of items that can be stored in bufferSize

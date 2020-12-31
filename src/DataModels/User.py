@@ -6,7 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import mongoengine
-from mongoengine import StringField, EmbeddedDocumentField
+from mongoengine import StringField, EmbeddedDocumentListField
 from flask_login import UserMixin
 
 #First Party Imports
@@ -18,7 +18,7 @@ class User(db.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
-    shift = EmbeddedDocumentField(Shift)
+    shifts = EmbeddedDocumentListField(Shift)
 
 
     @staticmethod

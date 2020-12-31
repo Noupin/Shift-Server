@@ -17,11 +17,13 @@ from src.AI.decoder import Decoder
 from src.utils.video import videoToImages
 from src.AI.autoencoder import AutoEncoder
 from src.utils.detection import detectObject
-from src.constants import FILE_NAME_BYTE_SIZE, VIDEO_FRAME_GRAB_INTERVAL
-from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.math import getLargestRectangle, flattenList
+from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.image import (resizeImage, blendImageAndColor,
-                             flipImage, cropImage, loadImage)
+                             flipImage, cropImage, loadImage,
+                             replaceAreaOfImage, viewImage)
+from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
+                           VIDEO_FRAME_GRAB_INTERVAL)
 
 
 class Shift:
@@ -66,11 +68,12 @@ class Shift:
 
         self.addCodingLayers(self.codingLayers)
 
+        #Will shift objects from mask to base if predicting on mask images
         self.baseAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
-                                  optimizer=optimizer, loss=loss)
+                                  optimizer=optimizer, loss=loss, name="Base")
+        #Will shift objects from base to mask if predicting on base images
         self.maskAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                  optimizer=optimizer, loss=loss)
-        self.shifter = AutoEncoder()
+                                  optimizer=optimizer, loss=loss, name="Mask")
 
 
     def getMaxCodingLayers(self) -> None:
@@ -86,13 +89,14 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: List[np.ndarray], objectClassifier, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
+    def formatTrainingData(self, images: List[np.ndarray], objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models.
 
         Args:
             images (list of numpy.ndarray): The images to be formatted for Shift model training
-            objectClassifier (function): The function used as a classifier on the images
+            objectClassifier (function): The classifier used to detect the are of the image
+                                         to shift. Defaults to OBJECT_CLASSIFIER.
             flipCodes (list of str): The codes to flip the image for augmentation. Defaults to ["x"].
             **kwargs: The key word arguments to pass into detectObject function
 
@@ -104,10 +108,10 @@ class Shift:
 
         for image in images:
             objects = detectObject(objectClassifier, image=image, **kwargs)
-            if type(objects) != tuple:
+            if type(objects) != tuple: #if type(objects) == tuple: continue
                 augmented = []
                 augmentedItems = 0
-                image = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]), keepAR=False)
+                image = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
                 
                 coloredImages = [image]
                 for colorCode in range(5):
@@ -169,6 +173,39 @@ class Shift:
         return image
     
 
+    def shift(self, model: tf.keras.Model, image: np.ndarray, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
+        """
+        Given an image the classifier will determine an area of the image to replace
+        with the shifted object.
+
+        Args:
+            model (tf.keras.Model): The model used to shift the objects.
+            image (np.ndarray): The image to be shifted
+            objectClassifier (function): The classifier used to detect the are of the image
+                                         to shift. Defaults to OBJECT_CLASSIFIER.
+            imageResizer (function): The function used to resize images. Defaults to resizeImage.
+            **kwargs: The key word arguments to pass into detectObject function
+
+        Returns:
+            np.ndarray: The shifted image
+        """
+
+        objects = detectObject(objectClassifier, image=image, **kwargs)
+
+        if type(objects) == tuple:
+            return image
+        
+        replaceArea = getLargestRectangle(objects)
+        replaceImage = cropImage(image, replaceArea)
+        replaceImageXY = (replaceImage.shape[0], replaceImage.shape[1])
+
+        replaceImage = imageResizer(replaceImage, (self.imageShape[0], self.imageShape[1]))
+        shiftedReplace = self.predict(model, replaceImage)
+        replaceImage = imageResizer(shiftedReplace, replaceImageXY)
+
+        return replaceAreaOfImage(image, replaceArea, replaceImage)
+
+
     def build(self) -> None:
         """
         Builds each of the models used in Shift. Building a model can only happen once
@@ -219,7 +256,7 @@ class Shift:
                                   optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(imageType: str, dataPath: str) -> List[np.ndarray]:
+    def loadData(self, imageType: str, dataPath: str) -> List[np.ndarray]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -233,17 +270,17 @@ class Shift:
         
         loadedImages = []
         files = os.listdir(dataPath)
-        print(files)
         for media in files:
             if media.find(imageType) == -1:
                 continue
 
-            mediaType = getMediaType(dataPath)
+            mediaType = getMediaType(media)
+            print(media, mediaType)
 
             if mediaType == 'video':
-                loadedImages += videoToImages(media, interval=VIDEO_FRAME_GRAB_INTERVAL)
+                loadedImages += videoToImages(os.path.join(dataPath, media), interval=VIDEO_FRAME_GRAB_INTERVAL)
             elif mediaType == "image":
-                loadedImages.append(loadImage(media))
+                loadedImages.append(loadImage(os.path.join(dataPath, media)))
         
         return loadedImages
     
@@ -258,6 +295,9 @@ class Shift:
             maskPath (str): The path to save self.maskDecoder to
         """
 
-        self.encoder.save(os.path.join(encoderPath, f"encoder"))
-        self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"))
-        self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"))
+        if encoderPath:
+            self.encoder.save(os.path.join(encoderPath, f"encoder"))
+        if basePath:
+            self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"))
+        if maskPath:
+            self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"))
