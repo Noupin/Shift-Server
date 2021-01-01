@@ -165,10 +165,10 @@ def train() -> dict:
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
     if not baseTrainingData is None and baseTrainingData.any():
-        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=50,
+        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=1,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     if not maskTrainingData is None and maskTrainingData.any():
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=50,
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=1,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
@@ -178,9 +178,9 @@ def train() -> dict:
                                     encoderFile=os.path.join(shiftFilePath, "encoder"),
                                     baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
                                     maskDecoderFile=os.path.join(shiftFilePath, "maskDecoder"))
-    updated = User.objects(shifts__uuid=shiftDataModel.uuid).update_one(set__shifts__S=shiftDataModel)
+    updated = User.objects(username=current_user.username, shifts__uuid=shiftDataModel.uuid).update_one(set__shifts__S=shiftDataModel)
     if not updated:
-        User.objects.update_one(push__shifts=shiftDataModel)
+        User.objects(username=current_user.username).update_one(push__shifts=shiftDataModel)
 
     del shft
     return {'msg': f"Trained as {current_user}"}
