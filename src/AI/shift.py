@@ -22,7 +22,8 @@ from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.image import (resizeImage, blendImageAndColor,
                              flipImage, cropImage, loadImage,
-                             replaceAreaOfImage, viewImage)
+                             replaceAreaOfImage, viewImage,
+                             maskImage)
 from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
                            VIDEO_FRAME_GRAB_INTERVAL)
 
@@ -197,14 +198,16 @@ class Shift:
             return image
         
         replaceArea = getLargestRectangle(objects)
-        replaceImage = cropImage(image, replaceArea)
-        replaceImageXY = (replaceImage.shape[0], replaceImage.shape[1])
+        originalCroppedImage = cropImage(image, replaceArea)
+        replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
 
-        replaceImage = imageResizer(replaceImage, (self.imageShape[0], self.imageShape[1]))
+        replaceImage = imageResizer(originalCroppedImage, (self.imageShape[0], self.imageShape[1]))
         replaceImage = replaceImage.astype(np.float32)
 
         shiftedReplace = self.predict(model, replaceImage)
         replaceImage = imageResizer(shiftedReplace, replaceImageXY)
+
+        replaceImage = maskImage(originalCroppedImage, replaceImage.astype(np.uint8), gray=True)
 
         return replaceAreaOfImage(image, replaceArea, replaceImage)
 

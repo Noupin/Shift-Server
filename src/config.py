@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import datetime
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
@@ -22,3 +23,4 @@ class Config:
     OBJECTID = ObjectIdConverter
     USER_DATA_FOLDER = "userData"
     SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")
+    PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)

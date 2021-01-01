@@ -9,19 +9,22 @@ import os
 import json
 import flask
 import numpy as np
+from typing import List
 from flask import Blueprint, request, current_app
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 
 #First Party Imports
 from src.AI.shift import Shift
-from src.DataModels.User import User
 from src.utils.video import videoToImages
+from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage, viewImage
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
-from src.DataModels.Shift import Shift as ShiftDataModel
+from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
+from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
+from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
                            LARGE_BATCH_SIZE)
 from src.utils.files import (generateUniqueFilename, checkPathExists,
@@ -51,9 +54,15 @@ def loadData() -> dict:
     if not validateFileRequest(request.files):
         return {'msg': "The request payload had no file"}
 
-    if request.headers["dataTypes"]  == None:
-        return {'msg': "The request had no dataTypes item in the header"}
-    dataTypes = json.loads(request.headers["dataTypes"])
+    try:
+        requestData: List[str] = json.loads(request.headers["dataTypes"])
+    except ValueError:
+        return {"msg": "Not all fields for the LoadRequest object were POSTed"}
+    except TypeError:
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+    
+    if len(requestData) < len(request.files):
+        return {'msg': "There is not enough request types for the files sent"}
 
     uuid_, _ = generateUniqueFilename()
     uuid_ = str(uuid_)
@@ -73,7 +82,7 @@ def loadData() -> dict:
             makeDir(folderPath)
             makeDir(os.path.join(folderPath, "tmp"))
             data.save(os.path.join(folderPath, "tmp",
-                                   "{}media{}{}".format(dataTypes[count], count+1, extension)))
+                                   "{}media{}{}".format(requestData[count], count+1, extension)))
         else:
             return {'msg': 'File not valid'}
         
@@ -102,35 +111,40 @@ def train() -> dict:
     if not request.is_json:
         return {'msg': "Your train request had no JSON payload"}
     
-    requestData = request.get_json()
+    try:
+        requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
+    except ValueError:
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+    except TypeError:
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
     
-    if requestData["uuid"] is None or requestData["uuid"] is "":
+    if requestData.uuid is None or requestData.uuid is "":
         return {'msg': "Your train request had no uuid"}
     
-    if requestData["usePTM"] is None:
+    if requestData.usePTM is None:
         return {'msg': "Your train request had not indication to use the prebuilt model or not"}
 
     baseTrainingData = None
     maskTrainingData = None
-    shft = Shift(id_=requestData["uuid"])
+    shft = Shift(id_=requestData.uuid)
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
 
-    if requestData["prebuiltShiftModel"]:
+    if requestData.prebuiltShiftModel:
         try:
             shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                   requestData["prebuiltShiftModel"], "encoder"),
+                                   requestData.prebuiltShiftModel, "encoder"),
                       os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                   requestData["prebuiltShiftModel"], "baseDecoder"))
+                                   requestData.prebuiltShiftModel, "baseDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
 
-        if requestData["usePTM"]:
+        if requestData.usePTM:
             shft.load(maskPath=os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                             "PTM", "maskDecoder"))
         maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
         maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
 
-    elif requestData["usePTM"]:
+    elif requestData.usePTM:
         shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                "PTM", "encoder"),
                   os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
@@ -138,7 +152,7 @@ def train() -> dict:
                   os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                "PTM", "maskDecoder"))
 
-    if requestData["prebuiltShiftModel"] == "":
+    if requestData.prebuiltShiftModel == "":
         baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"))
         baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
 
@@ -151,10 +165,10 @@ def train() -> dict:
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
     if not baseTrainingData is None and baseTrainingData.any():
-        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=10,
+        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=50,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     if not maskTrainingData is None and maskTrainingData.any():
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=10,
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=50,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
@@ -187,24 +201,29 @@ def inference() -> dict:
     if not request.is_json:
         return {'msg': "Your inference request had no JSON payload"}
     
-    requestData = request.get_json()
+    try:
+        requestData: InferenceRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: InferenceRequest(**d))
+    except ValueError:
+        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
+    except TypeError:
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
     
-    if requestData["uuid"] is None or requestData["uuid"] is "":
+    if requestData.uuid is None or requestData.uuid is "":
         return {'msg': "Your inference request had no uuid"}
     
-    if requestData["usePTM"] is None:
+    if requestData.usePTM is None:
         return {'msg': "Your inference request had not indication to use the prebuilt model or not"}
     
-    shft = Shift(id_=requestData["uuid"])
+    shft = Shift(id_=requestData.uuid)
     inferencingData = [np.ones(shft.imageShape)]
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
 
-    if requestData["prebuiltShiftModel"]:
+    if requestData.prebuiltShiftModel:
         try:
             shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                   requestData["prebuiltShiftModel"], "encoder"),
+                                   requestData.prebuiltShiftModel, "encoder"),
                       os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                   requestData["prebuiltShiftModel"], "baseDecoder"),
+                                   requestData.prebuiltShiftModel, "baseDecoder"),
                       os.path.join(shiftFilePath, "maskDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
@@ -215,7 +234,7 @@ def inference() -> dict:
                   os.path.join(shiftFilePath, "maskDecoder"))
 
     inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1)
-    encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+    encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[57], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
 
     del shft
     return {'msg': f"Inferenced as {current_user}", "testImage": encodedImage}

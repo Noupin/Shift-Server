@@ -11,7 +11,7 @@ from flask_login import UserMixin
 
 #First Party Imports
 from src import db, login_manager
-from src.DataModels.Shift import Shift
+from src.DataModels.MongoDB.Shift import Shift
 
 
 class User(db.Document, UserMixin):

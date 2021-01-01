@@ -25,11 +25,16 @@ def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
         list of int: The atributes from classifier
     """
 
-    if kwargs["gray"]:#Error if the key does not exist
+    try:
+        kwargs["gray"]
+    except KeyError:
+        kwargs["gray"] = False
+    
+    if kwargs["gray"]:
         del kwargs["gray"]
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         attributes = classifier(image, **kwargs)
-    else:
+    elif gray:
         attributes = classifier(image, **kwargs)
     
     return attributes

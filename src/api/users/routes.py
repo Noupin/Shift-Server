@@ -11,12 +11,23 @@ from flask import Blueprint, request, make_response, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 
 #First Party Imports
-from src import bcrypt
-from src.DataModels.User import User
+from src.DataModels.MongoDB.User import User
+from src import bcrypt, login_manager
 from src.utils.validators import validateEmail, validatePassword
 
 
 users = Blueprint('users', __name__)
+
+
+@login_manager.unauthorized_handler
+def unauthorized() -> dict:
+    """
+    The unauthorized endpoint for the Shift app.
+
+    Returns:
+        dict: The msg telling the user they are not authorized
+    """
+    return {"msg": "You are not logged in and don't have access"}
 
 
 @users.route("/register", methods=["POST"])
