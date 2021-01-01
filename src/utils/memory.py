@@ -43,7 +43,7 @@ def getGPUMemory() -> List[int]:
     memory_free_info = _output_to_list(subprocess.check_output(COMMAND.split()))[1:]
     memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
 
-    return memory_free_values
+    return memory_free_values * 1_000_000
 
 
 def getAmountForBuffer(data, bufferSize: int) -> int:

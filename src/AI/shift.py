@@ -10,6 +10,7 @@ import random
 import numpy as np
 import tensorflow as tf
 from typing import List
+from skimage.util import img_as_float
 
 #First Party Imports
 from src.AI.encoder import Encoder
@@ -135,8 +136,8 @@ class Shift:
                 trainingData.append(shuffledAugmented)
 
         random.shuffle(trainingData)
-        trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2])
-        trainingData = trainingData.astype('float32') / 255.
+        trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2]) / 255.
+        trainingData = trainingData.astype('float32')
 
         return trainingData
     
@@ -200,6 +201,8 @@ class Shift:
         replaceImageXY = (replaceImage.shape[0], replaceImage.shape[1])
 
         replaceImage = imageResizer(replaceImage, (self.imageShape[0], self.imageShape[1]))
+        replaceImage = replaceImage.astype(np.float32)
+
         shiftedReplace = self.predict(model, replaceImage)
         replaceImage = imageResizer(shiftedReplace, replaceImageXY)
 
@@ -256,13 +259,14 @@ class Shift:
                                   optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, imageType: str, dataPath: str) -> List[np.ndarray]:
+    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL) -> List[np.ndarray]:
         """
         Loads the images and videos for either the mask or base model
 
         Args:
             imageType (str): Either 'mask' or 'base' to load the correct files
             dataPath (str): The path to the folder holding the data
+            interval (int): The interval to grab images from a video
 
         Returns:
             list of np.ndarray: The images to load in
@@ -275,10 +279,9 @@ class Shift:
                 continue
 
             mediaType = getMediaType(media)
-            print(media, mediaType)
 
             if mediaType == 'video':
-                loadedImages += videoToImages(os.path.join(dataPath, media), interval=VIDEO_FRAME_GRAB_INTERVAL)
+                loadedImages += videoToImages(os.path.join(dataPath, media), interval=interval)
             elif mediaType == "image":
                 loadedImages.append(loadImage(os.path.join(dataPath, media)))
         

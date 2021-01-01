@@ -69,6 +69,9 @@ class TFModel(tf.keras.Model):
         Returns:
             tensorflow.python.framework.ops.Tensor: The last layer in the connected model
         """
+        
+        if self.modelLoaded:
+            return layer
 
         connectedLayers = [layer]
         
@@ -132,6 +135,9 @@ class TFModel(tf.keras.Model):
         """
 
         self.model = tf.keras.models.load_model(path)
+
+        self.modelLoaded = True
+        self.modelBuilt = True
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:

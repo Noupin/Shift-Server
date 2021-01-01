@@ -6,6 +6,7 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 
 #Third Party Imports
 import re
+import werkzeug
 from typing import Tuple
 from email_validator import validate_email, EmailNotValidError
 
@@ -72,3 +73,32 @@ def validateFilename(filename: str) -> bool:
     """
 
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def validateFileRequest(fileDict: werkzeug.datastructures.MultiDict, fileIndicator="file") -> bool:
+    """
+    Given a dictionary of files from a flask request this will valiadate
+    whether they are correctly keyed in the dicitonary.
+
+    Args:
+        fileDict (werkzeug.datastructures.MultiDict): The flask file request
+        fileIndicator (str, optional): The string to search for in the dictionary
+                                       keys to validate. Defaults to "file".
+
+    Returns:
+        bool: Whether the request is valid or not
+    """
+
+    valid = True
+
+    if not fileDict:
+        return False
+
+    for currentFile in fileDict:
+        if currentFile.find(fileIndicator) != -1:
+            continue
+
+        valid = False
+        break
+    
+    return valid

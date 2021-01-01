@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import json
 import flask
 import numpy as np
 from flask import Blueprint, request, current_app
@@ -16,8 +17,9 @@ from flask_login import login_required, current_user
 from src.AI.shift import Shift
 from src.DataModels.User import User
 from src.utils.video import videoToImages
-from src.utils.validators import validateFilename
 from src.utils.image import encodeImage, viewImage
+from src.utils.validators import (validateFilename,
+                                  validateFileRequest)
 from src.DataModels.Shift import Shift as ShiftDataModel
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
@@ -37,7 +39,7 @@ def loadData() -> dict:
     more relaisitic results than just an inference though it takes longer. 
 
     Request Header Arguments:
-        dataType: Whether the data is 'base' or 'mask'
+        dataTypes: Whether the data is 'base' or 'mask'
     
     Request Body Arguments:
         file: The training data to be saved.
@@ -46,33 +48,36 @@ def loadData() -> dict:
         Shifted Media: The media that has been shifted by the specialized model.
     """
 
-    if 'file' not in request.files:
+    if not validateFileRequest(request.files):
         return {'msg': "The request payload had no file"}
-    
-    if request.headers["dataType"]  == None:
-        return {'msg': "The request had no dataType item in the header"}
-    
-    if request.headers["dataType"] != "mask" and request.headers["dataType"] != "base":
-        return {'msg': "The dataType is incorrect"}
 
-    data = request.files['file']
+    if request.headers["dataTypes"]  == None:
+        return {'msg': "The request had no dataTypes item in the header"}
+    dataTypes = json.loads(request.headers["dataTypes"])
 
-    if data.filename == '':
-        return {'msg': "The request had no selected file"}
-    
-    if data and validateFilename(data.filename):
-        filename = secure_filename(data.filename)
-        _, extension = os.path.splitext(filename)
-        uuid_, _ = generateUniqueFilename()
-        uuid_ = str(uuid_)
+    uuid_, _ = generateUniqueFilename()
+    uuid_ = str(uuid_)
 
-        folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid_)
-        makeDir(folderPath)
-        makeDir(os.path.join(folderPath, "tmp"))
-        data.save(os.path.join(folderPath, "tmp",
-                               "{}media{}".format(request.headers["dataType"], extension)))
-    else:
-        return {'msg': 'File not valid'}
+    count = 0
+    for _ in request.files:
+        data = request.files[_]
+
+        if data.filename == '':
+            return {'msg': "The request had no selected file"}
+
+        if data and validateFilename(data.filename):
+            filename = secure_filename(data.filename)
+            _, extension = os.path.splitext(filename)
+
+            folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid_)
+            makeDir(folderPath)
+            makeDir(os.path.join(folderPath, "tmp"))
+            data.save(os.path.join(folderPath, "tmp",
+                                   "{}media{}{}".format(dataTypes[count], count+1, extension)))
+        else:
+            return {'msg': 'File not valid'}
+        
+        count += 1
  
     return {'msg': f"Loaded data as {current_user}", "uuid": uuid_}
 
@@ -101,8 +106,6 @@ def train() -> dict:
     
     if requestData["uuid"] is None or requestData["uuid"] is "":
         return {'msg': "Your train request had no uuid"}
-    
-
     
     if requestData["usePTM"] is None:
         return {'msg': "Your train request had not indication to use the prebuilt model or not"}
@@ -146,18 +149,17 @@ def train() -> dict:
     shft.compile()
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
-    print("VRAM Amount:", (amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
-    if not maskTrainingData is None and maskTrainingData.any():
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=10,
-                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
-        shft.maskAE.summary()
+
     if not baseTrainingData is None and baseTrainingData.any():
         shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=10,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
-        shft.baseAE.summary()
+    if not maskTrainingData is None and maskTrainingData.any():
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=10,
+                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
 
+    #Updating MongoDB User wiht the new Shift
     shiftDataModel = ShiftDataModel(uuid=shft.id_, title="Some title",
                                     encoderFile=os.path.join(shiftFilePath, "encoder"),
                                     baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
@@ -212,7 +214,7 @@ def inference() -> dict:
                   os.path.join(shiftFilePath, "baseDecoder"),
                   os.path.join(shiftFilePath, "maskDecoder"))
 
-    inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"))
+    inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1)
     encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
 
     del shft
