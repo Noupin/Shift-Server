@@ -9,6 +9,7 @@ import os
 import json
 import flask
 import numpy as np
+import tensorflow as tf
 from typing import List
 from flask import Blueprint, request, current_app
 from werkzeug.utils import secure_filename
@@ -17,6 +18,7 @@ from flask_login import login_required, current_user
 #First Party Imports
 from src.AI.shift import Shift
 from src.utils.video import videoToImages
+from src.utils.losses import bernoulliLoss
 from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage, viewImage
 from src.utils.validators import (validateFilename,
@@ -165,10 +167,10 @@ def train() -> dict:
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
     if not baseTrainingData is None and baseTrainingData.any():
-        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=1,
+        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=50,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     if not maskTrainingData is None and maskTrainingData.any():
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=1,
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=50,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
@@ -234,7 +236,7 @@ def inference() -> dict:
                   os.path.join(shiftFilePath, "maskDecoder"))
 
     inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1)
-    encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[57], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+    encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[12], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
 
     del shft
     return {'msg': f"Inferenced as {current_user}", "testImage": encodedImage}

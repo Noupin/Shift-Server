@@ -34,7 +34,8 @@ def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
         del kwargs["gray"]
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         attributes = classifier(image, **kwargs)
-    elif gray:
+    else:
+        del kwargs["gray"]
         attributes = classifier(image, **kwargs)
     
     return attributes

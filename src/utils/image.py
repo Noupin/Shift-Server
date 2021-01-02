@@ -150,15 +150,16 @@ def replaceAreaOfImage(fullImage: np.ndarray, replaceArea: Tuple[int], replaceIm
     return fullImage
 
 
-def viewImage(image) -> None:
+def viewImage(image, **kwargs) -> None:
     """
     Given a CV image or a PIL image it will be previewed using matplotlib
 
     Args:
         image (PIL.Image.Image or numpy.ndarray): The image to be displayed
+        **kwargs: Arguments to be applied to matplotlib.pyplot.imshow
     """
 
-    plt.imshow(image)
+    plt.imshow(image, **kwargs)
     plt.show()
 
 

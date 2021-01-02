@@ -19,6 +19,7 @@ ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
 FILE_NAME_BYTE_SIZE = 8
 VIDEO_FRAME_GRAB_INTERVAL = 5
+#Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
 OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                                        'site-packages', 'cv2',
                                                        'data', 'haarcascade_frontalface_default.xml')
