@@ -84,4 +84,4 @@ def getMediaType(filePath: str) -> str:
 
     _, extension = os.path.splitext(filePath)
 
-    return EXTENSION_FILE_TYPES[extension[1:]]
+    return EXTENSION_FILE_TYPES[extension.lower()[1:]]

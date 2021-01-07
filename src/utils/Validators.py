@@ -71,7 +71,7 @@ def validateFilename(filename: str) -> bool:
     Returns:
         bool: Whether or not the file is valid by the filename
     """
-
+    print(filename.rsplit('.', 1)[1].lower())
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 

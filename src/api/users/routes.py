@@ -27,6 +27,7 @@ def unauthorized() -> dict:
     Returns:
         dict: The msg telling the user they are not authorized
     """
+
     return {"msg": "You are not logged in and don't have access"}
 
 
@@ -128,3 +129,19 @@ def account() -> dict:
     """
 
     return {"username": current_user.username}
+
+
+@users.route('/isAuthenticated', methods=["GET"])
+def isAuthenticated() -> dict:
+    """
+    Whether the user is logged in currently or not
+
+    Returns:
+        dict: A bool of whether the user is currently logged in
+    """
+
+    if current_user.is_authenticated:
+
+        return {'authenticated': True}
+
+    return {'authenticated': False}

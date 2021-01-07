@@ -8,6 +8,7 @@ __author__ = "Noupin"
 import os
 import json
 import flask
+import random
 import numpy as np
 import tensorflow as tf
 from typing import List
@@ -20,7 +21,7 @@ from src.AI.shift import Shift
 from src.utils.video import videoToImages
 from src.utils.losses import bernoulliLoss
 from src.DataModels.MongoDB.User import User
-from src.utils.image import encodeImage, viewImage
+from src.utils.image import encodeImage, viewImage, decodeImage
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.DataModels.JSON.TrainRequest import TrainRequest
@@ -44,7 +45,7 @@ def loadData() -> dict:
     more relaisitic results than just an inference though it takes longer. 
 
     Request Header Arguments:
-        dataTypes: Whether the data is 'base' or 'mask'
+        trainingDataTypes: Whether the data is 'base' or 'mask'
     
     Request Body Arguments:
         file: The training data to be saved.
@@ -57,17 +58,17 @@ def loadData() -> dict:
         return {'msg': "The request payload had no file"}
 
     try:
-        requestData: List[str] = json.loads(request.headers["dataTypes"])
+        requestData: List[str] = json.loads(request.headers["trainingDataTypes"])
     except ValueError:
         return {"msg": "Not all fields for the LoadRequest object were POSTed"}
     except TypeError:
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}
     
-    if len(requestData) < len(request.files):
-        return {'msg': "There is not enough request types for the files sent"}
+    if len(requestData) != len(request.files):
+        return {'msg': "The number of training files and training data types does not match"}
 
-    uuid_, _ = generateUniqueFilename()
-    uuid_ = str(uuid_)
+    shiftUUID, _ = generateUniqueFilename()
+    shiftUUID = str(shiftUUID)
 
     count = 0
     for _ in request.files:
@@ -80,7 +81,7 @@ def loadData() -> dict:
             filename = secure_filename(data.filename)
             _, extension = os.path.splitext(filename)
 
-            folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid_)
+            folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shiftUUID)
             makeDir(folderPath)
             makeDir(os.path.join(folderPath, "tmp"))
             data.save(os.path.join(folderPath, "tmp",
@@ -90,7 +91,7 @@ def loadData() -> dict:
         
         count += 1
  
-    return {'msg': f"Loaded data as {current_user}", "uuid": uuid_}
+    return {'msg': f"Loaded data as {current_user}", "shiftUUID": shiftUUID}
 
 
 @api.route("/train", methods=["POST"])
@@ -101,7 +102,7 @@ def train() -> dict:
     more relaisitic results than just an inference though it takes longer. 
 
     Request Body Arguments:
-        uuid (str): The UUID of the current training situation
+        shiftUUID (str): The UUID of the current shift training session
         usePTM (bool): Whether or not to use the pre-trained model to enhace shifting
         prebuiltShiftModel (str): The id of the prebuilt model to use or an empty
                                   string if not using a prebuilt model
@@ -116,19 +117,26 @@ def train() -> dict:
     try:
         requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
     except ValueError:
+        print("value")
+        print(request.get_json()) #Seeing whats missing
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}
     except TypeError:
+        print("type")
+        print(request.get_json()) #Seeing whats missing
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}
-    
-    if requestData.uuid is None or requestData.uuid is "":
-        return {'msg': "Your train request had no uuid"}
+
+    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+        return {'msg': "Your train request had no shiftUUID"}
     
     if requestData.usePTM is None:
         return {'msg': "Your train request had not indication to use the prebuilt model or not"}
+    
+    if requestData.epochs > 100:
+        return {'msg': "Your train request is too large and will exceed the TCP request timeout"}
 
     baseTrainingData = None
     maskTrainingData = None
-    shft = Shift(id_=requestData.uuid)
+    shft = Shift(id_=requestData.shiftUUID)
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
 
     if requestData.prebuiltShiftModel:
@@ -167,15 +175,17 @@ def train() -> dict:
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
     if not baseTrainingData is None and baseTrainingData.any():
-        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=50,
+        print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
+        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=requestData.epochs,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     if not maskTrainingData is None and maskTrainingData.any():
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=50,
+        print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
+        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=requestData.epochs,
                         batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
 
-    #Updating MongoDB User wiht the new Shift
+    #Updating MongoDB User with the new Shift
     shiftDataModel = ShiftDataModel(uuid=shft.id_, title="Some title",
                                     encoderFile=os.path.join(shiftFilePath, "encoder"),
                                     baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
@@ -208,15 +218,15 @@ def inference() -> dict:
     except ValueError:
         return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
     except TypeError:
-        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
     
-    if requestData.uuid is None or requestData.uuid is "":
-        return {'msg': "Your inference request had no uuid"}
+    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+        return {'msg': "Your inference request had no shiftUUID"}
     
     if requestData.usePTM is None:
         return {'msg': "Your inference request had not indication to use the prebuilt model or not"}
     
-    shft = Shift(id_=requestData.uuid)
+    shft = Shift(id_=requestData.shiftUUID)
     inferencingData = [np.ones(shft.imageShape)]
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
 
@@ -235,8 +245,8 @@ def inference() -> dict:
                   os.path.join(shiftFilePath, "baseDecoder"),
                   os.path.join(shiftFilePath, "maskDecoder"))
 
-    inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1)
-    encodedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[12], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+    inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True)
+    encodedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
 
     del shft
     return {'msg': f"Inferenced as {current_user}", "testImage": encodedImage}

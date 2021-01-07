@@ -9,10 +9,11 @@ import os
 import cv2
 
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'm4a'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
 EXTENSION_FILE_TYPES = {'png': 'image', 'jpg': 'image',
                         'jpeg': 'image', 'gif': 'image',
-                        'mp4': 'video', 'm4a': 'video'}
+                        'heic': 'image', 'mp4': 'video',
+                        'm4a': 'video', 'mov': 'video'}
 PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
 ALLOWED_CAPITALS = '[A-Z]'

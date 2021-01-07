@@ -262,7 +262,7 @@ class Shift:
                                   optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL) -> List[np.ndarray]:
+    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, firstMedia=False) -> List[np.ndarray]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -270,6 +270,10 @@ class Shift:
             imageType (str): Either 'mask' or 'base' to load the correct files
             dataPath (str): The path to the folder holding the data
             interval (int): The interval to grab images from a video
+            firstMedia (bool): Whether or not to only load the first version of
+                               that media. For exmaple when delivering the final
+                               shift only the first base video will want to be
+                               loaded. Defaults to False.
 
         Returns:
             list of np.ndarray: The images to load in
@@ -287,6 +291,9 @@ class Shift:
                 loadedImages += videoToImages(os.path.join(dataPath, media), interval=interval)
             elif mediaType == "image":
                 loadedImages.append(loadImage(os.path.join(dataPath, media)))
+            
+            if firstMedia:
+                break
         
         return loadedImages
     

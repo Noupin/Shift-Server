@@ -6,11 +6,11 @@ __author__ = "Noupin"
 
 
 class InferenceRequest:
-    uuid: str
+    shiftUUID: str
     usePTM: bool
     prebuiltShiftModel: str
 
-    def __init__(self, uuid, usePTM, prebuiltShiftModel):
-        self.uuid = uuid
+    def __init__(self, shiftUUID, usePTM, prebuiltShiftModel):
+        self.shiftUUID = shiftUUID
         self.usePTM = usePTM
         self.prebuiltShiftModel = prebuiltShiftModel

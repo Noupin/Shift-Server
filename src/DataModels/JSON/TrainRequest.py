@@ -6,11 +6,13 @@ __author__ = "Noupin"
 
 
 class TrainRequest:
-    uuid: str
+    shiftUUID: str
     usePTM: bool
     prebuiltShiftModel: str
+    epochs: int
 
-    def __init__(self, uuid, usePTM, prebuiltShiftModel):
-        self.uuid = uuid
+    def __init__(self, shiftUUID, usePTM, prebuiltShiftModel, epochs):
+        self.shiftUUID = shiftUUID
         self.usePTM = usePTM
         self.prebuiltShiftModel = prebuiltShiftModel
+        self.epochs = epochs
