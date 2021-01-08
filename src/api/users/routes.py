@@ -141,7 +141,6 @@ def isAuthenticated() -> dict:
     """
 
     if current_user.is_authenticated:
-
         return {'authenticated': True}
 
     return {'authenticated': False}

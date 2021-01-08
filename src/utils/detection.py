@@ -22,7 +22,8 @@ def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
                   a conversion to grayscale is needed
 
     Returns:
-        list of int: The atributes from classifier
+        list of int: The atributes from classifier usually a list of rectangles
+                     where the objects are in the image
     """
 
     try:

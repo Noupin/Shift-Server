@@ -117,12 +117,8 @@ def train() -> dict:
     try:
         requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
     except ValueError:
-        print("value")
-        print(request.get_json()) #Seeing whats missing
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}
     except TypeError:
-        print("type")
-        print(request.get_json()) #Seeing whats missing
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
@@ -133,6 +129,9 @@ def train() -> dict:
     
     if requestData.epochs > 100:
         return {'msg': "Your train request is too large and will exceed the TCP request timeout"}
+    
+    if requestData.trainType != "basic" and requestData.trainType != "advanced":
+        return {'msg': "Your train request did not have the correct training type"}
 
     baseTrainingData = None
     maskTrainingData = None
@@ -163,11 +162,14 @@ def train() -> dict:
                                "PTM", "maskDecoder"))
 
     if requestData.prebuiltShiftModel == "":
-        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"))
+        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
         baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
 
-        maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
+        maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
         maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+
+    if len(baseTrainingData) == 0 or len(maskTrainingData) == 0:
+        return {'msg': "Your training data had no detectable faces."}
     
     shft.build()
     shft.compile()
@@ -194,8 +196,29 @@ def train() -> dict:
     if not updated:
         User.objects(username=current_user.username).update_one(push__shifts=shiftDataModel)
 
+    exhibitImages = []
+    if requestData.trainType == "basic":
+        inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+
+        shiftedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        exhibitImages.append(shiftedImage)
+    elif requestData.trainType == "advanced":
+        baseInferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+        maskInferencingData = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+
+        baseImage = encodeImage(baseInferencingData[0])
+        baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+
+        maskImage = encodeImage(maskInferencingData[0])
+        maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+
+        shiftedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        exhibitImages += [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
+    
+    #viewImage(decodeImage(exhibitImages[0]))
+
     del shft
-    return {'msg': f"Trained as {current_user}"}
+    return {'msg': f"Trained as {current_user}", 'exhibit': exhibitImages}
 
 
 @api.route("/inference", methods=["POST"])
@@ -247,6 +270,7 @@ def inference() -> dict:
 
     inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True)
     encodedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+    #viewImage(decodeImage(encodedImage))
 
     del shft
     return {'msg': f"Inferenced as {current_user}", "testImage": encodedImage}

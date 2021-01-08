@@ -262,7 +262,7 @@ class Shift:
                                   optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, firstMedia=False) -> List[np.ndarray]:
+    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> List[np.ndarray]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -270,13 +270,19 @@ class Shift:
             imageType (str): Either 'mask' or 'base' to load the correct files
             dataPath (str): The path to the folder holding the data
             interval (int): The interval to grab images from a video
+            action (function): The classifier to determine whether the frame of
+                               the video is valid to inference on. Defaults to
+                               None.
             firstMedia (bool): Whether or not to only load the first version of
                                that media. For exmaple when delivering the final
                                shift only the first base video will want to be
                                loaded. Defaults to False.
+            firstImage (bool): Whether or not to only load the first image from the
+                               imageType media. Defaults to False.
+            kwargs: The additional keyword arguments to pass to the action.
 
         Returns:
-            list of np.ndarray: The images to load in
+            list of np.ndarray: The images to load in.
         """
         
         loadedImages = []
@@ -288,11 +294,14 @@ class Shift:
             mediaType = getMediaType(media)
 
             if mediaType == 'video':
-                loadedImages += videoToImages(os.path.join(dataPath, media), interval=interval)
+                loadedImages += videoToImages(os.path.join(dataPath, media), interval=interval, firstImage=firstImage, action=action, **kwargs)
             elif mediaType == "image":
                 loadedImages.append(loadImage(os.path.join(dataPath, media)))
             
             if firstMedia:
+                break
+                
+            if firstImage:
                 break
         
         return loadedImages

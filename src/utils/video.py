@@ -11,6 +11,9 @@ import numpy as np
 from typing import List
 from moviepy import editor as mediaEditor
 
+#First Party Import
+from src.utils.detection import detectObject
+
 
 def extractAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip) -> moviepy.audio.io.AudioFileClip.AudioFileClip:
     """
@@ -57,26 +60,45 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarr
         list of numpy.ndarray: An array of CV images
     """
 
+    try:
+        firstImage = kwargs["firstImage"]
+        del kwargs["firstImage"]
+    except KeyError:
+        firstImage = False
+
     images = []
-    frame = 0
+    validFrames = 0
     video = cv2.VideoCapture(path)
 
-    print("Total frames:", video.get(cv2.CAP_PROP_FRAME_COUNT))
+    print("Total frames in Video:", video.get(cv2.CAP_PROP_FRAME_COUNT))
     for frame in range(int(video.get(cv2.CAP_PROP_FRAME_COUNT))):
         check, image = video.read()
+
         try:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         except cv2.error as e:
             print("Frame unable to be converted to an image.")
             continue
-        if action and frame % interval == 0:
-            returnData = action(image=image, **kwargs)
-            if type(returnData) == list:
+
+        if action and validFrames % interval == 0:
+            returnData = detectObject(action, image=image, **kwargs)
+
+            if type(returnData) == list and type(returnData[0]) == np.ndarray: #Checks for list of images
                 images += returnData
-            else:
+            elif type(returnData) == np.ndarray and returnData.ndim == 3: #Checks for numpy array image
                 images.append(returnData)
+            elif type(returnData) == np.ndarray and returnData.ndim == 2: #Checks for list of rectangles for object detection areas
+                images.append(image)
+            else:
+                continue
+
+            validFrames += 1
+
         elif frame % interval == 0:
             images.append(image)
+        
+        if firstImage:
+            break
     
     print("Frames grabbed:", len(images))
     
