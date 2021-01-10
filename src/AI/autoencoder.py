@@ -27,11 +27,12 @@ class AutoEncoder(TFModel):
     """
 
     def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder(),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="AutoEncoder"):
+                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="AutoEncoder",
+                       modelPath=""):
         super(AutoEncoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
                                           outputLayer=decoder,
                                           optimizer=optimizer, loss=loss,
-                                          name=name)
+                                          name=name, modelPath=modelPath)
 
         self.inputLayer = tf.keras.Input(shape=inputShape, name=inputName)
         self.encoderLayer = encoder

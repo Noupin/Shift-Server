@@ -13,6 +13,7 @@ from typing import List
 from skimage.util import img_as_float
 
 #First Party Imports
+from src.AI.TFModel import TFModel
 from src.AI.encoder import Encoder
 from src.AI.decoder import Decoder
 from src.utils.video import videoToImages
@@ -47,7 +48,8 @@ class Shift:
     def __init__(self, id_=generateUniqueFilename(),
                        imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
-                       convolutionFilters=24, codingLayers=-1, name="Default"):
+                       convolutionFilters=24, codingLayers=-1, name="Default",
+                       modelPath=""):
         self.id_ = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
@@ -140,7 +142,7 @@ class Shift:
         trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2]) / 255.
         trainingData = trainingData.astype('float32')
 
-        return trainingData
+        return trainingData #tf.data.Dataset.from_tensor_slices(trainingData)
     
 
     def addCodingLayers(self, count: int) -> None:
@@ -157,12 +159,12 @@ class Shift:
             self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
     
 
-    def predict(self, model: tf.keras.Model, image: np.ndarray) -> np.ndarray:
+    def predict(self, model: TFModel, image: np.ndarray) -> np.ndarray:
         """
         Uses model to predict on image
 
         Args:
-            model (tf.keras.Model): The model to be used for inferencing
+            model (TFModel): The model to be used for inferencing
             image (numpy.ndarray): The image to be inferenced on
 
         Returns:
@@ -250,17 +252,11 @@ class Shift:
 
         if encoderPath:
             self.encoder.load(encoderPath)
-            #self.encoder.load_weights(encoderPath)
-            #self.encoder = tf.keras.models.load_model(encoderPath)
 
         if basePath:
             self.baseDecoder.load(basePath)
-            #self.baseDecoder.load_weights(basePath)
-            #self.baseDecoder = tf.keras.models.load_model(basePath)
         if maskPath:
             self.maskDecoder.load(maskPath)
-            #self.maskDecoder.load_weights(maskPath)
-            #self.maskDecoder = tf.keras.models.load_model(maskPath)
 
         self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
                                   optimizer=self.optimizer, loss=self.loss)
@@ -293,6 +289,7 @@ class Shift:
         
         loadedImages = []
         files = os.listdir(dataPath)
+
         for media in files:
             if media.find(imageType) == -1:
                 continue

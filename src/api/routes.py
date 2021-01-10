@@ -180,12 +180,10 @@ def train() -> dict:
 
     if not baseTrainingData is None and baseTrainingData.any():
         print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
-        shft.baseAE.fit(baseTrainingData, baseTrainingData, epochs=requestData.epochs,
-                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+        shft.baseAE.train(baseTrainingData, epochs=requestData.epochs, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     if not maskTrainingData is None and maskTrainingData.any():
         print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
-        shft.maskAE.fit(maskTrainingData, maskTrainingData, epochs=requestData.epochs,
-                        batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+        shft.maskAE.train(maskTrainingData, epochs=requestData.epochs, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
 
@@ -195,10 +193,6 @@ def train() -> dict:
                                 baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
                                 maskDecoderFile=os.path.join(shiftFilePath, "maskDecoder"))
     mongoShift.save()
-    shiftDataModel = ShiftDataModel(uuid=shft.id_, title="Some title",
-                                    encoderFile=os.path.join(shiftFilePath, "encoder"),
-                                    baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
-                                    maskDecoderFile=os.path.join(shiftFilePath, "maskDecoder"))
 
     exhibitImages = []
     ##############################################################

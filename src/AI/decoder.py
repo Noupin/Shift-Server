@@ -32,11 +32,11 @@ class Decoder(TFModel):
     def __init__(self, inputShape=(512,), inputName="LatentInput",
                        latentReshape=(128, 128, 24),
                        outputDimension=3, outputName="OutputImage", outputActivation=tf.nn.relu,
-                       name="Decoder"):
+                       name="Decoder", modelPath=""):
         super(Decoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
                                       outputLayer=tf.keras.layers.Conv2DTranspose(filters=outputDimension, kernel_size=3, strides=1,
                                                                          padding="same", activation=outputActivation, name=outputName),
-                                      name=name)
+                                      name=name, modelPath=modelPath)
      
         self.decodingLayers = 0
         
