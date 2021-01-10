@@ -49,6 +49,7 @@ class TFModel(tf.keras.Model):
         self.modelName = name
         self.modelBuilt = False
         self.modelLoaded = False
+        self.modelPath = ""
 
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
@@ -56,6 +57,7 @@ class TFModel(tf.keras.Model):
         self.model = None
 
 
+    @tf.function
     def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
@@ -71,7 +73,7 @@ class TFModel(tf.keras.Model):
         """
         
         if self.modelLoaded:
-            return layer
+            self.modelLayers = self.model.layers
 
         connectedLayers = [layer]
         
@@ -137,7 +139,8 @@ class TFModel(tf.keras.Model):
         self.model = tf.keras.models.load_model(path)
 
         self.modelLoaded = True
-        self.modelBuilt = True
+        self.modelPath = path
+        #self.modelBuilt = True
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:

@@ -18,7 +18,6 @@ class User(db.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
-    shifts = EmbeddedDocumentListField(Shift)
 
 
     @staticmethod

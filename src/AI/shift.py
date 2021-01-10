@@ -24,7 +24,7 @@ from src.utils.image import (resizeImage, blendImageAndColor,
                              flipImage, cropImage, loadImage,
                              replaceAreaOfImage, viewImage,
                              maskImage)
-from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
+from src.constants import (OBJECT_CLASSIFIER,
                            VIDEO_FRAME_GRAB_INTERVAL)
 
 
@@ -33,7 +33,7 @@ class Shift:
     Two custom built AutoEncoder TensorFlow models for Shifting objects within an image.
 
     Args:
-        id_ (str): A unique identifier for the shift model. Defaults to generateUniqueFilename(FILE_NAME_BYTE_SIZE).
+        id_ (str): A unique identifier for the shift model. Defaults to generateUniqueFilename().
         imageShape (tuple of int, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
         latentSpaceDimension (int, optional): The dimensionality of the latent space for the compression. Defaults to 512.
         latentReshape (tuple of int, optional): The shape to reshape the latent space into. Defaults to (128, 128, 3).
@@ -238,7 +238,7 @@ class Shift:
         self.maskAE.compileModel()
     
     
-    def load(self, encoderPath: str, basePath: str, maskPath: str) -> None:
+    def load(self, encoderPath: str = None, basePath: str = None, maskPath: str = None) -> None:
         """
         Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
 
@@ -249,12 +249,18 @@ class Shift:
         """
 
         if encoderPath:
-            self.encoder = tf.keras.models.load_model(encoderPath)
+            self.encoder.load(encoderPath)
+            #self.encoder.load_weights(encoderPath)
+            #self.encoder = tf.keras.models.load_model(encoderPath)
 
         if basePath:
-            self.baseDecoder = tf.keras.models.load_model(basePath)
+            self.baseDecoder.load(basePath)
+            #self.baseDecoder.load_weights(basePath)
+            #self.baseDecoder = tf.keras.models.load_model(basePath)
         if maskPath:
-            self.maskDecoder = tf.keras.models.load_model(maskPath)
+            self.maskDecoder.load(maskPath)
+            #self.maskDecoder.load_weights(maskPath)
+            #self.maskDecoder = tf.keras.models.load_model(maskPath)
 
         self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
                                   optimizer=self.optimizer, loss=self.loss)

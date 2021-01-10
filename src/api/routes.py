@@ -28,7 +28,7 @@ from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
-from src.constants import (FILE_NAME_BYTE_SIZE, OBJECT_CLASSIFIER,
+from src.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                            LARGE_BATCH_SIZE)
 from src.utils.files import (generateUniqueFilename, checkPathExists,
                              makeDir, getMediaType)
@@ -143,7 +143,9 @@ def train() -> dict:
             shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                    requestData.prebuiltShiftModel, "encoder"),
                       os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                   requestData.prebuiltShiftModel, "baseDecoder"))
+                                   requestData.prebuiltShiftModel, "baseDecoder"),
+                      os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                                   requestData.prebuiltShiftModel, "maskDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
 
@@ -151,7 +153,7 @@ def train() -> dict:
             shft.load(maskPath=os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                             "PTM", "maskDecoder"))
         maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"))
-        maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+        maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
 
     elif requestData.usePTM:
         shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
@@ -161,12 +163,12 @@ def train() -> dict:
                   os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
                                "PTM", "maskDecoder"))
 
-    if requestData.prebuiltShiftModel == "":
-        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
-        baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+    if True: #Needs check for if the model is being retrained or iterativley trained
+        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+        baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
 
-        maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
-        maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+        maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+        maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
 
     if len(baseTrainingData) == 0 or len(maskTrainingData) == 0:
         return {'msg': "Your training data had no detectable faces."}
@@ -188,34 +190,37 @@ def train() -> dict:
 
 
     #Updating MongoDB User with the new Shift
+    mongoShift = ShiftDataModel(uuid=shft.id_, userID=current_user.id, title="Some title",
+                                encoderFile=os.path.join(shiftFilePath, "encoder"),
+                                baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
+                                maskDecoderFile=os.path.join(shiftFilePath, "maskDecoder"))
+    mongoShift.save()
     shiftDataModel = ShiftDataModel(uuid=shft.id_, title="Some title",
                                     encoderFile=os.path.join(shiftFilePath, "encoder"),
                                     baseDecoderFile=os.path.join(shiftFilePath, "baseDecoder"),
                                     maskDecoderFile=os.path.join(shiftFilePath, "maskDecoder"))
-    updated = User.objects(username=current_user.username, shifts__uuid=shiftDataModel.uuid).update_one(set__shifts__S=shiftDataModel)
-    if not updated:
-        User.objects(username=current_user.username).update_one(push__shifts=shiftDataModel)
 
     exhibitImages = []
+    ##############################################################
+    #Possible error when loading images not sure why need to test#
+    ##############################################################
     if requestData.trainType == "basic":
-        inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+        inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
-        shiftedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        shiftedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
         exhibitImages.append(shiftedImage)
     elif requestData.trainType == "advanced":
-        baseInferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
-        maskInferencingData = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True)
+        baseInferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+        maskInferencingData = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), 1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
         baseImage = encodeImage(baseInferencingData[0])
-        baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
 
         maskImage = encodeImage(maskInferencingData[0])
-        maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferencingData[0], scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
 
-        shiftedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+        shiftedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
         exhibitImages += [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
-    
-    #viewImage(decodeImage(exhibitImages[0]))
 
     del shft
     return {'msg': f"Trained as {current_user}", 'exhibit': exhibitImages}
@@ -269,7 +274,7 @@ def inference() -> dict:
                   os.path.join(shiftFilePath, "maskDecoder"))
 
     inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True)
-    encodedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), scaleFactor=1.15, minNeighbors=4, minSize=(30, 30), gray=True))
+    encodedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
     #viewImage(decodeImage(encodedImage))
 
     del shft

@@ -284,7 +284,57 @@ def imagesToVideo(images: List[np.ndarray], outPath: str, fps: float) -> None:
     cv2.destroyAllWindows()
 
 
+def createMask(image: np.ndarray, **kwargs) -> np.ndarray:
+    """
+    Given an image a black and white mask will be generated 
+
+    Args:
+        image (np.ndarray): [description]
+        kwargs: [desc]
+
+    Returns:
+        np.ndarray: [description]
+    """
+
+    try:
+        kwargs["gray"]
+    except KeyError:
+        kwargs["gray"] = False
+    
+    if kwargs["gray"]:
+        del kwargs["gray"]
+        grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    else:
+        grayImage = image.copy()
+    
+    _, thresh = cv2.threshold(grayImage, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    kernel = np.ones((3, 3), np.uint8)
+    closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+    distTransform = cv2.distanceTransform(closing, cv2.DIST_L2, 0)
+    _, foreground = cv2.threshold(distTransform, 0.2 * distTransform.max(), 255, 0)
+
+    foreground = foreground.astype(np.uint8)
+    background = cv2.bitwise_not(foreground)
+
+    mask = cv2.bitwise_and(image, image, mask=foreground)
+
+    return mask
+
+
 def maskImage(baseImage: np.ndarray, maskImage: np.ndarray, **kwargs) -> np.ndarray:
+    """
+    Given a base image a mask area will be generated and the portion of the mask image will be 
+
+    Args:
+        baseImage (np.ndarray): [description]
+        maskImage (np.ndarray): [description]
+
+    Returns:
+        np.ndarray: [description]
+    """
+
     try:
         kwargs["gray"]
     except KeyError:
@@ -309,4 +359,5 @@ def maskImage(baseImage: np.ndarray, maskImage: np.ndarray, **kwargs) -> np.ndar
     maskImage = cv2.bitwise_and(maskImage, maskImage, mask=background)
 
     maskedImage = cv2.add(maskImage, baseImage)
+
     return maskedImage

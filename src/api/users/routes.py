@@ -11,8 +11,9 @@ from flask import Blueprint, request, make_response, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 
 #First Party Imports
-from src.DataModels.MongoDB.User import User
 from src import bcrypt, login_manager
+from src.DataModels.MongoDB.User import User
+from src.DataModels.MongoDB.Shift import Shift
 from src.utils.validators import validateEmail, validatePassword
 
 
@@ -128,6 +129,7 @@ def account() -> dict:
         JSON: A JSON with the data needed to display on the users account page
     """
 
+    userShifts = Shift.objects(userID=current_user.id)
     return {"username": current_user.username}
 
 

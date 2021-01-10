@@ -14,15 +14,18 @@ EXTENSION_FILE_TYPES = {'png': 'image', 'jpg': 'image',
                         'jpeg': 'image', 'gif': 'image',
                         'heic': 'image', 'mp4': 'video',
                         'm4a': 'video', 'mov': 'video'}
+
 PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
 ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
-FILE_NAME_BYTE_SIZE = 8
+
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
 OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                                        'site-packages', 'cv2',
                                                        'data', 'haarcascade_frontalface_default.xml')
                                           ).detectMultiScale
+HAAR_CASCADE_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
+
 LARGE_BATCH_SIZE = 64
