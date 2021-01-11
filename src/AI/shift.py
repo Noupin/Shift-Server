@@ -251,12 +251,18 @@ class Shift:
         """
 
         if encoderPath:
-            self.encoder.load(encoderPath)
+            self.encoder = tf.keras.models.load_model(encoderPath)
+            #self.encoder.load(encoderPath)
+            #self.encoder.load_weights(encoderPath)
 
         if basePath:
-            self.baseDecoder.load(basePath)
+            self.baseDecoder = tf.keras.models.load_model(basePath)
+            #self.baseDecoder.load(basePath)
+            #self.baseDecoder.load_weights(basePath)
         if maskPath:
-            self.maskDecoder.load(maskPath)
+            self.maskDecoder = tf.keras.models.load_model(maskPath)
+            #self.maskDecoder.load(maskPath)
+            #self.maskDecoder.load_weights(maskPath)
 
         self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
                                   optimizer=self.optimizer, loss=self.loss)
@@ -321,8 +327,8 @@ class Shift:
         """
 
         if encoderPath:
-            self.encoder.save(os.path.join(encoderPath, f"encoder"))
+            self.encoder.save(os.path.join(encoderPath, f"encoder"), save_format='tf')
         if basePath:
-            self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"))
+            self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"), save_format='tf')
         if maskPath:
-            self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"))
+            self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"), save_format='tf')

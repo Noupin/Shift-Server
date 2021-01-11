@@ -52,10 +52,6 @@ class TFModel(tf.keras.Model):
         self.modelName = name
         self.modelBuilt = False
         self.modelLoaded = False
-        self.modelPath = modelPath
-
-        self.ckpt = tf.train.Checkpoint(step=tf.Variable(1), optimizer=self.optimizer, net=self)
-        self.manager = tf.train.CheckpointManager(self.ckpt, self.modelPath, max_to_keep=3)
 
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
@@ -77,10 +73,10 @@ class TFModel(tf.keras.Model):
         Returns:
             tensorflow.python.framework.ops.Tensor: The last layer in the connected model
         """
-        
-        if self.modelLoaded:
-            self.modelLayers = self.model.layers
 
+        ###################################################################################################
+        # Need to figure out how to call layers with weights or return loaded models as conencted tensors #
+        ###################################################################################################
         connectedLayers = [layer]
         
         for modelLayer in range(1, len(self.modelLayers)):
@@ -160,13 +156,6 @@ class TFModel(tf.keras.Model):
         testDataset.batch(batch_size)
 
 
-        self.ckpt.restore(self.manager.latest_checkpoint)
-        if self.manager.latest_checkpoint:
-            print("Restored from {}".format(self.manager.latest_checkpoint))
-        else:
-            print("Initializing from scratch.")
-
-
         for epoch in range(epochs):
             #Iterate over batches of dataset
             for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
@@ -175,11 +164,7 @@ class TFModel(tf.keras.Model):
             for xBatchTest, yBatchTest in testDataset:
                self.testStep(x_batch_val, y_batch_val)
             
-            self.ckpt.step.assign_add(1)
-            if int(self.ckpt.step) % 10 == 0:
-                save_path = self.manager.save()
-                print("Saved checkpoint for step {}: {}".format(int(self.ckpt.step), save_path))
-                print("loss {}".format(tf.reduce_mean(tf.abs(loss_value))))
+            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")
 
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:
@@ -235,7 +220,6 @@ class TFModel(tf.keras.Model):
         self.model = tf.keras.models.load_model(path)
 
         self.modelLoaded = True
-        self.modelPath = path
         #self.modelBuilt = True
 
 

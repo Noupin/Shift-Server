@@ -173,8 +173,13 @@ def train() -> dict:
     if len(baseTrainingData) == 0 or len(maskTrainingData) == 0:
         return {'msg': "Your training data had no detectable faces."}
     
-    shft.build()
-    shft.compile()
+    try:
+        shft.encoder.modelLoaded
+        #Only needs built and compiled the first time
+        shft.build()
+        shft.compile()
+    except AttributeError:
+        pass
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
