@@ -10,7 +10,7 @@ import uuid
 import base64
 
 #First Party Imports
-from src.constants import EXTENSION_FILE_TYPES
+from src.variables.constants import EXTENSION_FILE_TYPES
 
 
 def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> str:

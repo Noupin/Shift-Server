@@ -17,7 +17,7 @@ from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
-from src.constants import HAAR_CASCADE_KWARGS
+from src.variables.constants import HAAR_CASCADE_KWARGS
 
 
 def loadPTM(requestData: InferenceRequest, shft: Shift):

@@ -11,7 +11,7 @@ from typing import Tuple
 from email_validator import validate_email, EmailNotValidError
 
 #First Party Imports
-from src.constants import (
+from src.variables.constants import (
     ALLOWED_EXTENSIONS, PASSWORD_LENGTH, ALLOWED_NUMBERS,
     ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS
     )

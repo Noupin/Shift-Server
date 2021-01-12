@@ -25,8 +25,8 @@ from src.utils.image import (resizeImage, blendImageAndColor,
                              flipImage, cropImage, loadImage,
                              replaceAreaOfImage, viewImage,
                              maskImage)
-from src.constants import (OBJECT_CLASSIFIER,
-                           VIDEO_FRAME_GRAB_INTERVAL)
+from src.variables.constants import (OBJECT_CLASSIFIER,
+                                     VIDEO_FRAME_GRAB_INTERVAL)
 
 
 class Shift:

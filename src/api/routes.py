@@ -28,8 +28,8 @@ from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
-from src.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
-                           LARGE_BATCH_SIZE)
+from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
+                                     LARGE_BATCH_SIZE)
 from src.utils.files import (generateUniqueFilename, checkPathExists,
                              makeDir, getMediaType)
 

@@ -17,8 +17,8 @@ from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
-from src.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
-                           LARGE_BATCH_SIZE)
+from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
+                                     LARGE_BATCH_SIZE)
 
 
 def saveShiftToDatabase(uuid: str, userID, title: str, path: str):

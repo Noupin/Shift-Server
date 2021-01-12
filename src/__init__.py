@@ -15,10 +15,12 @@ from flask_mail import Mail
 
 #First Party Imports
 from src.config import Config
+from src.variables.globals import Globals
 from src.utils.MJSONEncoder import MongoJSONEncoder
 from src.utils.ObjectIdConverter import ObjectIdConverter
 
 
+shiftGlobals = Globals()
 cors = CORS()
 login_manager = LoginManager()
 db = MongoEngine()
@@ -30,6 +32,7 @@ def createApp(configClass=Config) -> flask.app.Flask:
     app = Flask(__name__, static_folder="static/build", static_url_path="/")
     app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
+    app.config["SHIFT_GLOBALS"] = shiftGlobals
 
 
     cors.init_app(app)
