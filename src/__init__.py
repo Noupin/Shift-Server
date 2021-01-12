@@ -31,6 +31,7 @@ def createApp(configClass=Config) -> flask.app.Flask:
     app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
 
+
     cors.init_app(app)
     login_manager.init_app(app)
     db.init_app(app)

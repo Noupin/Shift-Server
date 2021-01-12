@@ -88,6 +88,7 @@ def login() -> dict:
     if not requestData['usernameOrEmail']:
         return {'msg': "Username or Email missing"}
     
+    print(User.objects(username=requestData["usernameOrEmail"]))
     if User.objects(email=requestData["usernameOrEmail"]).first():
         user = User.objects(email=requestData["usernameOrEmail"]).first()
     elif User.objects(username=requestData["usernameOrEmail"]).first():

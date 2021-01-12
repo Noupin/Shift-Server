@@ -24,3 +24,5 @@ class Config:
     USER_DATA_FOLDER = "userData"
     SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
+    CELERY_BROKER_URL = "amqp://localhost//"
+    CELERY_BACKEND = "mongodb://localhost:27017"

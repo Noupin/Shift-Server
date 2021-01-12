@@ -250,6 +250,9 @@ class Shift:
             maskPath (str): The path to the mask decoder to be loaded
         """
 
+        ##
+        #Work Around
+        ##
         if encoderPath:
             self.encoder = tf.keras.models.load_model(encoderPath)
             #self.encoder.load(encoderPath)
@@ -259,15 +262,14 @@ class Shift:
             self.baseDecoder = tf.keras.models.load_model(basePath)
             #self.baseDecoder.load(basePath)
             #self.baseDecoder.load_weights(basePath)
+            self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
+                                      optimizer=self.optimizer, loss=self.loss)
         if maskPath:
             self.maskDecoder = tf.keras.models.load_model(maskPath)
             #self.maskDecoder.load(maskPath)
             #self.maskDecoder.load_weights(maskPath)
-
-        self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
-                                  optimizer=self.optimizer, loss=self.loss)
-        self.maskAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                  optimizer=self.optimizer, loss=self.loss)
+            self.maskAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+                                      optimizer=self.optimizer, loss=self.loss)
     
 
     def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> List[np.ndarray]:
