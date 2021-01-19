@@ -1,26 +1,52 @@
 #pylint: disable=C0103, C0301
 """
-Routes for the Shift API
+Routes for the Load part of the Shift API
 """
 __author__ = "Noupin"
 
 #Third Party Imports
+import os
 import json
+import base64
+import werkzeug
 from typing import List
-from flask import Blueprint, request
+from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
+from flask import Blueprint, request, current_app, jsonify
 
 #First Party Imports
-from src.api.load import tasks
+from src.utils.files import makeDir
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename
 
 
-load = Blueprint('load', __name__)
+loadBP = Blueprint('load', __name__)
 
 
-@load.route("/loadData", methods=["POST"])
+def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestData: List[str], count=0):
+    """
+    Saves the data from a werkzeug file object to the file system
+
+    Args:
+        data (werkzeug.datastructures.FileStorage): The data to be saved to the file system.
+        uuid (str): The uuid of the folder to save the files to.
+        requestData (list of str): The additional data with the request needed for naming the file.
+        count (int, optional): The counter to change the filename of the data
+                               being saved. Defaults to 0.
+    """
+
+    filename = secure_filename(data.filename)
+    _, extension = os.path.splitext(filename)
+
+    folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid)
+    makeDir(folderPath)
+    makeDir(os.path.join(folderPath, "tmp"))
+    data.save(os.path.join(folderPath, "tmp",
+                           "{}media{}{}".format(requestData[count], count+1, extension)))
+
+
+@loadBP.route("/loadData", methods=["POST"])
 @login_required
 def loadData() -> dict:
     """
@@ -61,10 +87,10 @@ def loadData() -> dict:
             return {'msg': "The request had no selected file"}
 
         if data and validateFilename(data.filename):
-            tasks.saveFlaskData.delay(requestData, data, shiftUUID, count)
+            saveFlaskFile(data, shiftUUID,requestData, count=count)
         else:
             return {'msg': 'File not valid'}
-
+        
         count += 1
 
-    return {'msg': f"Loading data as {current_user.username}", "shiftUUID": shiftUUID}
+    return {'msg': f"Loaded data as {current_user.username}", "shiftUUID": shiftUUID}

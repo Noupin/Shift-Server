@@ -63,6 +63,7 @@ def makeDir(folderPath: str) -> bool:
     Returns:
         bool: Whether or not the folder was made
     """
+
     if checkPathExists(folderPath):
         return False
     

@@ -6,13 +6,16 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import json
 import numpy as np
-from flask import current_app
+from typing import List
+from flask import current_app, session
 from flask_login import current_user
 
 #First Party Imports
-from src.celery import celery
+from src.celeryApp import cel
 from src.AI.shift import Shift
+from src.utils.image import encodeImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
@@ -67,14 +70,61 @@ def loadPTM(requestData: TrainRequest, shft: Shift):
                                "PTM", "decoder"))
 
 
-@celery.task(name="train.trainShift")
-def trainShift(requestData: TrainRequest):
+def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
+    """
+    Uses the Shift object to get the data to return for the basic training view
+
+    Args:
+        shft (Shift): The shift models and variables
+
+    Returns:
+        list of str: An array with the encoded shifted image
+    """
+
+    inferencingData = shft.loadData("base", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+    shiftedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+
+    return [shiftedImage]
+
+
+def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
+    """
+    Uses the Shift object to get the data to return for the advanced training view
+
+    Args:
+        shft (Shift): The shift models and variables
+
+    Returns:
+        list of str: An array of the encoded shifted images
+    """
+
+    baseInferencingData = shft.loadData("base", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+                                        1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+    maskInferencingData = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+                                        1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+
+    baseImage = encodeImage(baseInferencingData[0])
+    baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+
+    maskImage = encodeImage(maskInferencingData[0])
+    maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+
+    shiftedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
+
+    return [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
+
+
+@cel.task(name="train.trainShift")
+def trainShift(requestJSON: dict):
     """
     Trains the shift models from PTM or from a specialized model depending on the requestData.
 
     Args:
-        requestData (TrainRequest): The data associated with the train request
+        requestJSON (TrainRequest): The JSON request data that can be serialized
     """
+
+    requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
 
     shft = Shift(id_=requestData.shiftUUID)
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
@@ -84,6 +134,7 @@ def trainShift(requestData: TrainRequest):
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
         baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
         baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+
 
         if requestData.prebuiltShiftModel:
             maskImages = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"))
@@ -105,12 +156,24 @@ def trainShift(requestData: TrainRequest):
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
-    if not baseTrainingData is None and baseTrainingData.any():
-        #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
-        shft.baseAE.train(baseTrainingData, epochs=requestData.epochs, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
-    if not maskTrainingData is None and maskTrainingData.any():
-        #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
-        shft.maskAE.train(maskTrainingData, epochs=requestData.epochs, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+    while session["training"]:
+        while not session["trainingUpdate"]:
+            if not baseTrainingData is None and baseTrainingData.any():
+                #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
+                shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+            if not maskTrainingData is None and maskTrainingData.any():
+                #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
+                shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+
+        if session["trainingUpdate"]:
+            if requestData.trainType == "basic":
+                current_app.config["SHIFT_GLOBALS"].exhibitImages = getBasicExhibitImage(shft)
+            elif requestData.trainType == "advanced":
+                current_app.config["SHIFT_GLOBALS"].exhibitImages = getAdvancedExhibitImages(shft)
+                
+            session["trainingUpdate"] = False
+
+
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
     saveShiftToDatabase(uuid=shft.id_, userID=current_user.id, title="Some title", path=shiftFilePath)

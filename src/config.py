@@ -7,12 +7,16 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import datetime
+from dotenv import load_dotenv
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
 
 
-class Config:
+load_dotenv()
+
+
+class Config(object):
     SECRET_KEY = open('keys/jwt-key').read()
     MONGO_URI = f"mongodb://{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_PROJECT')}"
     MONGODB_SETTINGS = {
@@ -25,4 +29,4 @@ class Config:
     SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
     CELERY_BROKER_URL = "amqp://localhost//"
-    CELERY_BACKEND = "mongodb://localhost:27017"
+    CELERY_RESULT_BACKEND = "mongodb://localhost:27017"

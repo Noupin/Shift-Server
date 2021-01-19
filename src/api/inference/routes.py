@@ -18,12 +18,12 @@ from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 
 
-inference = Blueprint('inference', __name__)
+inferenceBP = Blueprint('inference', __name__)
 
 
-@inference.route("/inference", methods=["POST"])
+@inferenceBP.route("/inference", methods=["POST"])
 @login_required
-def shiftMedia() -> dict:
+def shift() -> dict:
     """
     Inferenceing based on a specialized pretrained model(PTM) where, the input is
     the face to be put on the media and inferenced with PTM. Alternativley inferencing
@@ -62,3 +62,22 @@ def shiftMedia() -> dict:
     shift.delay(requestData)
 
     return {'msg': f"Inferencing as {current_user}"}
+
+
+@inferenceBP.route("/inferenceStatus", methods=["GET"])
+@login_required
+def inferenceStatus() -> dict:
+    """
+    The status of the current inferencing task.
+
+    Returns:
+        dict: A response with the status of the inferencing.
+    """
+
+    try:
+        status = current_app.config["SHIFT_GLOBALS"].job.status
+
+        return {'msg': f"The status is {status}"}
+
+    except AttributeError:
+        return {'msg': "There are currently no jobs"}

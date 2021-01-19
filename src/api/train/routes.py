@@ -8,21 +8,22 @@ __author__ = "Noupin"
 import os
 import json
 import tensorflow as tf
-from flask import Blueprint, request, current_app
 from flask_login import login_required, current_user
+from flask import Blueprint, request, current_app, session
 
 #First Party Imports
 from src.DataModels.MongoDB.User import User
+from src.api.train.tasks import trainShift
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
 
-train = Blueprint('train', __name__)
+trainBP = Blueprint('train', __name__)
 
 
-@train.route("/train", methods=["POST"])
+@trainBP.route("/train", methods=["POST"])
 @login_required
-def trainShift() -> dict:
+def train() -> dict:
     """
     Given training data Shift specializes a model for the training data. Yeilds
     more relaisitic results than just an inference though it takes longer.
@@ -68,6 +69,50 @@ def trainShift() -> dict:
         except OSError:
             return {'msg': "That model does not exist"}
 
-    trainShift.delay(requestData)
+    session["training"] = True
+    trainShift.delay(request.get_json())
 
     return {'msg': f"Training as {current_user.username}"}
+
+
+@trainBP.route("/trainStatus", methods=["POST"])
+@login_required
+def trainStatus() -> dict:
+    """
+    The status of of the current training task if called while training the task
+    will switch to give an update image. After a certain amount of time the training
+    will be completed automatically to allow for multiple users to train.
+
+    Returns:
+        dict: A response with the status of the training and possibly exhibit images if ready.
+    """
+
+    try:
+        status = current_app.config["SHIFT_GLOBALS"].job.status
+
+        if status == "PENDING":
+            session["training"] = False
+            session["trainingUpdate"] = True
+
+            if len(current_app.config["SHIFT_GLOBALS"].exhibitImages) > 0 and not session["trainingUpdate"]:
+                return {'msg': f"Update for current shift", 'exhibit': current_app.config["SHIFT_GLOBALS"].exhibitImages}
+
+        return {'msg': f"The status is {status}"}
+
+    except AttributeError:
+        return {'msg': "There are currently no jobs"}
+
+
+@trainBP.route("/stopTrain", methods=["POST"])
+@login_required
+def stopTrain() -> dict:
+    """
+    Stop the training with the UUID of the shift model being trained.
+
+    Returns:
+        dict: A msg confirming the cancellation of the shift training.
+    """
+
+    session["training"] = False
+
+    return {'msg': "Training stopped"}
