@@ -6,14 +6,14 @@ Creates the celery applciation
 __author__ = "Noupin"
 
 #Third Party Imports
-import celery
+import celery as cel
 from celery import Celery
 
 #First Party Imports
 from src.config import Config
 
 
-def make_celery(appName=__name__) -> celery.app.base.Celery:
+def make_celery(appName=__name__) -> cel.app.base.Celery:
     """
     Makes a celery app
 
@@ -21,9 +21,9 @@ def make_celery(appName=__name__) -> celery.app.base.Celery:
         appName (str, optional): The name of the Celery applciation. Defaults to __name__.
 
     Returns:
-        cel.app.base.Celery: The Celery applicaiton
+        celery.app.base.Celery: The Celery applicaiton
     """
 
     return Celery(appName, backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL)
 
-cel = make_celery()
+celery = make_celery()

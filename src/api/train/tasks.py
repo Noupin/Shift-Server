@@ -13,8 +13,8 @@ from flask import current_app, session
 from flask_login import current_user
 
 #First Party Imports
-from src.celeryApp import cel
 from src.AI.shift import Shift
+from src.celeryApp import celery
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
@@ -115,7 +115,7 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     return [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
 
 
-@cel.task(name="train.trainShift")
+@celery.task(name="train.trainShift")
 def trainShift(requestJSON: dict):
     """
     Trains the shift models from PTM or from a specialized model depending on the requestData.
@@ -155,7 +155,7 @@ def trainShift(requestJSON: dict):
         pass
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
-
+    print(current_user)
     while session["training"]:
         while not session["trainingUpdate"]:
             if not baseTrainingData is None and baseTrainingData.any():

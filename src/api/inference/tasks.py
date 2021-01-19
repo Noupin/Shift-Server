@@ -12,7 +12,7 @@ from flask import current_app
 
 #First Party Imports
 from src.AI.shift import Shift
-from src.celeryApp import cel
+from src.celeryApp import celery
 from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
@@ -45,7 +45,7 @@ def loadPTM(requestData: InferenceRequest, shft: Shift):
                                "PTM", "decoder"))
 
 
-@cel.task(name="inference.shift")
+@celery.task(name="inference.shift")
 def shift(requestData: InferenceRequest) -> str:
     """
     Shifts the object given the infernce data and whether to load the
