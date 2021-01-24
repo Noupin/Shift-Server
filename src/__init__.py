@@ -15,10 +15,9 @@ from flask_mail import Mail
 
 #First Party Imports
 from src.config import Config
-from src.utils.celeryHelpers import init_celery
 from src.variables.globals import Globals
+from src.utils.FlaskCelery import FlaskCelery
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.utils.ObjectIdConverter import ObjectIdConverter
 
 
 shiftGlobals = Globals()
@@ -27,6 +26,8 @@ login_manager = LoginManager()
 db = MongoEngine()
 bcrypt = Bcrypt()
 mail = Mail()
+celery = FlaskCelery()
+print("Main:",celery)
 
 
 def createApp(appName=__name__, configClass=Config, **kwargs) -> flask.app.Flask:
@@ -48,14 +49,12 @@ def createApp(appName=__name__, configClass=Config, **kwargs) -> flask.app.Flask
     app.config["SHIFT_GLOBALS"] = shiftGlobals
 
 
-    if kwargs.get("celery"):
-        init_celery(app, kwargs.get("celery"))
-
     cors.init_app(app)
     login_manager.init_app(app)
     db.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
+    celery.init_app(app)
 
 
     from src.main.routes import main

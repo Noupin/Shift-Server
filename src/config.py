@@ -18,6 +18,7 @@ load_dotenv()
 
 class Config(object):
     SECRET_KEY = open('keys/jwt-key').read()
+
     MONGO_URI = f"mongodb://{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_PROJECT')}"
     MONGODB_SETTINGS = {
         'db': os.environ.get('DB_PROJECT'),
@@ -25,8 +26,11 @@ class Config(object):
         'port': int(os.environ.get('DB_PORT'))
     }
     OBJECTID = ObjectIdConverter
+
     USER_DATA_FOLDER = "userData"
     SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")
+
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
-    CELERY_BROKER_URL = "amqp://localhost//"
-    CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
+
+    BROKER_URL = "amqp://localhost//"
+    RESULT_BACKEND = "mongodb://localhost:27017"

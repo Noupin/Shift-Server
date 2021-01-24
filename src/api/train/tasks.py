@@ -9,12 +9,13 @@ import os
 import json
 import numpy as np
 from typing import List
-from flask import current_app, session
 from flask_login import current_user
+from flask import current_app, session
 
 #First Party Imports
+from src import celery
+print("Train:",celery)
 from src.AI.shift import Shift
-from src.celeryApp import celery
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
@@ -123,6 +124,8 @@ def trainShift(requestJSON: dict):
     Args:
         requestJSON (TrainRequest): The JSON request data that can be serialized
     """
+    print("Train Celery:",celery)
+    print("Train Task:", celery.conf.get("RESULT_BACKEND"))
 
     requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
 
@@ -155,9 +158,9 @@ def trainShift(requestJSON: dict):
         pass
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
-    print(current_user)
-    while session["training"]:
-        while not session["trainingUpdate"]:
+
+    while session.get("training"):
+        while not session.get("trainingUpdate"):
             if not baseTrainingData is None and baseTrainingData.any():
                 #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
                 shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
@@ -165,7 +168,7 @@ def trainShift(requestJSON: dict):
                 #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
                 shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
 
-        if session["trainingUpdate"]:
+        if session.get("trainingUpdate"):
             if requestData.trainType == "basic":
                 current_app.config["SHIFT_GLOBALS"].exhibitImages = getBasicExhibitImage(shft)
             elif requestData.trainType == "advanced":

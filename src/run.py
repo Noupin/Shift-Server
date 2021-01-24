@@ -6,9 +6,11 @@ __author__ = "Noupin"
 
 #First Party Imports
 from src import createApp
-from src.celeryApp import celery
 
 
-if __name__ == 'src.run':
-    app = createApp(celery=celery)
+#print("\n\n", __name__, "\n\n")
+print("App Running")
+app = createApp()
+
+if __name__ == '__main__':
     app.run()

@@ -12,8 +12,8 @@ from flask_login import login_required, current_user
 from flask import Blueprint, request, current_app, session
 
 #First Party Imports
-from src.DataModels.MongoDB.User import User
 from src.api.train.tasks import trainShift
+from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
@@ -37,6 +37,8 @@ def train() -> dict:
     Returns:
         Shifted Media: The media that has been shifted by the specialized model.
     """
+    print(current_user.username)
+    print(current_app.config.get("SHIFT_MODELS_FOLDER"))
 
     if not request.is_json:
         return {'msg': "Your train request had no JSON payload"}
