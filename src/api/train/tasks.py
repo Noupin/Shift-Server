@@ -6,15 +6,16 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import bson
 import json
 import numpy as np
 from typing import List
+from bson import ObjectId
 from flask_login import current_user
 from flask import current_app, session
 
 #First Party Imports
-from src import celery
-print("Train:",celery)
+from src.run import celery
 from src.AI.shift import Shift
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.User import User
@@ -25,7 +26,7 @@ from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE)
 
 
-def saveShiftToDatabase(uuid: str, userID, title: str, path: str):
+def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, path: str):
     """
     Saves the paths and the relevant information for a shift model to the database.
 
@@ -117,16 +118,15 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
 
 
 @celery.task(name="train.trainShift")
-def trainShift(requestJSON: dict):
+def trainShift(requestJSON: dict, userID: str):
     """
     Trains the shift models from PTM or from a specialized model depending on the requestData.
 
     Args:
         requestJSON (TrainRequest): The JSON request data that can be serialized
     """
-    print("Train Celery:",celery)
-    print("Train Task:", celery.conf.get("RESULT_BACKEND"))
 
+    userID = ObjectId(userID)
     requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
 
     shft = Shift(id_=requestData.shiftUUID)
@@ -179,6 +179,6 @@ def trainShift(requestJSON: dict):
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
-    saveShiftToDatabase(uuid=shft.id_, userID=current_user.id, title="Some title", path=shiftFilePath)
+    saveShiftToDatabase(uuid=shft.id_, userID=userID, title="Some title", path=shiftFilePath)
 
     del shft

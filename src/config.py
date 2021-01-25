@@ -32,5 +32,5 @@ class Config(object):
 
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
 
-    BROKER_URL = "amqp://localhost//"
-    RESULT_BACKEND = "mongodb://localhost:27017"
+    CELERY_BROKER_URL = "amqp://localhost//"
+    CELERY_RESULT_BACKEND = "mongodb://localhost:27017"

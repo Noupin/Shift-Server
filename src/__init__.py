@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import flask
 from flask import Flask
+from celery import Celery
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mongoengine import MongoEngine
@@ -16,7 +17,6 @@ from flask_mail import Mail
 #First Party Imports
 from src.config import Config
 from src.variables.globals import Globals
-from src.utils.FlaskCelery import FlaskCelery
 from src.utils.MJSONEncoder import MongoJSONEncoder
 
 
@@ -26,18 +26,15 @@ login_manager = LoginManager()
 db = MongoEngine()
 bcrypt = Bcrypt()
 mail = Mail()
-celery = FlaskCelery()
-print("Main:",celery)
 
 
-def createApp(appName=__name__, configClass=Config, **kwargs) -> flask.app.Flask:
+def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
     """
     Creates the Shift Flask App and if given a config class the default config class is overridden.
 
     Args:
         appName (str): The name of the Flask applcation
         configClass (Config, optional): The configuration settings for the Flask app. Defaults to Config.
-        **kwargs: The extra keyword arguments to apply to the init_celery funciton
 
     Returns:
         flask.app.Flask: The created Flask app.
@@ -54,7 +51,25 @@ def createApp(appName=__name__, configClass=Config, **kwargs) -> flask.app.Flask
     db.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
-    celery.init_app(app)
+
+    return app
+
+
+def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask:
+    """
+    Creates the Shift Flask App and if given a config class the default config class is overridden.
+
+    Args:
+        app (flask.app.Flask): The application to update the blueprints of
+        appName (str): The name of the Flask applcation
+        configClass (Config, optional): The configuration settings for the Flask app. Defaults to Config.
+
+    Returns:
+        flask.app.Flask: The created Flask app.
+    """
+
+    if not app:
+        app = initApp(appName, configClass)
 
 
     from src.main.routes import main
@@ -71,3 +86,20 @@ def createApp(appName=__name__, configClass=Config, **kwargs) -> flask.app.Flask
     app.register_blueprint(users, url_prefix='/api/users')
 
     return app
+
+
+def makeCelery(app: flask.app.Flask):
+    celery = Celery(app.import_name,
+                    backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context() and app.test_request_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+
+    return celery

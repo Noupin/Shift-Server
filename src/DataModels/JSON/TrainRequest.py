@@ -4,6 +4,8 @@ The Train Request Data Model for the Shift API
 """
 __author__ = "Noupin"
 
+#Third Party Imports
+import bson
 
 class TrainRequest:
     shiftUUID: str

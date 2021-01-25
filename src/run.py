@@ -5,12 +5,14 @@ Runs the server for Shift
 __author__ = "Noupin"
 
 #First Party Imports
-from src import createApp
+from src import initApp, createApp, makeCelery
 
 
 #print("\n\n", __name__, "\n\n")
-print("App Running")
-app = createApp()
+app = initApp()
+celery = makeCelery(app)
+app = createApp(app)
 
 if __name__ == '__main__':
+    print("App Running")
     app.run()

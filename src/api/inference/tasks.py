@@ -11,7 +11,7 @@ import numpy as np
 from flask import current_app
 
 #First Party Imports
-from src import celery
+from src.run import celery
 from src.AI.shift import Shift
 from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage
