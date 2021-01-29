@@ -75,6 +75,7 @@ def train() -> dict:
 
     session["training"] = True
     trainShift.delay(request.get_json(), str(current_user.id))
+    print(session)
 
     return {'msg': f"Training as {current_user.username}"}
 

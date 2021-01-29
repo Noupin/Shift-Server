@@ -361,3 +361,50 @@ def maskImage(baseImage: np.ndarray, maskImage: np.ndarray, **kwargs) -> np.ndar
     maskedImage = cv2.add(maskImage, baseImage)
 
     return maskedImage
+
+
+def drawPolygon(image: np.ndarray, points: List[List[int]], color=(255, 255, 255), mask=False) -> np.ndarray:
+    """
+    Connects the dots and fills the newly made polygon with color. If needed
+    the background can be set to black and a masking image can be returned. 
+
+    Args:
+        image (np.ndarray): The image to draw the polygon ontop of.
+        points (List[List[int]]): The points to connect together.
+        color (tuple, optional): The color to fill the polygon. Defaults to (255, 255, 255).
+        mask (bool, optional): Whether the image should be converted to a mask. Defaults to False.
+
+    Returns:
+        np.ndarray: The polygon drawn ontop of image or the drawn mask.
+    """
+
+    polyImage = image.copy()
+    if mask:
+        polyImage = np.zeros(image.shape[0:2], dtype=np.uint8)
+
+    cv2.fillPoly(polyImage, pts=[points], color=color)
+    
+    return polyImage
+
+
+def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """
+    Applies mask to baseImage and overlays maskImage in the correspodning area.
+
+    Args:
+        baseImage (np.ndarray): The image to have the mask applied to.
+        maskImage (np.ndarray): The image to apply as a mask to the base image.
+        mask (np.ndarray): The black and white bitwise mask to be applied.
+
+    Returns:
+        np.ndarray: An output of maskImage overlayed on baseImage in using the area from mask
+    """
+
+    inverseMask = cv2.bitwise_not(mask)
+
+    base = cv2.bitwise_and(baseImage, baseImage, mask=inverseMask)
+    mask = cv2.bitwise_and(maskImage, maskImage, mask=mask)
+
+    maskedImage = cv2.add(base, mask)
+
+    return maskedImage

@@ -125,6 +125,7 @@ def trainShift(requestJSON: dict, userID: str):
     Args:
         requestJSON (TrainRequest): The JSON request data that can be serialized
     """
+    print(session)
 
     userID = ObjectId(userID)
     requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))

@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import cv2
+import dlib
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
@@ -30,3 +31,7 @@ OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
 HAAR_CASCADE_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
 
 LARGE_BATCH_SIZE = 64
+
+#Facial Landmark Model & Detector
+FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
+FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
