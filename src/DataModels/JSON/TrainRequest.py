@@ -20,3 +20,6 @@ class TrainRequest:
         self.prebuiltShiftModel = prebuiltShiftModel
         self.epochs = epochs
         self.trainType = trainType
+    
+    def __repr__(self) -> str:
+        return f"TrainRequest(shiftUUID: {self.shiftUUID}, usePTM: {self.usePTM}, prebuiltShiftModel: {self.prebuiltShiftModel}, trainInterval: {self.epochs}, trainType: {self.trainType})"

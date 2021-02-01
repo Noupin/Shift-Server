@@ -13,8 +13,8 @@ from flask import current_app
 #First Party Imports
 from src.run import celery
 from src.AI.shift import Shift
-from src.DataModels.MongoDB.User import User
 from src.utils.image import encodeImage
+from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.variables.constants import HAAR_CASCADE_KWARGS
@@ -75,7 +75,8 @@ def shift(requestData: InferenceRequest) -> str:
                   os.path.join(shiftFilePath, "maskDecoder"))
 
     inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True)
-    encodedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
+    shiftedImage = shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True)
+    encodedImage = encodeImage(shiftedImage)
 
     del shft
     return encodedImage

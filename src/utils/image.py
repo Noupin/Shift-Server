@@ -387,7 +387,7 @@ def drawPolygon(image: np.ndarray, points: List[List[int]], color=(255, 255, 255
     return polyImage
 
 
-def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray) -> np.ndarray:
+def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray, dtype=cv2.CV_32F) -> np.ndarray:
     """
     Applies mask to baseImage and overlays maskImage in the correspodning area.
 
@@ -395,6 +395,7 @@ def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray) ->
         baseImage (np.ndarray): The image to have the mask applied to.
         maskImage (np.ndarray): The image to apply as a mask to the base image.
         mask (np.ndarray): The black and white bitwise mask to be applied.
+        dtype (int, optional): The datatype of baseImage and maskImage. Defaults to cv2.CV_32F.
 
     Returns:
         np.ndarray: An output of maskImage overlayed on baseImage in using the area from mask
@@ -405,6 +406,6 @@ def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray) ->
     base = cv2.bitwise_and(baseImage, baseImage, mask=inverseMask)
     mask = cv2.bitwise_and(maskImage, maskImage, mask=mask)
 
-    maskedImage = cv2.add(base, mask)
+    maskedImage = cv2.add(base, mask, dtype=dtype)
 
     return maskedImage

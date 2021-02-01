@@ -18,13 +18,13 @@ from src.AI.encoder import Encoder
 from src.AI.decoder import Decoder
 from src.utils.video import videoToImages
 from src.AI.autoencoder import AutoEncoder
-from src.utils.detection import detectObject
 from src.utils.math import getLargestRectangle, flattenList
+from src.utils.detection import detectObject, getFacialLandmarks
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.image import (resizeImage, blendImageAndColor,
                              flipImage, cropImage, loadImage,
                              replaceAreaOfImage, viewImage,
-                             maskImage)
+                             drawPolygon, applyMask)
 from src.variables.constants import (OBJECT_CLASSIFIER,
                                      VIDEO_FRAME_GRAB_INTERVAL)
 
@@ -206,10 +206,16 @@ class Shift:
         replaceImage = imageResizer(originalCroppedImage, (self.imageShape[0], self.imageShape[1]))
         replaceImage = replaceImage.astype(np.float32)
 
-        shiftedReplace = self.predict(model, replaceImage)
+        shiftedReplace = self.predict(model, replaceImage) #TF needs float32 not uint8
         replaceImage = imageResizer(shiftedReplace, replaceImageXY)
 
-        replaceImage = maskImage(originalCroppedImage, replaceImage.astype(np.uint8), gray=True)
+        landmarks = getFacialLandmarks(originalCroppedImage, replaceArea)
+        maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
+        mask = drawPolygon(originalCroppedImage, maskLandmarks, mask=True)
+
+        maskedImage = applyMask(originalCroppedImage, replaceImage, mask)
+
+        #replaceImage = maskImage(originalCroppedImage, replaceImage.astype(np.uint8), gray=True)
 
         return replaceAreaOfImage(image, replaceArea, replaceImage)
 

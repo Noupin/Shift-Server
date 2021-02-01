@@ -8,19 +8,48 @@ __author__ = "Noupin"
 import os
 import json
 import bson
+import mongoengine
 import tensorflow as tf
+from celery.result import AsyncResult
 from flask_login import login_required, current_user
 from flask import Blueprint, request, current_app, session
 
 #First Party Imports
+from src.run import celery
 from src.api.train.tasks import trainShift
-from src.utils.MJSONEncoder import MongoJSONEncoder
 from src.DataModels.MongoDB.User import User
+from src.utils.MJSONEncoder import MongoJSONEncoder
 from src.DataModels.JSON.TrainRequest import TrainRequest
+from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
 
 trainBP = Blueprint('train', __name__)
+
+
+def validateBaseTrainRequest() -> TrainRequest or dict:
+    if not request.is_json:
+        return {'msg': "Your train request had no JSON payload"}
+
+    try:
+        requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
+    except ValueError as e:
+        print("Value:", e)
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+    except TypeError as e:
+        print("Type:", e)
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+
+    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+        return {'msg': "Your train request had no shiftUUID"}
+
+    if requestData.usePTM is None:
+        return {'msg': "Your train request had not indication to use the prebuilt model or not"}
+
+    if requestData.trainType != "basic" and requestData.trainType != "advanced":
+        return {'msg': "Your train request did not have the correct training type"}
+    
+    return requestData
 
 
 @trainBP.route("/train", methods=["POST"])
@@ -40,29 +69,9 @@ def train() -> dict:
         Shifted Media: The media that has been shifted by the specialized model.
     """
 
-    if not request.is_json:
-        return {'msg': "Your train request had no JSON payload"}
-
-    try:
-        requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
-    except ValueError as e:
-        print("Value:", e)
-        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
-    except TypeError as e:
-        print("Type:", e)
-        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
-
-    if requestData.shiftUUID is None or requestData.shiftUUID is "":
-        return {'msg': "Your train request had no shiftUUID"}
-
-    if requestData.usePTM is None:
-        return {'msg': "Your train request had not indication to use the prebuilt model or not"}
-
-    if requestData.epochs > 100:
-        return {'msg': "Your train request will take too long"}
-
-    if requestData.trainType != "basic" and requestData.trainType != "advanced":
-        return {'msg': "Your train request did not have the correct training type"}
+    requestData = validateBaseTrainRequest()
+    if type(requestData) == dict:
+        return requestData
 
     if requestData.prebuiltShiftModel:
         try:
@@ -73,9 +82,14 @@ def train() -> dict:
         except OSError:
             return {'msg': "That model does not exist"}
 
-    session["training"] = True
-    trainShift.delay(request.get_json(), str(current_user.id))
-    print(session)
+    worker = TrainWorker(shiftUUID=requestData.shiftUUID, training=True, inferencing=False)
+    job = trainShift.delay(request.get_json(), str(current_user.id))
+    worker.workerID = job.id
+
+    try:
+        worker.save()
+    except mongoengine.errors.NotUniqueError:
+        return {'msg': "That AI is already training."}
 
     return {'msg': f"Training as {current_user.username}"}
 
@@ -92,23 +106,33 @@ def trainStatus() -> dict:
         dict: A response with the status of the training and possibly exhibit images if ready.
     """
 
+    requestData = validateBaseTrainRequest()
+    if type(requestData) == dict:
+        return requestData
+
+    worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
+    job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
+
     try:
-        status = current_app.config["SHIFT_GLOBALS"].job.status
+        status = job.status
 
         if status == "PENDING":
-            session["training"] = False
-            session["trainingUpdate"] = True
+            worker.update(set__inferencing=True)
+            worker.reload()
 
-            if len(current_app.config["SHIFT_GLOBALS"].exhibitImages) > 0 and not session["trainingUpdate"]:
-                return {'msg': f"Update for current shift", 'exhibit': current_app.config["SHIFT_GLOBALS"].exhibitImages}
+            if len(worker.exhibitImages) > 0 and worker.imagesUpdated:
+                worker.update(set__imagesUpdated=False)
+                worker.reload()
+                print("Sent image")
+                return {'msg': f"Update for current shift", 'exhibit': worker.exhibitImages}
 
         return {'msg': f"The status is {status}"}
 
-    except AttributeError:
+    except AttributeError as e:
         return {'msg': "There are currently no jobs"}
 
 
-@trainBP.route("/stopTrain", methods=["POST"])
+@trainBP.route("/stopTraining", methods=["POST"])
 @login_required
 def stopTrain() -> dict:
     """
@@ -118,6 +142,11 @@ def stopTrain() -> dict:
         dict: A msg confirming the cancellation of the shift training.
     """
 
-    session["training"] = False
+    requestData = validateBaseTrainRequest()
+    if type(requestData) == dict:
+        return requestData
+
+    worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
+    worker.update(set__training=False)
 
     return {'msg': "Training stopped"}

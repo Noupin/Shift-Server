@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The data models for the Shift API
+The MongoDB data model for a Shift
 """
 __author__ = "Noupin"
 

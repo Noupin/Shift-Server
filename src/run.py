@@ -1,4 +1,5 @@
 #pylint: disable=C0103, C0301, R0903, E1101
+#celery -A src.run:celery worker --pool=solo --loglevel=info
 """
 Runs the server for Shift
 """

@@ -8,11 +8,12 @@ __author__ = "Noupin"
 import os
 import bson
 import json
+import time
 import numpy as np
 from typing import List
 from bson import ObjectId
+from flask import current_app
 from flask_login import current_user
-from flask import current_app, session
 
 #First Party Imports
 from src.run import celery
@@ -20,6 +21,7 @@ from src.AI.shift import Shift
 from src.utils.image import encodeImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
+from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
@@ -125,10 +127,11 @@ def trainShift(requestJSON: dict, userID: str):
     Args:
         requestJSON (TrainRequest): The JSON request data that can be serialized
     """
-    print(session)
 
     userID = ObjectId(userID)
     requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
+
+    worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)
     shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
@@ -147,9 +150,8 @@ def trainShift(requestJSON: dict, userID: str):
             maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
             maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
 
-    ##
-    #Work Around
-    ##
+
+    ### Work Around ###
     try:
         shft.encoder.modelLoaded
         #Only needs built and compiled the first time
@@ -160,24 +162,29 @@ def trainShift(requestJSON: dict, userID: str):
 
     amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
-    while session.get("training"):
-        while not session.get("trainingUpdate"):
+    training = worker.training
+    while training:
+        while not worker.inferencing and training:
             if not baseTrainingData is None and baseTrainingData.any():
                 #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
                 shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             if not maskTrainingData is None and maskTrainingData.any():
                 #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
                 shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+            
+            worker.reload()
+            training = worker.training
 
-        if session.get("trainingUpdate"):
+        if worker.inferencing:
             if requestData.trainType == "basic":
-                current_app.config["SHIFT_GLOBALS"].exhibitImages = getBasicExhibitImage(shft)
+                worker.update(set__exhibitImages=getBasicExhibitImage(shft))
             elif requestData.trainType == "advanced":
-                current_app.config["SHIFT_GLOBALS"].exhibitImages = getAdvancedExhibitImages(shft)
+                worker.update(set__exhibitImages=getAdvancedExhibitImages(shft))
                 
-            session["trainingUpdate"] = False
+            worker.update(set__inferencing=False, set__imagesUpdated=True)
+            worker.reload()
 
-
+    worker.delete()
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
     saveShiftToDatabase(uuid=shft.id_, userID=userID, title="Some title", path=shiftFilePath)

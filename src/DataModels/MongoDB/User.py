@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The data models for the Shift API
+The MongoDB data model for a User
 """
 __author__ = "Noupin"
 
@@ -11,7 +11,6 @@ from flask_login import UserMixin
 
 #First Party Imports
 from src import db, login_manager
-from src.DataModels.MongoDB.Shift import Shift
 
 
 class User(db.Document, UserMixin):
