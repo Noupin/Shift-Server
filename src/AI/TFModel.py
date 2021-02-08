@@ -126,7 +126,7 @@ class TFModel(tf.keras.Model):
 
     def train(self, xTrainData: List[np.ndarray], yTrainData: List[np.ndarray]=None,
                     xTestData: List[np.ndarray]=None, yTestData: List[np.ndarray]=None,
-                    epochs: int=None, batch_size: int=None) -> None:
+                    epochs: int=1, batch_size: int=1) -> None:
 
         """
         Trains the model given traingin data. This an an alternative to the .fit() with more customizability.
@@ -136,20 +136,22 @@ class TFModel(tf.keras.Model):
             yTrainData (list of numpy.ndarray, optional): The expected outputs for training the model. Defaults to None.
             xTestData (list of numpy.ndarray, optional): The inputs for testing or validating the model. Defaults to None.
             yTestData (list of numpy.ndarray, optional): The expected outputs for testing or validating the model. Defaults to None.
-            epochs (int, optional): The amount of iterations to train. Defaults to None.
-            batch_size (int, optional): Then size to batch the data into. Defaults to None.
+            epochs (int, optional): The amount of iterations to train. Defaults to 1.
+            batch_size (int, optional): Then size to batch the data into. Defaults to 1.
         """
 
-        if yTrainData:
+        self.fit(xTrainData, xTrainData, batch_size=batch_size, epochs=epochs)
+
+        '''if np.array(yTrainData).any():
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, yTrainData))
         else:
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, xTrainData))
         trainDataset = trainDataset.batch(batch_size)
 
         
-        if xTestData and yTestData:
+        if np.array(xTestData).any() and np.array(yTestData).any():
             testDataset = tf.data.Dataset.from_tensor_slices(xTestData, yTestData)
-        elif xTestData:
+        elif np.array(xTestData).any():
             testDataset = tf.data.Dataset.from_tensor_slices(xTestData, xTestData)
         else:
             testDataset = tf.data.Dataset.from_tensor_slices([])
@@ -164,7 +166,7 @@ class TFModel(tf.keras.Model):
             for xBatchTest, yBatchTest in testDataset:
                self.testStep(x_batch_val, y_batch_val)
             
-            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")
+            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")'''
 
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:

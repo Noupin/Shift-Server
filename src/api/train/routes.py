@@ -120,10 +120,15 @@ def trainStatus() -> dict:
             worker.update(set__inferencing=True)
             worker.reload()
 
+            imagesUpdated = worker.imagesUpdated
+            while not imagesUpdated:
+                worker.reload()
+                imagesUpdated = worker.imagesUpdated
+
             if len(worker.exhibitImages) > 0 and worker.imagesUpdated:
                 worker.update(set__imagesUpdated=False)
                 worker.reload()
-                print("Sent image")
+
                 return {'msg': f"Update for current shift", 'exhibit': worker.exhibitImages}
 
         return {'msg': f"The status is {status}"}
@@ -149,4 +154,10 @@ def stopTrain() -> dict:
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
     worker.update(set__training=False)
 
-    return {'msg': "Training stopped"}
+    while True:
+        try:
+            worker.reload()
+        except mongoengine.errors.DoesNotExist:
+            break
+
+    return {'msg': "Training stopped", 'stopped': True}

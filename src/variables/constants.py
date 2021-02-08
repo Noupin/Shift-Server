@@ -35,3 +35,5 @@ LARGE_BATCH_SIZE = 64
 #Facial Landmark Model & Detector
 FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
 FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
+
+TEMP_MEDIA_PATH = os.path.join("userData")

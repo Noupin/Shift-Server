@@ -26,6 +26,7 @@ from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE)
+from src.utils.image import viewImage
 
 
 def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, path: str):
@@ -166,10 +167,10 @@ def trainShift(requestJSON: dict, userID: str):
     while training:
         while not worker.inferencing and training:
             if not baseTrainingData is None and baseTrainingData.any():
-                #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
+                print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
                 shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             if not maskTrainingData is None and maskTrainingData.any():
-                #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
+                print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
                 shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             
             worker.reload()
@@ -184,9 +185,9 @@ def trainShift(requestJSON: dict, userID: str):
             worker.update(set__inferencing=False, set__imagesUpdated=True)
             worker.reload()
 
-    worker.delete()
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
     saveShiftToDatabase(uuid=shft.id_, userID=userID, title="Some title", path=shiftFilePath)
 
+    worker.delete()
     del shft

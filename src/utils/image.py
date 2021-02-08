@@ -6,16 +6,21 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import io
+import os
 import cv2
+import types
 import base64
+import moviepy
 import numpy as np
 from PIL import Image
-from typing import List, Tuple
 from colorama import Fore
+from typing import List, Tuple
 import matplotlib.pyplot as plt
+from moviepy import editor as mediaEditor
 
 #First Party Imports
 from src.Exceptions.CVToPIL import CVToPILError
+from src.Exceptions.IncompatibleShapes import IncompatibleShapeError
 
 
 def PILToCV(image: Image.Image) -> np.ndarray:
@@ -29,9 +34,9 @@ def PILToCV(image: Image.Image) -> np.ndarray:
         numpy.ndarray: The CV image
     """
 
-    image = np.asarray(image)
+    converted = np.asarray(image)
 
-    return image
+    return converted
 
 
 def CVToPIL(image: np.ndarray) -> Image.Image:
@@ -53,9 +58,9 @@ def CVToPIL(image: np.ndarray) -> Image.Image:
             print(Fore.GREEN + "Conversion skipped." + Fore.RESET)
             return image
 
-    image = Image.fromarray(image)
+    converted = Image.fromarray(image)
 
-    return image
+    return converted
 
 
 def loadImage(path: str) -> np.ndarray:
@@ -101,14 +106,14 @@ def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False) -> np.ndarray
         numpy.ndarray: The resized CV image
     """
 
-    image = PILToCV(image)
+    resized = PILToCV(image)
 
     if keepAR:
-        image = cv2.resize(image, size)
+        resized = cv2.resize(resized, size)
     else:
-        image = cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+        resized = cv2.resize(resized, size, interpolation=cv2.INTER_AREA)
 
-    return image
+    return resized
 
 
 def cropImage(image: np.ndarray, cropArea: Tuple[int]) -> np.ndarray:
@@ -125,8 +130,9 @@ def cropImage(image: np.ndarray, cropArea: Tuple[int]) -> np.ndarray:
     """
 
     x, y, width, height = cropArea
+    cropped = image[int(y):int(y+height), int(x):int(x+width)]
 
-    return image[int(y):int(y+height), int(x):int(x+width)]
+    return cropped
 
 
 def replaceAreaOfImage(fullImage: np.ndarray, replaceArea: Tuple[int], replaceImage: np.ndarray) -> np.ndarray:
@@ -221,11 +227,11 @@ def blendImageAndColor(image, colorCode: int) -> np.ndarray:
                   2: (0, 0, 255), #Blue
                   3: (0, 0, 0), #Black
                   4: (255, 255, 255)} # White
-    alphaLevels = {0: 0.3, #Red alpha level
-                   1: 0.3, #Green alpha level
-                   2: 0.3, #Blue alpha level
-                   3: 0.7, #Black alpha level
-                   4: 0.7} #White alpha level
+    alphaLevels = {0: 0.225, #Red alpha level
+                   1: 0.225, #Green alpha level
+                   2: 0.2, #Blue alpha level
+                   3: 0.4, #Black alpha level
+                   4: 0.4} #White alpha level
 
     image = CVToPIL(image)
     colorImage = Image.new("RGB", image.size,
@@ -258,30 +264,42 @@ def flipImage(image, flipCode: str) -> np.ndarray:
     return cv2.flip(image, flipMap[flipCode])
 
 
-def imagesToVideo(images: List[np.ndarray], outPath: str, fps: float) -> None:
+def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, fps: float, save=False) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     """
     Given a path with all of the image arrays a .mp4 video will be exported
 
     Args:
-        images (list of numpy.ndarray): An array of cv images
+        images (types.GeneratorType): An array of cv images
+        shape (tuple of int): The height, width and color dimension of the frames to converted to a video.
         outPath (str): The path to save the video to
         fps (float): The fps at which to combine the video at
+        save (bool): Whether or not to keep the video in the filesystem or not
     """
 
-    height, width, colorDim = images[0].shape
+    height, width, _ = shape
 
     codec = cv2.VideoWriter_fourcc(*'H264') #H264, X264, MP42, MP4A
     videoWrite = cv2.VideoWriter(outPath,
-                                codec,
-                                fps,
-                                (width, height))
+                                 codec,
+                                 fps,
+                                 (width, height))
 
     for image in images:
+        if image.shape != shape:
+            raise IncompatibleShapeError(image.shape, shape)
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         videoWrite.write(image)
 
     videoWrite.release()
     cv2.destroyAllWindows()
+
+    video = mediaEditor.VideoFileClip(outPath)
+
+    if not save:
+        os.remove(outPath)
+
+    return video
 
 
 def createMask(image: np.ndarray, **kwargs) -> np.ndarray:
@@ -387,7 +405,7 @@ def drawPolygon(image: np.ndarray, points: List[List[int]], color=(255, 255, 255
     return polyImage
 
 
-def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray, dtype=cv2.CV_32F) -> np.ndarray:
+def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray, dtype=cv2.CV_8U) -> np.ndarray:
     """
     Applies mask to baseImage and overlays maskImage in the correspodning area.
 
@@ -395,7 +413,7 @@ def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray, dt
         baseImage (np.ndarray): The image to have the mask applied to.
         maskImage (np.ndarray): The image to apply as a mask to the base image.
         mask (np.ndarray): The black and white bitwise mask to be applied.
-        dtype (int, optional): The datatype of baseImage and maskImage. Defaults to cv2.CV_32F.
+        dtype (int, optional): The datatype of baseImage and maskImage. Defaults to cv2.CV_8U.
 
     Returns:
         np.ndarray: An output of maskImage overlayed on baseImage in using the area from mask

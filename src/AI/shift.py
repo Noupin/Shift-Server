@@ -6,10 +6,12 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import types
 import random
+import moviepy
 import numpy as np
 import tensorflow as tf
-from typing import List
+from typing import List, Union
 from skimage.util import img_as_float
 
 #First Party Imports
@@ -18,15 +20,18 @@ from src.AI.encoder import Encoder
 from src.AI.decoder import Decoder
 from src.utils.video import videoToImages
 from src.AI.autoencoder import AutoEncoder
+from src.utils.memory import chunkIterable
 from src.utils.math import getLargestRectangle, flattenList
-from src.utils.detection import detectObject, getFacialLandmarks
 from src.utils.files import generateUniqueFilename, getMediaType
+from src.utils.detection import detectObject, getFacialLandmarks
 from src.utils.image import (resizeImage, blendImageAndColor,
                              flipImage, cropImage, loadImage,
                              replaceAreaOfImage, viewImage,
-                             drawPolygon, applyMask)
+                             drawPolygon, applyMask,
+                             imagesToVideo)
 from src.variables.constants import (OBJECT_CLASSIFIER,
-                                     VIDEO_FRAME_GRAB_INTERVAL)
+                                     VIDEO_FRAME_GRAB_INTERVAL,
+                                     TEMP_MEDIA_PATH)
 
 
 class Shift:
@@ -65,19 +70,19 @@ class Shift:
         latentReshapeY = int(imageShape[1]/(2**(self.codingLayers+1)))
 
 
-        self.encoder = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
+        self.encoder: TFModel = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
 
-        self.baseDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
-        self.maskDecoder = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.baseDecoder: TFModel = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.maskDecoder: TFModel = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
 
         self.addCodingLayers(self.codingLayers)
 
         #Will shift objects from mask to base if predicting on mask images
-        self.baseAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
-                                  optimizer=optimizer, loss=loss, name="Base")
+        self.baseAE: TFModel = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
+                                           optimizer=optimizer, loss=loss, name="Base")
         #Will shift objects from base to mask if predicting on base images
-        self.maskAE = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                  optimizer=optimizer, loss=loss, name="Mask")
+        self.maskAE: TFModel = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+                                           optimizer=optimizer, loss=loss, name="Mask")
 
 
     def getMaxCodingLayers(self) -> None:
@@ -93,12 +98,12 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: List[np.ndarray], objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
+    def formatTrainingData(self, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models.
 
         Args:
-            images (list of numpy.ndarray): The images to be formatted for Shift model training
+            images (types.GeneratorType): The images to be formatted for Shift model training
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             flipCodes (list of str): The codes to flip the image for augmentation. Defaults to ["x"].
@@ -112,37 +117,42 @@ class Shift:
 
         for image in images:
             objects = detectObject(objectClassifier, image=image, **kwargs)
-            if type(objects) != tuple: #if type(objects) == tuple: continue
-                augmented = []
-                augmentedItems = 0
-                image = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
-                
-                coloredImages = [image]
-                for colorCode in range(5):
-                    coloredImages.append(blendImageAndColor(image, colorCode))
+            if type(objects) == tuple:
+                continue
+            
+            augmented = []
+            augmentedItems = 0
+            resized = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
+            #trainingData.append(resized)
+            
+            coloredImages = [resized]
+            for colorCode in range(5):
+                coloredImages.append(blendImageAndColor(resized, colorCode))
 
-                randomColored = coloredImages.copy()
-                random.shuffle(randomColored)
-                augmentedItems += len(randomColored)
-                augmented.append(randomColored)
+            randomColored = coloredImages.copy()
+            random.shuffle(randomColored)
+            augmentedItems += len(randomColored)
+            augmented.append(randomColored)
 
-                for flipCode in flipCodes:
-                    flippedImages = []
-                    for coloredImage in coloredImages:
-                        flippedImages.append(flipImage(coloredImage, flipCode))
+            for flipCode in flipCodes:
+                flippedImages = []
+                for coloredImage in coloredImages:
+                    flippedImages.append(flipImage(coloredImage, flipCode))
 
-                    random.shuffle(flippedImages)
-                    augmentedItems += len(flippedImages)
-                    augmented.append(flippedImages)
+                random.shuffle(flippedImages)
+                augmentedItems += len(flippedImages)
+                augmented.append(flippedImages)
 
-                shuffledAugmented = random.sample(flattenList(augmented), augmentedItems)
-                trainingData.append(shuffledAugmented)
+            shuffledAugmented = random.sample(flattenList(augmented), augmentedItems)
+            trainingData.append(shuffledAugmented)
+            
+
 
         random.shuffle(trainingData)
         trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2]) / 255.
         trainingData = trainingData.astype('float32')
 
-        return trainingData #tf.data.Dataset.from_tensor_slices(trainingData)
+        return trainingData
     
 
     def addCodingLayers(self, count: int) -> None:
@@ -175,49 +185,86 @@ class Shift:
         image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
 
         return image
-    
 
-    def shift(self, model: tf.keras.Model, image: np.ndarray, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
+    
+    def shiftedMedia(self, model: tf.keras.Model, media: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
 
         Args:
             model (tf.keras.Model): The model used to shift the objects.
-            image (np.ndarray): The image to be shifted
+            media (types.GeneratorType or np.ndarray): The media to be shifted
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
             **kwargs: The key word arguments to pass into detectObject function
 
-        Returns:
-            np.ndarray: The shifted image
+        Yields:
+            np.ndarray: The shifted image.
         """
 
-        objects = detectObject(objectClassifier, image=image, **kwargs)
+        for image in media:
+            image = image.astype(np.uint8)
+            objects = detectObject(objectClassifier, image=image, **kwargs)
 
-        if type(objects) == tuple:
-            return image
+            if type(objects) == tuple:
+                yield image
+                continue
+            
+            replaceArea = getLargestRectangle(objects)
+            originalCroppedImage = cropImage(image, replaceArea)
+            replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
+
+            replaceImage = imageResizer(originalCroppedImage, (self.imageShape[0], self.imageShape[1]))
+            shiftedReplace = self.predict(model, replaceImage.astype(np.float32)) #TF needs float32 not uint8
+            shiftedReplace = shiftedReplace.astype(np.uint8)
+            replaceImage = imageResizer(shiftedReplace, replaceImageXY)
+
+            landmarks = getFacialLandmarks(image, replaceArea)
+            maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
+            mask = drawPolygon(image, maskLandmarks, mask=True)
+            mask = cropImage(mask, replaceArea) #Cropping the mask to fit the shifted image
+
+            maskedImage = applyMask(originalCroppedImage, replaceImage, mask)
+            shiftedImage = replaceAreaOfImage(image, replaceArea, maskedImage)
+    
+            yield shiftedImage
+    
+
+    def shift(self, model: tf.keras.Model, media: Union[types.GeneratorType, np.ndarray], fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> Union[moviepy.video.io.VideoFileClip.VideoFileClip, np.ndarray]:
+        """
+        Shifts the desired objects in the media.
+
+        Args:
+            model (tf.keras.Model): The model used to shift the objects.
+            media (types.GeneratorType or np.ndarray): The media to be shifted
+            objectClassifier (function): The classifier used to detect the are of the image
+                                         to shift. Defaults to OBJECT_CLASSIFIER.
+            imageResizer (function): The function used to resize images. Defaults to resizeImage.
+            fps (float): The fps to save the video at. Defaults to 30.0.
+            **kwargs: The key word arguments to pass into detectObject function
+
+        Returns:
+            moviepy.video.io.VideoFileClip.VideoFileClip or np.ndarray: The shifted media
+        """
+
+        isImage = False
+
+        if isinstance(media, np.ndarray) and media.ndim == 3:
+            media = (i for i in [media])
+            isImage = True
+
         
-        replaceArea = getLargestRectangle(objects)
-        originalCroppedImage = cropImage(image, replaceArea)
-        replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
-
-        replaceImage = imageResizer(originalCroppedImage, (self.imageShape[0], self.imageShape[1]))
-        replaceImage = replaceImage.astype(np.float32)
-
-        shiftedReplace = self.predict(model, replaceImage) #TF needs float32 not uint8
-        replaceImage = imageResizer(shiftedReplace, replaceImageXY)
-
-        landmarks = getFacialLandmarks(originalCroppedImage, replaceArea)
-        maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
-        mask = drawPolygon(originalCroppedImage, maskLandmarks, mask=True)
-
-        maskedImage = applyMask(originalCroppedImage, replaceImage, mask)
-
-        #replaceImage = maskImage(originalCroppedImage, replaceImage.astype(np.uint8), gray=True)
-
-        return replaceAreaOfImage(image, replaceArea, replaceImage)
+        mediaGenerator = self.shiftedMedia(model, media, objectClassifier, imageResizer, **kwargs)
+        shape = next(mediaGenerator).shape
+        mediaGenerator = self.shiftedMedia(model, media, objectClassifier, imageResizer, **kwargs)
+        
+        if isImage:
+            return next(mediaGenerator)
+        else:
+            return imagesToVideo(mediaGenerator, shape, os.path.join(TEMP_MEDIA_PATH, f"{self.id_}.mp4"), fps, save=True)
+        
 
 
     def build(self) -> None:
@@ -246,7 +293,7 @@ class Shift:
         self.maskAE.compileModel()
     
     
-    def load(self, encoderPath: str = None, basePath: str = None, maskPath: str = None) -> None:
+    def load(self, encoderPath: str=None, basePath: str = None, maskPath: str=None) -> None:
         """
         Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
 

@@ -54,7 +54,8 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarr
 
     Args:
         path (str): Path to the video to be converted to a sequence of images
-        action (function): The function to apply to each of the frames of the video. Defaults to None.
+        interval (int, optional): The interval between images to load in. Defaults to 1.
+        action (function, optional): The function to apply to each of the frames of the video. Defaults to None.
     
     Returns:
         list of numpy.ndarray: An array of CV images
@@ -66,11 +67,9 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarr
     except KeyError:
         firstImage = False
 
-    images = []
     validFrames = 0
     video = cv2.VideoCapture(path)
 
-    print("Total frames in Video:", video.get(cv2.CAP_PROP_FRAME_COUNT))
     for frame in range(int(video.get(cv2.CAP_PROP_FRAME_COUNT))):
         check, image = video.read()
 
@@ -84,25 +83,22 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarr
             returnData = detectObject(action, image=image, **kwargs)
 
             if type(returnData) == list and type(returnData[0]) == np.ndarray: #Checks for list of images
-                images += returnData
+                for image in returnData:
+                    yield image
             elif type(returnData) == np.ndarray and returnData.ndim == 3: #Checks for numpy array image
-                images.append(returnData)
+                yield returnData
             elif type(returnData) == np.ndarray and returnData.ndim == 2: #Checks for list of rectangles for object detection areas
-                images.append(image)
+                yield image
             else:
                 continue
 
             validFrames += 1
 
         elif frame % interval == 0:
-            images.append(image)
+            yield image
         
         if firstImage:
             break
-    
-    print("Frames grabbed:", len(images))
-    
-    return images
 
 
 def loadVideo(path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
