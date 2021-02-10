@@ -5,6 +5,7 @@ The utility functions related to videos
 __author__ = "Noupin"
 
 #Third Party Imports
+import os
 import cv2
 import moviepy
 import numpy as np
@@ -115,7 +116,7 @@ def loadVideo(path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     return mediaEditor.VideoFileClip(path)
 
 
-def saveVideo(video: moviepy.video.io.VideoFileClip.VideoFileClip, path: str, fps=None) -> None:
+def saveVideo(video: moviepy.video.io.VideoFileClip.VideoFileClip, path: str, fps=None, deleteOld=False) -> None:
     """
     Saves the video to path at fps frame rate
 
@@ -123,9 +124,13 @@ def saveVideo(video: moviepy.video.io.VideoFileClip.VideoFileClip, path: str, fp
         video (moviepy.video.io.VideoFileClip.VideoFileClip): The video to be saved
         path (str): The path to save video
         fps (int, optional): The fps for the video to be saved at. Defaults to None.
+        deleteOld (bool, optional): Whehter or not to delete the old file. Defaults to False.
     """
 
     if not fps:
         fps = video.fps
 
     video.write_videofile(path, fps=fps)
+
+    if deleteOld:
+        os.remove(video.filename)

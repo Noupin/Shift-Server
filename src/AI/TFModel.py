@@ -6,10 +6,13 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import typing
 import numpy as np
 import tensorflow as tf
+from itertools import tee
 from colorama import Fore
-from typing import List, Tuple
+from itertools import chain
+from typing import List, Tuple, Union
 
 #First Party Imports
 from src.utils.memory import allowTFMemoryGrowth
@@ -124,31 +127,45 @@ class TFModel(tf.keras.Model):
         val_logits = self(x, training=False)
 
 
-    def train(self, xTrainData: List[np.ndarray], yTrainData: List[np.ndarray]=None,
-                    xTestData: List[np.ndarray]=None, yTestData: List[np.ndarray]=None,
+    def train(self, xTrainData: Union[List[np.ndarray], typing.Generator], yTrainData: Union[List[np.ndarray], typing.Generator]=None,
+                    xTestData: Union[List[np.ndarray], typing.Generator]=None, yTestData: Union[List[np.ndarray], typing.Generator]=None,
                     epochs: int=1, batch_size: int=1) -> None:
 
         """
         Trains the model given traingin data. This an an alternative to the .fit() with more customizability.
 
         Args:
-            xTrainData (list of numpy.ndarray): The inputs for training the model.
-            yTrainData (list of numpy.ndarray, optional): The expected outputs for training the model. Defaults to None.
-            xTestData (list of numpy.ndarray, optional): The inputs for testing or validating the model. Defaults to None.
-            yTestData (list of numpy.ndarray, optional): The expected outputs for testing or validating the model. Defaults to None.
+            xTrainData (list of numpy.ndarray or Generator): The inputs for training the model.
+            yTrainData (list of numpy.ndarray or Generator, optional): The expected outputs for training the model. Defaults to None.
+            xTestData (list of numpy.ndarray or Generator, optional): The inputs for testing or validating the model. Defaults to None.
+            yTestData (list of numpy.ndarray or Generator, optional): The expected outputs for testing or validating the model. Defaults to None.
             epochs (int, optional): The amount of iterations to train. Defaults to 1.
             batch_size (int, optional): Then size to batch the data into. Defaults to 1.
         """
 
-        self.fit(xTrainData, xTrainData, batch_size=batch_size, epochs=epochs)
+        #self.fit(xTrainData, xTrainData, batch_size=batch_size, epochs=epochs)
 
-        '''if np.array(yTrainData).any():
+        isGenerator = False
+
+        if np.array(yTrainData).any():
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, yTrainData))
+        elif isinstance(xTrainData, typing.Generator) and isinstance(yTrainData, typing.Generator):
+            xGen, _ = tee(xTrainData)
+            yGen, _ = tee(yTrainData)
+    
+            trainDataset = ((x, y) for (x, y) in zip(xGen, yGen))
+            isGenerator = True
+        elif isinstance(xTrainData, typing.Generator):
+            xGen, _ = tee(xTrainData)
+
+            trainDataset = ((x, y) for (x, y) in zip(xGen, xGen))
+            isGenerator = True
         else:
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, xTrainData))
-        trainDataset = trainDataset.batch(batch_size)
 
-        
+        if not isGenerator:
+            trainDataset = trainDataset.batch(batch_size)
+
         if np.array(xTestData).any() and np.array(yTestData).any():
             testDataset = tf.data.Dataset.from_tensor_slices(xTestData, yTestData)
         elif np.array(xTestData).any():
@@ -159,14 +176,29 @@ class TFModel(tf.keras.Model):
 
 
         for epoch in range(epochs):
+            #Recreating the generators for each iteration
+            if isinstance(xTrainData, typing.Generator) and isinstance(yTrainData, typing.Generator):
+                xGen, _ = tee(xTrainData)
+                yGen, _ = tee(yTrainData)
+        
+                trainDataset = ((x, y) for (x, y) in zip(xGen, yGen))
+            elif isinstance(xTrainData, typing.Generator):
+                xGen, _ = tee(xTrainData)
+
+                trainDataset = ((x, y) for (x, y) in zip(xGen, xGen))
+
             #Iterate over batches of dataset
             for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
+                if isGenerator:
+                    xBatchTrain = xBatchTrain.reshape(-1, xBatchTrain.shape[0], xBatchTrain.shape[1], xBatchTrain.shape[2])
+                    yBatchTrain = yBatchTrain.reshape(-1, yBatchTrain.shape[0], yBatchTrain.shape[1], yBatchTrain.shape[2])
+
                 loss_value = self.trainStep(xBatchTrain, yBatchTrain)
             
             for xBatchTest, yBatchTest in testDataset:
                self.testStep(x_batch_val, y_batch_val)
             
-            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")'''
+            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")
 
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:

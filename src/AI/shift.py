@@ -55,7 +55,7 @@ class Shift:
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
                        convolutionFilters=24, codingLayers=-1, name="Default",
                        modelPath=""):
-        self.id_ = id_
+        self.id_ = id_[1]
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -123,8 +123,9 @@ class Shift:
             augmented = []
             augmentedItems = 0
             resized = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
+            yield (resized / 255.).astype('float32')
             #trainingData.append(resized)
-            
+            '''
             coloredImages = [resized]
             for colorCode in range(5):
                 coloredImages.append(blendImageAndColor(resized, colorCode))
@@ -152,7 +153,7 @@ class Shift:
         trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2]) / 255.
         trainingData = trainingData.astype('float32')
 
-        return trainingData
+        return trainingData'''
     
 
     def addCodingLayers(self, count: int) -> None:
@@ -187,7 +188,7 @@ class Shift:
         return image
 
     
-    def shiftedMedia(self, model: tf.keras.Model, media: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
+    def shiftMedia(self, model: tf.keras.Model, media: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -252,18 +253,17 @@ class Shift:
         isImage = False
 
         if isinstance(media, np.ndarray) and media.ndim == 3:
-            media = (i for i in [media])
+            mediaGenerator = self.shiftMedia(model, [media], objectClassifier, imageResizer, **kwargs)
             isImage = True
-
-        
-        mediaGenerator = self.shiftedMedia(model, media, objectClassifier, imageResizer, **kwargs)
-        shape = next(mediaGenerator).shape
-        mediaGenerator = self.shiftedMedia(model, media, objectClassifier, imageResizer, **kwargs)
+        else:
+            mediaGenerator = self.shiftMedia(model, media, objectClassifier, imageResizer, **kwargs)
+            shape = next(mediaGenerator).shape
+            mediaGenerator = self.shiftMedia(model, media, objectClassifier, imageResizer, **kwargs)
         
         if isImage:
             return next(mediaGenerator)
         else:
-            return imagesToVideo(mediaGenerator, shape, os.path.join(TEMP_MEDIA_PATH, f"{self.id_}.mp4"), fps, save=True)
+            return imagesToVideo(mediaGenerator, shape, os.path.join(TEMP_MEDIA_PATH, f"{str(self.id_)}.mp4"), fps)
         
 
 

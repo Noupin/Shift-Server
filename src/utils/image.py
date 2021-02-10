@@ -264,7 +264,7 @@ def flipImage(image, flipCode: str) -> np.ndarray:
     return cv2.flip(image, flipMap[flipCode])
 
 
-def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, fps: float, save=False) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, fps: float) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     """
     Given a path with all of the image arrays a .mp4 video will be exported
 
@@ -273,7 +273,6 @@ def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, 
         shape (tuple of int): The height, width and color dimension of the frames to converted to a video.
         outPath (str): The path to save the video to
         fps (float): The fps at which to combine the video at
-        save (bool): Whether or not to keep the video in the filesystem or not
     """
 
     height, width, _ = shape
@@ -295,9 +294,6 @@ def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, 
     cv2.destroyAllWindows()
 
     video = mediaEditor.VideoFileClip(outPath)
-
-    if not save:
-        os.remove(outPath)
 
     return video
 

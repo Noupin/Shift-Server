@@ -8,12 +8,13 @@ __author__ = "Noupin"
 import os
 import uuid
 import base64
+from typing import Union
 
 #First Party Imports
 from src.variables.constants import EXTENSION_FILE_TYPES
 
 
-def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> str:
+def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> Union[uuid.UUID, str]:
     """
     Generates a unique filename.
 
@@ -22,7 +23,8 @@ def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> str:
         urlSafe (bool): Whether the filename needs to be url safe or not. Defaults to False.
 
     Returns:
-        str: The uniquely generated filename
+        uuid.UUID: The uniquley generated filename.
+        str: The uniquely generated filename in string format.
     """
 
     uuid_ = generator()
