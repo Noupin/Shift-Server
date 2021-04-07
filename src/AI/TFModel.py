@@ -6,15 +6,17 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import typing
+import gc
+import sys
+import time
 import numpy as np
 import tensorflow as tf
-from itertools import tee
 from colorama import Fore
 from itertools import chain
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Generator
 
 #First Party Imports
+from src.utils.image import viewImage
 from src.utils.memory import allowTFMemoryGrowth
 from src.Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
@@ -108,9 +110,10 @@ class TFModel(tf.keras.Model):
         with tf.GradientTape() as tape:
             logits = self(x, training=True)
             loss_value = self.loss(y, logits)
+
         grads = tape.gradient(loss_value, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-        
+
         return loss_value
     
 
@@ -127,8 +130,10 @@ class TFModel(tf.keras.Model):
         val_logits = self(x, training=False)
 
 
-    def train(self, xTrainData: Union[List[np.ndarray], typing.Generator], yTrainData: Union[List[np.ndarray], typing.Generator]=None,
-                    xTestData: Union[List[np.ndarray], typing.Generator]=None, yTestData: Union[List[np.ndarray], typing.Generator]=None,
+    def train(self, xTrainData: Union[List[np.ndarray], Generator[None, np.ndarray, None]],
+                    yTrainData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
+                    xTestData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
+                    yTestData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
                     epochs: int=1, batch_size: int=1) -> None:
 
         """
@@ -147,25 +152,20 @@ class TFModel(tf.keras.Model):
 
         isGenerator = False
 
-        if np.array(yTrainData).any():
+        if isinstance(xTrainData, Generator) and isinstance(yTrainData, Generator):
+            trainDataset = ((x, y) for (x, y) in zip(xTrainData, yTrainData))
+            isGenerator = True
+        elif isinstance(xTrainData, Generator):
+            trainDataset = ((x, y) for (x, y) in zip(xTrainData, xTrainData))
+            isGenerator = True
+        elif np.array(yTrainData).any():
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, yTrainData))
-        elif isinstance(xTrainData, typing.Generator) and isinstance(yTrainData, typing.Generator):
-            xGen, _ = tee(xTrainData)
-            yGen, _ = tee(yTrainData)
-    
-            trainDataset = ((x, y) for (x, y) in zip(xGen, yGen))
-            isGenerator = True
-        elif isinstance(xTrainData, typing.Generator):
-            xGen, _ = tee(xTrainData)
-
-            trainDataset = ((x, y) for (x, y) in zip(xGen, xGen))
-            isGenerator = True
         else:
             trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, xTrainData))
 
         if not isGenerator:
             trainDataset = trainDataset.batch(batch_size)
-
+        
         if np.array(xTestData).any() and np.array(yTestData).any():
             testDataset = tf.data.Dataset.from_tensor_slices(xTestData, yTestData)
         elif np.array(xTestData).any():
@@ -176,29 +176,48 @@ class TFModel(tf.keras.Model):
 
 
         for epoch in range(epochs):
-            #Recreating the generators for each iteration
-            if isinstance(xTrainData, typing.Generator) and isinstance(yTrainData, typing.Generator):
-                xGen, _ = tee(xTrainData)
-                yGen, _ = tee(yTrainData)
-        
-                trainDataset = ((x, y) for (x, y) in zip(xGen, yGen))
-            elif isinstance(xTrainData, typing.Generator):
-                xGen, _ = tee(xTrainData)
-
-                trainDataset = ((x, y) for (x, y) in zip(xGen, xGen))
-
+            epochStart = time.time()
+            reducedLoss = 0
             #Iterate over batches of dataset
-            for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
-                if isGenerator:
-                    xBatchTrain = xBatchTrain.reshape(-1, xBatchTrain.shape[0], xBatchTrain.shape[1], xBatchTrain.shape[2])
-                    yBatchTrain = yBatchTrain.reshape(-1, yBatchTrain.shape[0], yBatchTrain.shape[1], yBatchTrain.shape[2])
+            if isGenerator:
+                currentData = 1
+                step = 0
+                while currentData:
+                    batchStart = time.time()
+                    xBatchTrain = []
+                    yBatchTrain = []
+                    for image in range(batch_size):
+                        currentData = next(trainDataset, None)
+                        if not currentData:
+                            break
 
-                loss_value = self.trainStep(xBatchTrain, yBatchTrain)
+                        xData, yData = currentData
+                        xBatchTrain.append(xData)
+                        yBatchTrain.append(yData)
+                    
+                    xBatchTrain = np.array(xBatchTrain)
+                    yBatchTrain = np.array(yBatchTrain)
+
+                    loss_value = self.trainStep(xBatchTrain, yBatchTrain)
+                    reducedLoss = tf.reduce_mean(tf.abs(loss_value))
+                    print(f"Loss for batch {step+1}: {tf.reduce_mean(tf.abs(loss_value))}, Time: {time.time()-batchStart}")
+
+                    step += 1
+
+            else:
+                for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
+                    loss_value = self.trainStep(xBatchTrain, yBatchTrain)
+                    reducedLoss = tf.reduce_mean(tf.abs(loss_value))
+                    print(f"Loss for batch {step+1}: {reducedLoss}")
             
             for xBatchTest, yBatchTest in testDataset:
-               self.testStep(x_batch_val, y_batch_val)
+               self.testStep(xBatchTest, yBatchTest)
+
             
-            print(f"Loss: {tf.reduce_mean(tf.abs(loss_value))}")
+            print(f"Loss: {reducedLoss}, Time: {time.time()-epochStart}")
+        
+        #Clear dataset to perserve RAM
+        trainDataset = tf.data.Dataset.from_tensor_slices([])
 
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:

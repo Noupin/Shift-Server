@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import bson
 
+
 class TrainRequest:
     shiftUUID: str
     usePTM: bool

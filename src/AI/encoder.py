@@ -67,7 +67,8 @@ class Encoder(TFModel):
             index = -(len(self.modelLayers)-index)
         
         if len(layers) == 0:
-            self.addLayer(tf.keras.layers.Conv2D(filters, kernel_size, strides, padding, activation=activation), index)
+            self.addLayer(layer=tf.keras.layers.Conv2D(filters, kernel_size, strides, padding, activation=activation),
+                          index=index)
         
         for layer in layers:
             self.addLayer(layer, index)

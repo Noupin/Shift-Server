@@ -9,7 +9,7 @@ import os
 import cv2
 import moviepy
 import numpy as np
-from typing import List
+from typing import List, Generator
 from moviepy import editor as mediaEditor
 
 #First Party Import
@@ -49,7 +49,7 @@ def insertAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip,
     return video.set_audio(audio)
 
 
-def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarray]:
+def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[None, np.ndarray, None]:
     """
     Converts a video into image frames
 
@@ -83,12 +83,12 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> List[np.ndarr
         if action and validFrames % interval == 0:
             returnData = detectObject(action, image=image, **kwargs)
 
-            if type(returnData) == list and type(returnData[0]) == np.ndarray: #Checks for list of images
+            if isinstance(returnData, list) and isinstance(returnData[0], np.ndarray): #Checks for list of images
                 for image in returnData:
                     yield image
-            elif type(returnData) == np.ndarray and returnData.ndim == 3: #Checks for numpy array image
+            elif isinstance(returnData, np.ndarray) and returnData.ndim == 3: #Checks for numpy array image
                 yield returnData
-            elif type(returnData) == np.ndarray and returnData.ndim == 2: #Checks for list of rectangles for object detection areas
+            elif isinstance(returnData, np.ndarray) and returnData.ndim == 2: #Checks for list of rectangles for object detection areas
                 yield image
             else:
                 continue

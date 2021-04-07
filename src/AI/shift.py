@@ -11,7 +11,7 @@ import random
 import moviepy
 import numpy as np
 import tensorflow as tf
-from typing import List, Union
+from typing import List, Union, Generator
 from skimage.util import img_as_float
 
 #First Party Imports
@@ -31,7 +31,8 @@ from src.utils.image import (resizeImage, blendImageAndColor,
                              imagesToVideo)
 from src.variables.constants import (OBJECT_CLASSIFIER,
                                      VIDEO_FRAME_GRAB_INTERVAL,
-                                     TEMP_MEDIA_PATH)
+                                     TEMP_MEDIA_PATH,
+                                     HUE_ADJUSTMENT)
 
 
 class Shift:
@@ -50,12 +51,12 @@ class Shift:
         name (str, optional): The name of the model. Defaults to "Default".
     """
 
-    def __init__(self, id_=generateUniqueFilename(),
+    def __init__(self, id_=generateUniqueFilename()[1],
                        imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
                        convolutionFilters=24, codingLayers=-1, name="Default",
                        modelPath=""):
-        self.id_ = id_[1]
+        self.id_ = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
         self.convolutionFilters = convolutionFilters
@@ -98,7 +99,7 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> List[np.ndarray]:
+    def formatTrainingData(self, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> Generator[None, np.ndarray, None]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models.
 
@@ -110,20 +111,23 @@ class Shift:
             **kwargs: The key word arguments to pass into detectObject function
 
         Returns:
-            list of numpy.ndarray: The list of training images ready to be input to the Shift models
+            list of numpy.ndarray or Generator for numpy.ndarray: The list of training images ready to be input to the Shift models
         """
 
         trainingData = []
 
         for image in images:
             objects = detectObject(objectClassifier, image=image, **kwargs)
-            if type(objects) == tuple:
+            if isinstance(objects, tuple):
                 continue
             
             augmented = []
             augmentedItems = 0
             resized = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
-            yield (resized / 255.).astype('float32')
+            floatImage = (resized / 255.).astype('float32')
+
+            for hue in HUE_ADJUSTMENT:
+                yield tf.image.adjust_hue(floatImage, hue)
             #trainingData.append(resized)
             '''
             coloredImages = [resized]
@@ -146,14 +150,7 @@ class Shift:
 
             shuffledAugmented = random.sample(flattenList(augmented), augmentedItems)
             trainingData.append(shuffledAugmented)
-            
-
-
-        random.shuffle(trainingData)
-        trainingData = np.array(flattenList(trainingData)).reshape(-1, self.imageShape[0], self.imageShape[1], self.imageShape[2]) / 255.
-        trainingData = trainingData.astype('float32')
-
-        return trainingData'''
+        '''
     
 
     def addCodingLayers(self, count: int) -> None:
@@ -188,14 +185,14 @@ class Shift:
         return image
 
     
-    def shiftMedia(self, model: tf.keras.Model, media: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
+    def shiftImages(self, model: tf.keras.Model, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
 
         Args:
             model (tf.keras.Model): The model used to shift the objects.
-            media (types.GeneratorType or np.ndarray): The media to be shifted
+            images (types.GeneratorType or np.ndarray): The images to be shifted
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
@@ -205,11 +202,11 @@ class Shift:
             np.ndarray: The shifted image.
         """
 
-        for image in media:
+        for image in images:
             image = image.astype(np.uint8)
             objects = detectObject(objectClassifier, image=image, **kwargs)
 
-            if type(objects) == tuple:
+            if isinstance(objects, tuple):
                 yield image
                 continue
             
@@ -233,7 +230,7 @@ class Shift:
             yield shiftedImage
     
 
-    def shift(self, model: tf.keras.Model, media: Union[types.GeneratorType, np.ndarray], fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> Union[moviepy.video.io.VideoFileClip.VideoFileClip, np.ndarray]:
+    def shift(self, model: tf.keras.Model, media: Union[types.GeneratorType, List[np.ndarray], np.ndarray], fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> Union[moviepy.video.io.VideoFileClip.VideoFileClip, np.ndarray]:
         """
         Shifts the desired objects in the media.
 
@@ -253,13 +250,17 @@ class Shift:
         isImage = False
 
         if isinstance(media, np.ndarray) and media.ndim == 3:
-            mediaGenerator = self.shiftMedia(model, [media], objectClassifier, imageResizer, **kwargs)
+            mediaGenerator = self.shiftImages(model, [media], objectClassifier, imageResizer, **kwargs)
+            isImage = True
+        elif len(media) == 1 and isinstance(media[0], np.ndarray) and media[0].ndim == 3:
+            mediaGenerator = self.shiftImages(model, [media[0]], objectClassifier, imageResizer, **kwargs)
             isImage = True
         else:
-            mediaGenerator = self.shiftMedia(model, media, objectClassifier, imageResizer, **kwargs)
-            shape = next(mediaGenerator).shape
-            mediaGenerator = self.shiftMedia(model, media, objectClassifier, imageResizer, **kwargs)
-        
+            mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
+            shape = media.shape
+
+            mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
+
         if isImage:
             return next(mediaGenerator)
         else:
@@ -325,7 +326,7 @@ class Shift:
                                       optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> List[np.ndarray]:
+    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> Generator[None, np.ndarray, None]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -345,10 +346,9 @@ class Shift:
             kwargs: The additional keyword arguments to pass to the action.
 
         Returns:
-            list of np.ndarray: The images to load in.
+            Generator of np.ndarray: The images to load in.
         """
-        
-        loadedImages = []
+
         files = os.listdir(dataPath)
 
         for media in files:
@@ -358,27 +358,26 @@ class Shift:
             mediaType = getMediaType(media)
 
             if mediaType == 'video':
-                loadedImages += videoToImages(os.path.join(dataPath, media), interval=interval, firstImage=firstImage, action=action, **kwargs)
+                for image in videoToImages(os.path.join(dataPath, media), interval=interval, firstImage=firstImage, action=action, **kwargs):
+                    yield image
             elif mediaType == "image":
-                loadedImages.append(loadImage(os.path.join(dataPath, media)))
+                yield loadImage(os.path.join(dataPath, media))
             
             if firstMedia:
                 break
                 
             if firstImage:
                 break
-        
-        return loadedImages
-    
 
-    def save(self, encoderPath: str, basePath: str, maskPath: str) -> None:
+
+    def save(self, encoderPath: str=None, basePath: str=None, maskPath: str=None) -> None:
         """
         Saves the encoder and both of the decoders to the given paths
 
         Args:
-            encoderPath (str): The path to save self.encoder to
-            basePath (str): The path to save self.baseDecoder to
-            maskPath (str): The path to save self.maskDecoder to
+            encoderPath (str, optional): The path to save self.encoder to. Defaults to None.
+            basePath (str, optional): The path to save self.baseDecoder to. Defaults to None.
+            maskPath (str, optional): The path to save self.maskDecoder to. Defaults to None.
         """
 
         if encoderPath:

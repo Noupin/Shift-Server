@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-API Validator
+API Validators
 """
 __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 

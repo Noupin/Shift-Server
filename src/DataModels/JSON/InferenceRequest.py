@@ -4,6 +4,9 @@ The Inference Request Data Model for the Shift API
 """
 __author__ = "Noupin"
 
+#Third Party Imports
+import bson
+
 
 class InferenceRequest:
     shiftUUID: str
@@ -14,3 +17,6 @@ class InferenceRequest:
         self.shiftUUID = shiftUUID
         self.usePTM = usePTM
         self.prebuiltShiftModel = prebuiltShiftModel
+
+    def __repr__(self) -> str:
+        return f"TrainRequest(shiftUUID: {self.shiftUUID}, usePTM: {self.usePTM}, prebuiltShiftModel: {self.prebuiltShiftModel})"

@@ -79,8 +79,7 @@ def loadData() -> dict:
     shiftUUID, _ = generateUniqueFilename()
     shiftUUID = str(shiftUUID)
 
-    count = 0
-    for _ in request.files:
+    for count, _ in enumerate(request.files):
         data = request.files[_]
 
         if data.filename == '':
@@ -90,7 +89,5 @@ def loadData() -> dict:
             saveFlaskFile(data, shiftUUID,requestData, count=count)
         else:
             return {'msg': 'File not valid'}
-        
-        count += 1
 
     return {'msg': f"Loaded data as {current_user.username}", "shiftUUID": shiftUUID}

@@ -14,9 +14,9 @@ import moviepy
 import numpy as np
 from PIL import Image
 from colorama import Fore
-from typing import List, Tuple
 import matplotlib.pyplot as plt
 from moviepy import editor as mediaEditor
+from typing import List, Tuple, Generator
 
 #First Party Imports
 from src.Exceptions.CVToPIL import CVToPILError
@@ -50,7 +50,7 @@ def CVToPIL(image: np.ndarray) -> Image.Image:
         PIL.Image.Image: The PIL image
     """
 
-    if type(image) == Image.Image:
+    if isinstance(image, Image.Image):
         try:
             raise PILToCVError(image)
         except PILToCVError as e:
@@ -78,6 +78,27 @@ def loadImage(path: str) -> np.ndarray:
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
     return image
+
+
+def loadImageFolder(path: str, maximum=-1) -> Generator[None, np.ndarray, None]:
+    """
+    Loads in a folder of images.
+
+    Args:
+        path (str): The path to the folder with the images.
+        maximum (int): The maximum number of images to grab from the folder. Defaults to -1.
+
+    Yields:
+        Generator of np.ndarray: The images from the folder path given
+    """
+
+    for index, imageName in enumerate(os.listdir(path)):
+        if index == maximum:
+            break
+
+        image = loadImage(os.path.join(path, imageName))
+
+        yield image
 
 
 def saveImage(image: np.ndarray, path: str) -> None:

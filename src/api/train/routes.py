@@ -10,9 +10,10 @@ import json
 import bson
 import mongoengine
 import tensorflow as tf
+from typing import Union
 from celery.result import AsyncResult
 from flask_login import login_required, current_user
-from flask import Blueprint, request, current_app, session
+from flask import Blueprint, request, current_app
 
 #First Party Imports
 from src.run import celery
@@ -21,13 +22,21 @@ from src.DataModels.MongoDB.User import User
 from src.utils.MJSONEncoder import MongoJSONEncoder
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
+from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
 
 trainBP = Blueprint('train', __name__)
 
 
-def validateBaseTrainRequest() -> TrainRequest or dict:
+def validateBaseTrainRequest() -> Union[TrainRequest, dict]:
+    """
+    Vialidates the basic version of the train request
+
+    Returns:
+        Union[TrainRequest, dict]: The train request data or the error to send
+    """
+
     if not request.is_json:
         return {'msg': "Your train request had no JSON payload"}
 
@@ -70,26 +79,27 @@ def train() -> dict:
     """
 
     requestData = validateBaseTrainRequest()
-    if type(requestData) == dict:
+    if isinstance(requestData, dict):
         return requestData
+    requestData = DataModelAdapter(requestData)
 
-    if requestData.prebuiltShiftModel:
+    if requestData.getModel().prebuiltShiftModel:
         try:
             tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                       requestData.prebuiltShiftModel, "encoder"))
+                                       requestData.getModel().prebuiltShiftModel, "encoder"))
             tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
-                                       requestData.prebuiltShiftModel, "baseDecoder"))
+                                       requestData.getModel().prebuiltShiftModel, "baseDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
 
-    worker = TrainWorker(shiftUUID=requestData.shiftUUID, training=True, inferencing=False)
-    job = trainShift.delay(request.get_json(), str(current_user.id))
-    worker.workerID = job.id
-
+    worker = TrainWorker(shiftUUID=requestData.getModel().shiftUUID, training=True, inferencing=False)
     try:
         worker.save()
     except mongoengine.errors.NotUniqueError:
         return {'msg': "That AI is already training."}
+    
+    job = trainShift.delay(requestData.getSerializable(), str(current_user.id))
+    worker.update(set__workerID=job.id)
 
     return {'msg': f"Training as {current_user.username}"}
 
@@ -107,10 +117,15 @@ def trainStatus() -> dict:
     """
 
     requestData = validateBaseTrainRequest()
-    if type(requestData) == dict:
+    if isinstance(requestData, dict):
         return requestData
+    requestData = DataModelAdapter(requestData)
 
-    worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
+    try:
+        worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
+    except Exception as e:
+        return {"msg": "That training worker does not exist"}
+
     job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
 
     try:
@@ -130,11 +145,22 @@ def trainStatus() -> dict:
                 worker.reload()
 
                 return {'msg': f"Update for current shift", 'exhibit': worker.exhibitImages}
+            
+        elif status == "SUCCESS":
+            worker.delete()
+
+            return {'msg': "Training stopped", 'stopped': True}
+        elif status == "FAILURE":
+            worker.delete()
+
+            return {'msg': "The training of your shift has encountered and error"}
 
         return {'msg': f"The status is {status}"}
 
     except AttributeError as e:
-        return {'msg': "There are currently no jobs"}
+        return {'msg': "There are currently no jobs with the given ID"}
+    except mongoengine.DoesNotExist:
+        return {'msg': "The worker you are trying to get the status of has been deleted"}
 
 
 @trainBP.route("/stopTraining", methods=["POST"])
@@ -148,16 +174,14 @@ def stopTrain() -> dict:
     """
 
     requestData = validateBaseTrainRequest()
-    if type(requestData) == dict:
+    if isinstance(requestData, dict):
         return requestData
+    requestData = DataModelAdapter(requestData)
 
-    worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
-    worker.update(set__training=False)
+    try:
+        worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
+    except Exception as e:
+        return {"msg": "That training worker does not exist"}
+    worker.update(set__training=False, set__imagesUpdated=False)
 
-    while True:
-        try:
-            worker.reload()
-        except mongoengine.errors.DoesNotExist:
-            break
-
-    return {'msg': "Training stopped", 'stopped': True}
+    return {'msg': "Stop signal sent!"}

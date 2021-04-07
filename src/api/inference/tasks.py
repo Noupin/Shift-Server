@@ -6,6 +6,8 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import cv2
+import json
 import random
 import numpy as np
 from flask import current_app
@@ -13,11 +15,15 @@ from flask import current_app
 #First Party Imports
 from src.run import celery
 from src.AI.shift import Shift
-from src.utils.image import encodeImage
+from src.utils.files import getMediaType
 from src.DataModels.MongoDB.User import User
+from src.utils.image import encodeImage, saveImage
+from src.variables.constants import HAAR_CASCADE_KWARGS
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
-from src.variables.constants import HAAR_CASCADE_KWARGS
+from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.utils.video import (loadVideo, extractAudio, insertAudio,
+                             saveVideo)
 
 
 def loadPTM(requestData: InferenceRequest, shft: Shift):
@@ -46,17 +52,20 @@ def loadPTM(requestData: InferenceRequest, shft: Shift):
 
 
 @celery.task(name="inference.shift")
-def shift(requestData: InferenceRequest) -> str:
+def shiftMedia(requestJSON: dict) -> str:
     """
-    Shifts the object given the infernce data and whether to load the
+    Shifts the media given the inference data and whether to load the
     PTM or a specialized model.
 
     Args:
-        requestData (InferenceRequest): The data that comes with the inference request
+        requestJSON (dict): The data that comes with the inference request in JSON form
 
     Returns:
         str: The encoded shift
     """
+
+    requestData: InferenceRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: InferenceRequest(**d))
+    worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)
     inferencingData = [np.ones(shft.imageShape)]
@@ -74,9 +83,23 @@ def shift(requestData: InferenceRequest) -> str:
                   os.path.join(shiftFilePath, "baseDecoder"),
                   os.path.join(shiftFilePath, "maskDecoder"))
 
-    inferencingData = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True)
-    shiftedImage = shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True)
-    encodedImage = encodeImage(shiftedImage)
+    baseVideoFilename = ""
+    for name in os.listdir(os.path.join(shiftFilePath, "tmp")):
+        if name.find("base") != -1:
+            baseVideoFilename = os.path.join(shiftFilePath, "tmp", name)
+
+    fps = loadVideo(baseVideoFilename).fps
+    inferencingData = list(shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True))
+    shifted = shft.shift(shft.maskAE, inferencingData, fps, **HAAR_CASCADE_KWARGS, gray=True)
+
+    if getMediaType(baseVideoFilename) == 'video':
+        baseAudio = extractAudio(loadVideo(baseVideoFilename))
+        shifted = insertAudio(shifted, baseAudio)
+        print(shifted.filename) ### Checking if deleteOld will work ###
+        saveVideo(shifted, os.path.join(shiftFilePath, 'tmp', f"{requestData.shiftUUID}.mp4"), fps)
+    elif getMediaType(baseVideoFilename) == 'image':
+        shifted = cv2.cvtColor(shifted, cv2.COLOR_RGB2BGR)
+        saveImage(shifted, os.path.join(shiftFilePath, 'tmp', f"{requestData.shiftUUID}.png"))
+
 
     del shft
-    return encodedImage

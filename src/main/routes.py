@@ -5,9 +5,8 @@ Routes for the Shift webapp
 __author__ = "Noupin"
 
 #Third Party Imports
-import os
 import flask
-from flask import Blueprint, request
+from flask import Blueprint
 
 
 main = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")

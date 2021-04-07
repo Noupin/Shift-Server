@@ -15,9 +15,22 @@ from src import db
 
 
 class InferenceWorker(db.Document):
+    """
+    The MongoDB data model for the Inference celery worker.
+
+    Args:
+        shiftUUID (UUID, required): The UUID of the shift this worker is associated with.
+        workerID (str): The id of the celery worker this MongoDB worker is associated with.
+        timeStarted (datetime.datetime): The time the worker was created.
+    """
+
     shiftUUID = UUIDField(required=True)
+    workerID = StringField(required=True, default="", unique=True)
     timeStarted = DateTimeField(required=True, default=datetime.utcnow)
 
 
     def __repr__(self) -> str:
+        return f"InferenceWorker('{self.shiftUUID}, {self.datePosted}')"
+
+    def __str__(self) -> str:
         return f"InferenceWorker('{self.shiftUUID}, {self.datePosted}')"

@@ -9,7 +9,6 @@ __author__ = "Noupin"
 from src import initApp, createApp, makeCelery
 
 
-#print("\n\n", __name__, "\n\n")
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)

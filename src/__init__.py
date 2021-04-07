@@ -16,11 +16,9 @@ from flask_mail import Mail
 
 #First Party Imports
 from src.config import Config
-from src.variables.globals import Globals
 from src.utils.MJSONEncoder import MongoJSONEncoder
 
 
-shiftGlobals = Globals()
 cors = CORS()
 login_manager = LoginManager()
 db = MongoEngine()
@@ -43,7 +41,6 @@ def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
     app = Flask(appName, static_folder="static/build", static_url_path="/")
     app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
-    app.config["SHIFT_GLOBALS"] = shiftGlobals
 
 
     cors.init_app(app)
@@ -77,6 +74,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.train.routes import trainBP
     from src.api.inference.routes import inferenceBP
     from src.api.users.routes import users
+    from src.api.content.routes import content
 
 
     app.register_blueprint(main)
@@ -84,6 +82,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(users, url_prefix='/api/users')
+    app.register_blueprint(content, url_prefix='/api/content')
 
     return app
 

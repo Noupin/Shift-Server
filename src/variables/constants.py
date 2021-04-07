@@ -30,6 +30,8 @@ OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                           ).detectMultiScale
 HAAR_CASCADE_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
 
+HUE_ADJUSTMENT = [0, 335/360, 120/360, 215/360] #RGB hue adjustment values
+
 LARGE_BATCH_SIZE = 64
 
 #Facial Landmark Model & Detector

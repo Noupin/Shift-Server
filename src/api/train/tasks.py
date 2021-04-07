@@ -88,7 +88,7 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
 
     inferencingData = shft.loadData("base", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
-    shiftedImage = encodeImage(shft.shift(shft.maskAE, inferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+    shiftedImage = encodeImage(shft.shift(shft.maskAE, next(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
 
     return [shiftedImage]
 
@@ -109,13 +109,15 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     maskInferencingData = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
                                         1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
-    baseImage = encodeImage(baseInferencingData[0])
-    baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+    baseInferenceImage = next(baseInferencingData)
+    baseImage = encodeImage(baseInferenceImage)
+    baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
 
-    maskImage = encodeImage(maskInferencingData[0])
-    maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferencingData[0], **HAAR_CASCADE_KWARGS, gray=True))
+    maskInferenceImage = next(maskInferencingData)
+    maskImage = encodeImage(maskInferenceImage)
+    maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
 
-    shiftedImage = encodeImage(shft.shift(shft.maskAE, random.choice(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
+    shiftedImage = encodeImage(shft.shift(shft.maskAE, baseInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
 
     return [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
 
@@ -126,12 +128,12 @@ def trainShift(requestJSON: dict, userID: str):
     Trains the shift models from PTM or from a specialized model depending on the requestData.
 
     Args:
-        requestJSON (TrainRequest): The JSON request data that can be serialized
+        requestJSON (dict): The JSON request data that can be serialized
+        userID (str): The id of the user to save the shift model with
     """
 
     userID = ObjectId(userID)
     requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
-
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)
@@ -141,15 +143,15 @@ def trainShift(requestJSON: dict, userID: str):
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
         baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
-        baseTrainingData = shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+        baseTrainingData = np.array(list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
 
 
         if requestData.prebuiltShiftModel:
             maskImages = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"))
-            maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+            maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
         else:
             maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
-            maskTrainingData = shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+            maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
 
 
     ### Work Around ###
@@ -167,10 +169,10 @@ def trainShift(requestJSON: dict, userID: str):
     while training:
         while not worker.inferencing and training:
             if not baseTrainingData is None and baseTrainingData.any():
-                print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
+                #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
                 shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             if not maskTrainingData is None and maskTrainingData.any():
-                print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
+                #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
                 shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             
             worker.reload()
@@ -189,5 +191,4 @@ def trainShift(requestJSON: dict, userID: str):
 
     saveShiftToDatabase(uuid=shft.id_, userID=userID, title="Some title", path=shiftFilePath)
 
-    worker.delete()
     del shft
