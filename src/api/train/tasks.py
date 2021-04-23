@@ -41,9 +41,9 @@ def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, p
     """
 
     mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title,
-                                encoderFile=os.path.join(path, "encoder"),
-                                baseDecoderFile=os.path.join(path, "baseDecoder"),
-                                maskDecoderFile=os.path.join(path, "maskDecoder"))
+                                encoderPath=os.path.join(path, "encoder"),
+                                baseDecoderPath=os.path.join(path, "baseDecoder"),
+                                maskDecoderPath=os.path.join(path, "maskDecoder"))
     mongoShift.save()
 
 
@@ -189,6 +189,6 @@ def trainShift(requestJSON: dict, userID: str):
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
-    saveShiftToDatabase(uuid=shft.id_, userID=userID, title="Some title", path=shiftFilePath)
+    saveShiftToDatabase(uuid=shft.id_, userID=userID, title=requestData.shiftTitle, path=shiftFilePath)
 
     del shft
