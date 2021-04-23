@@ -19,10 +19,10 @@ class Shift(db.Document):
     userID = ObjectIdField(required=True)
     title = StringField(required=True)
     datePosted = DateTimeField(required=True, default=datetime.utcnow)
-    imageFile = StringField(required=True, default='default.jpg')
-    encoderFile = StringField(required=True)
-    baseDecoderFile = StringField(required=True)
-    maskDecoderFile = StringField(required=True)
+    imagePath = StringField(required=True, default='default.jpg')
+    encoderPath = StringField(required=True)
+    baseDecoderPath = StringField(required=True)
+    maskDecoderPath = StringField(required=True)
     private = BooleanField(default=False)
 
     def __repr__(self) -> str:

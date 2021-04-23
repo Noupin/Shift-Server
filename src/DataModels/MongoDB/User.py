@@ -17,6 +17,7 @@ class User(db.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
+    imageFile = StringField(required=True, default='default.jpg')
 
 
     @staticmethod

@@ -8,7 +8,6 @@ __author__ = "Noupin"
 import os
 import cv2
 import json
-import random
 import numpy as np
 from flask import current_app
 

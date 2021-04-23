@@ -5,8 +5,8 @@ Routes for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import jwt
-import datetime
+import json
+from typing import List
 from flask import Blueprint, request, make_response, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 
@@ -119,18 +119,35 @@ def logout() -> dict:
     return {"msg": f"Logout Successful as {username}"}
 
 
-@users.route('/account')
+@users.route('/profile')
 @login_required
-def account() -> dict:
+def profile() -> dict:
     """
-    The data needed to display the users account page
+    The users profile to display the on users the account page
 
     Returns:
-        JSON: A JSON with the data needed to display on the users account page
+        JSON: A JSON with the users profile to display on the users account page
+    """
+
+    userJSON = User.objects(id=current_user.id).first()
+
+    return {"profile": userJSON}
+
+
+@users.route('/shifts')
+@login_required
+def shifts() -> dict:
+    """
+    The users shifts to display the users account page
+
+    Returns:
+        JSON: A JSON with the users shifts to display on the users account page
     """
 
     userShifts = Shift.objects(userID=current_user.id)
-    return {"username": current_user.username}
+    userShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in userShifts]
+
+    return {"shifts": userShiftsJSON}
 
 
 @users.route('/isAuthenticated', methods=["GET"])
