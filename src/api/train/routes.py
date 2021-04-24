@@ -7,7 +7,6 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import json
-import bson
 import mongoengine
 import tensorflow as tf
 from typing import Union
@@ -18,12 +17,9 @@ from flask import Blueprint, request, current_app
 #First Party Imports
 from src.run import celery
 from src.api.train.tasks import trainShift
-from src.DataModels.MongoDB.User import User
-from src.utils.MJSONEncoder import MongoJSONEncoder
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
-from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
 
 trainBP = Blueprint('train', __name__)

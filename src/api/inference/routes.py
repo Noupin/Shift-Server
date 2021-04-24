@@ -18,10 +18,8 @@ from flask import Blueprint, request, current_app, send_file
 
 #First Party Imports
 from src.run import celery
-from src.DataModels.MongoDB.User import User
 from src.api.inference.tasks import shiftMedia
 from src.DataModels.DataModelAdapter import DataModelAdapter
-from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 

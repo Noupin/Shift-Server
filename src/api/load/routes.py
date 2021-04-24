@@ -7,7 +7,6 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import json
-import base64
 import werkzeug
 from typing import List
 from werkzeug.utils import secure_filename

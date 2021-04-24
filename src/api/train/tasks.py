@@ -13,7 +13,6 @@ import numpy as np
 from typing import List
 from bson import ObjectId
 from flask import current_app
-from flask_login import current_user
 
 #First Party Imports
 from src.run import celery
@@ -26,7 +25,6 @@ from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE)
-from src.utils.image import viewImage
 
 
 def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, path: str):
