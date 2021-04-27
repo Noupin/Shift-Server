@@ -9,6 +9,7 @@ import io
 import os
 import cv2
 import types
+import scipy.misc
 import base64
 import moviepy
 import numpy as np
@@ -52,8 +53,8 @@ def CVToPIL(image: np.ndarray) -> Image.Image:
 
     if isinstance(image, Image.Image):
         try:
-            raise PILToCVError(image)
-        except PILToCVError as e:
+            raise CVToPILError(image)
+        except CVToPILError as e:
             print(e)
             print(Fore.GREEN + "Conversion skipped." + Fore.RESET)
             return image
@@ -110,7 +111,13 @@ def saveImage(image: np.ndarray, path: str) -> None:
         path (str): The path to where the file is saved
     """
 
-    cv2.imwrite(path, image)
+    _, extenstion = os.path.splitext(path)
+    if extenstion.find('.') != -1:
+        cv2.imwrite(path, image)
+    else:
+        cv2.imwrite(f"{path}.png", image)
+        os.rename(f"{path}.png", path)
+
 
 
 def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False) -> np.ndarray:

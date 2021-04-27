@@ -10,11 +10,12 @@ import json
 import werkzeug
 from typing import List
 from werkzeug.utils import secure_filename
+from flask import Blueprint, request, current_app
 from flask_login import login_required, current_user
-from flask import Blueprint, request, current_app, jsonify
 
 #First Party Imports
 from src.utils.files import makeDir
+from src.variables.constants import EXTENSION_FILE_TYPES
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename
@@ -41,6 +42,8 @@ def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestD
     folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid)
     makeDir(folderPath)
     makeDir(os.path.join(folderPath, "tmp"))
+
+    #FileStorage.save deletes the object
     data.save(os.path.join(folderPath, "tmp",
                            "{}media{}{}".format(requestData[count], count+1, extension)))
 

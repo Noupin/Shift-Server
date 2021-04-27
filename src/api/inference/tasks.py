@@ -15,10 +15,8 @@ from flask import current_app
 from src.run import celery
 from src.AI.shift import Shift
 from src.utils.files import getMediaType
-from src.DataModels.MongoDB.User import User
-from src.utils.image import encodeImage, saveImage
+from src.utils.image import saveImage
 from src.variables.constants import HAAR_CASCADE_KWARGS
-from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 from src.utils.video import (loadVideo, extractAudio, insertAudio,
@@ -99,6 +97,7 @@ def shiftMedia(requestJSON: dict) -> str:
     elif getMediaType(baseVideoFilename) == 'image':
         shifted = cv2.cvtColor(shifted, cv2.COLOR_RGB2BGR)
         saveImage(shifted, os.path.join(shiftFilePath, 'tmp', f"{requestData.shiftUUID}.png"))
+        saveImage(shifted, os.path.join(current_app.root_path, 'static', 'image', requestData.shiftUUID))
 
 
     del shft

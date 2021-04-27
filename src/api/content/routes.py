@@ -37,37 +37,25 @@ def shiftImage(shiftUUID):
                                mimetype='image/png',
                                cache_timeout=0)
 
+
 @content.route("/image/<string:filename>", methods=["GET"])
 @content.route("/image/<string:filename>/<string:download>", methods=["GET"])
 def image(filename: str='default', download: str='False'):
-    for file in os.listdir(os.path.join(current_app.root_path, "static", "images")):
-        if file.split('.')[0] != filename:
-            continue
-        
-        filename = file
-        break
-    
     asAttachment = json.loads(download.lower())
 
-    return send_from_directory(os.path.join(current_app.root_path, "static", "images"),
+    return send_from_directory(os.path.join(current_app.root_path, "static", "image"),
                                filename=filename,
                                as_attachment=asAttachment,
-                               mimetype=f"image/{filename.split('.')[-1].lower()}",
+                               mimetype=f"image",
                                cache_timeout=0)
+
 
 @content.route("/video/<string:filename>", methods=["GET"])
 @content.route("/video/<string:filename>/<string:download>", methods=["GET"])
 def video(filename: str, download: str='False'):
-    for file in os.listdir(os.path.join(current_app.root_path, "static", "videos")):
-        if file.split('.')[0] != filename:
-            continue
-        
-        filename = file
-        break
-
     asAttachment = json.loads(download.lower())
 
-    return send_from_directory(os.path.join(current_app.root_path, "static", "videos"),
+    return send_from_directory(os.path.join(current_app.root_path, "static", "video"),
                                filename=filename,
                                as_attachment=asAttachment,
                                mimetype='video/mp4',

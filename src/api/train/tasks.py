@@ -18,7 +18,6 @@ from flask import current_app
 from src.run import celery
 from src.AI.shift import Shift
 from src.utils.image import encodeImage
-from src.DataModels.MongoDB.User import User
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.utils.memory import getAmountForBuffer, getGPUMemory
@@ -33,12 +32,12 @@ def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, p
 
     Args:
         uuid (str): The unique identifier for the shift model
-        userID ([type]): The id of the user to associate the shift with
+        userID (bson.objectid.ObjectId): The id of the user to associate the shift with
         title (str): The title of the shift model
         path (str): The path to the encoder, base decoder and mask decoder models
     """
 
-    mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title,
+    mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title, imagePath=uuid,
                                 encoderPath=os.path.join(path, "encoder"),
                                 baseDecoderPath=os.path.join(path, "baseDecoder"),
                                 maskDecoderPath=os.path.join(path, "maskDecoder"))
