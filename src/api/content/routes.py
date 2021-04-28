@@ -7,35 +7,14 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import json
-from flask.helpers import send_file, send_from_directory
 from flask import Blueprint, current_app
+from flask.helpers import send_from_directory
+
+#First Party Imports
+from src.variables.constants import IMAGE_PATH, VIDEO_PATH
 
 
 content = Blueprint('content', __name__)
-
-
-@content.route("/shiftImage/<string:shiftUUID>", methods=["GET"])
-def shiftImage(shiftUUID):
-    tmpFiles = os.listdir(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shiftUUID, 'tmp'))
-
-    fileIndex = -1
-    for index, filename in enumerate(tmpFiles):
-        if filename.find(shiftUUID) == -1:
-            continue
-        fileIndex = index
-        break
-        
-    if fileIndex == -1:
-        return {'msg': "Could not find the shifted image"}
-
-    shiftedFile = tmpFiles[fileIndex]
-
-    print(shiftedFile)
-    return send_from_directory(os.path.join(current_app.root_path, "..", current_app.config["SHIFT_MODELS_FOLDER"], shiftUUID, 'tmp'),
-                               filename=shiftedFile,
-                               as_attachment=False,
-                               mimetype='image/png',
-                               cache_timeout=0)
 
 
 @content.route("/image/<string:filename>", methods=["GET"])
@@ -43,7 +22,7 @@ def shiftImage(shiftUUID):
 def image(filename: str='default', download: str='False'):
     asAttachment = json.loads(download.lower())
 
-    return send_from_directory(os.path.join(current_app.root_path, "static", "image"),
+    return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
                                filename=filename,
                                as_attachment=asAttachment,
                                mimetype=f"image",
@@ -55,7 +34,7 @@ def image(filename: str='default', download: str='False'):
 def video(filename: str, download: str='False'):
     asAttachment = json.loads(download.lower())
 
-    return send_from_directory(os.path.join(current_app.root_path, "static", "video"),
+    return send_from_directory(os.path.join(current_app.root_path, VIDEO_PATH),
                                filename=filename,
                                as_attachment=asAttachment,
                                mimetype='video/mp4',

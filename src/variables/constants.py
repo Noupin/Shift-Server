@@ -38,4 +38,7 @@ LARGE_BATCH_SIZE = 64
 FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
 FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
 
-TEMP_MEDIA_PATH = os.path.join("userData")
+#Folder Paths
+IMAGE_PATH = os.path.join("static", "image")
+VIDEO_PATH = os.path.join("static", "video")
+SHIFT_PATH = os.path.join("static", "shift")

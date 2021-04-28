@@ -17,6 +17,7 @@ from flask import Blueprint, request, current_app
 #First Party Imports
 from src.run import celery
 from src.api.train.tasks import trainShift
+from src.variables.constants import SHIFT_PATH
 from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
@@ -81,9 +82,9 @@ def train() -> dict:
 
     if requestData.getModel().prebuiltShiftModel:
         try:
-            tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                        requestData.getModel().prebuiltShiftModel, "encoder"))
-            tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                        requestData.getModel().prebuiltShiftModel, "baseDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}

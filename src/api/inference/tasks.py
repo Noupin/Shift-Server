@@ -16,11 +16,13 @@ from src.run import celery
 from src.AI.shift import Shift
 from src.utils.files import getMediaType
 from src.utils.image import saveImage
-from src.variables.constants import HAAR_CASCADE_KWARGS
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.utils.video import (loadVideo, extractAudio, insertAudio,
                              saveVideo)
+from src.variables.constants import (HAAR_CASCADE_KWARGS, SHIFT_PATH,
+                                     IMAGE_PATH, VIDEO_PATH)
 
 
 def loadPTM(requestData: InferenceRequest, shft: Shift):
@@ -33,18 +35,19 @@ def loadPTM(requestData: InferenceRequest, shft: Shift):
     """
 
     if requestData.prebuiltShiftModel:
-        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "encoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "baseDecoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], requestData.shiftUUID, "maskDecoder"))
+                  os.path.join(current_app.root_path, SHIFT_PATH,
+                               requestData.shiftUUID, "maskDecoder"))
 
     elif requestData.usePTM:
-        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "encoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "decoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "decoder"))
 
 
@@ -66,12 +69,12 @@ def shiftMedia(requestJSON: dict) -> str:
 
     shft = Shift(id_=requestData.shiftUUID)
     inferencingData = [np.ones(shft.imageShape)]
-    shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
+    shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
 
     if requestData.prebuiltShiftModel:
-        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "encoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "baseDecoder"),
                   os.path.join(shiftFilePath, "maskDecoder"))
 
@@ -80,24 +83,25 @@ def shiftMedia(requestJSON: dict) -> str:
                   os.path.join(shiftFilePath, "baseDecoder"),
                   os.path.join(shiftFilePath, "maskDecoder"))
 
-    baseVideoFilename = ""
-    for name in os.listdir(os.path.join(shiftFilePath, "tmp")):
-        if name.find("base") != -1:
-            baseVideoFilename = os.path.join(shiftFilePath, "tmp", name)
+    mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.shiftUUID)
+    baseMediaFilename = ""
+    for name in os.listdir(os.path.join(shiftFilePath, "tmp", "original")):
+        baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", name)
 
-    fps = loadVideo(baseVideoFilename).fps
-    inferencingData = list(shft.loadData("base", os.path.join(shiftFilePath, "tmp"), 1, firstMedia=True))
+    fps = loadVideo(baseMediaFilename).fps
+    inferencingData = list(shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), 1, firstMedia=True))
     shifted = shft.shift(shft.maskAE, inferencingData, fps, **HAAR_CASCADE_KWARGS, gray=True)
 
-    if getMediaType(baseVideoFilename) == 'video':
-        baseAudio = extractAudio(loadVideo(baseVideoFilename))
+    _, extension = os.path.splitext(baseMediaFilename)
+    if getMediaType(baseMediaFilename) == 'video':
+        baseAudio = extractAudio(loadVideo(baseMediaFilename))
         shifted = insertAudio(shifted, baseAudio)
         print(shifted.filename) ### Checking if deleteOld will work ###
-        saveVideo(shifted, os.path.join(shiftFilePath, 'tmp', f"{requestData.shiftUUID}.mp4"), fps)
-    elif getMediaType(baseVideoFilename) == 'image':
+        saveVideo(shifted, os.path.join(current_app.root_path, VIDEO_PATH, f"{requestData.shiftUUID}{extension}"), fps)
+    elif getMediaType(baseMediaFilename) == 'image':
         shifted = cv2.cvtColor(shifted, cv2.COLOR_RGB2BGR)
-        saveImage(shifted, os.path.join(shiftFilePath, 'tmp', f"{requestData.shiftUUID}.png"))
-        saveImage(shifted, os.path.join(current_app.root_path, 'static', 'image', requestData.shiftUUID))
-
+        saveImage(shifted, os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
+    
+    mongoShift.update(set__imagePath=f"{requestData.shiftUUID}{extension}")
 
     del shft

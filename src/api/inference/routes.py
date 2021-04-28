@@ -5,23 +5,23 @@ Routes for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from logging import error
 import os
 import json
-from flask.helpers import send_from_directory
 import mongoengine
 import tensorflow as tf
 from typing import Union
 from celery.result import AsyncResult
 from flask_login import login_required, current_user
-from flask import Blueprint, request, current_app, send_file
+from flask import Blueprint, request, current_app
 
 #First Party Imports
 from src.run import celery
 from src.api.inference.tasks import shiftMedia
+from src.variables.constants import SHIFT_PATH
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 
 
 inferenceBP = Blueprint('inference', __name__)
@@ -52,11 +52,11 @@ def validateInferenceRequest() -> Union[InferenceRequest, dict]:
 
     if requestData.prebuiltShiftModel:
         try:
-            tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                        requestData.prebuiltShiftModel, "encoder"))
-            tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                        requestData.prebuiltShiftModel, "baseDecoder"))
-            tf.keras.models.load_model(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                        requestData.shiftUUID, "maskDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
@@ -110,6 +110,7 @@ def inferenceStatus() -> dict:
 
     try:
         worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
+        mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.getModel().shiftUUID)
     except Exception as e:
         return {"msg": "That inference worker does not exist", 'stopped': True}
 
@@ -120,7 +121,7 @@ def inferenceStatus() -> dict:
 
         if status == "SUCCESS":
             worker.delete()
-            return {'msg': "Shifting completed", 'stopped': True}
+            return {'msg': "Shifting completed", 'stopped': True, "imagePath": mongoShift.imagePath}
 
         elif status == "FAILURE":
             worker.delete()

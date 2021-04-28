@@ -27,9 +27,6 @@ class Config(object):
     }
     OBJECTID = ObjectIdConverter
 
-    USER_DATA_FOLDER = "userData"
-    SHIFT_MODELS_FOLDER = os.path.join(USER_DATA_FOLDER, "shiftModels")
-
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
     SEND_FILE_MAX_AGE_DEFAULT = 0
 

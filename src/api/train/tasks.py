@@ -23,7 +23,7 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
-                                     LARGE_BATCH_SIZE)
+                                     LARGE_BATCH_SIZE, SHIFT_PATH)
 
 
 def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, path: str):
@@ -37,7 +37,7 @@ def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, p
         path (str): The path to the encoder, base decoder and mask decoder models
     """
 
-    mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title, imagePath=uuid,
+    mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title,
                                 encoderPath=os.path.join(path, "encoder"),
                                 baseDecoderPath=os.path.join(path, "baseDecoder"),
                                 maskDecoderPath=os.path.join(path, "maskDecoder"))
@@ -54,21 +54,21 @@ def loadPTM(requestData: TrainRequest, shft: Shift):
     """
 
     if requestData.prebuiltShiftModel:
-        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "encoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel, "baseDecoder"))
 
         if requestData.usePTM:
-            shft.load(maskPath=os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+            shft.load(maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                             "PTM", "maskDecoder"))
 
     elif requestData.usePTM:
-        shft.load(os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "encoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "decoder"),
-                  os.path.join(current_app.config["SHIFT_MODELS_FOLDER"],
+                  os.path.join(current_app.root_path, SHIFT_PATH,
                                "PTM", "decoder"))
 
 
@@ -83,7 +83,7 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
         list of str: An array with the encoded shifted image
     """
 
-    inferencingData = shft.loadData("base", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+    inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
     shiftedImage = encodeImage(shft.shift(shft.maskAE, next(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
 
@@ -101,9 +101,9 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
         list of str: An array of the encoded shifted images
     """
 
-    baseInferencingData = shft.loadData("base", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+    baseInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                         1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
-    maskInferencingData = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"),
+    maskInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
                                         1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
     baseInferenceImage = next(baseInferencingData)
@@ -134,20 +134,25 @@ def trainShift(requestJSON: dict, userID: str):
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)
-    shiftFilePath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_)
+    shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
 
     loadPTM(requestData, shft)
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
-        baseImages = shft.loadData("base", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
-        baseTrainingData = np.array(list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
+        originalImage = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+        baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+
+        baseImageArray = list(shft.formatTrainingData(originalImage, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True))
+        baseImageArray += list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True))
+
+        baseTrainingData = np.array(baseImageArray)
 
 
         if requestData.prebuiltShiftModel:
-            maskImages = shft.loadData("mask", os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], shft.id_, "tmp"))
+            maskImages = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, requestData.prebuiltShiftModel, "tmp", "mask"))
             maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
         else:
-            maskImages = shft.loadData("mask", os.path.join(shiftFilePath, "tmp"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+            maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
             maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
 
 

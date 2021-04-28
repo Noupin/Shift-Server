@@ -15,7 +15,7 @@ from flask_login import login_required, current_user
 
 #First Party Imports
 from src.utils.files import makeDir
-from src.variables.constants import EXTENSION_FILE_TYPES
+from src.variables.constants import SHIFT_PATH
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename
@@ -24,7 +24,22 @@ from src.utils.files import generateUniqueFilename
 loadBP = Blueprint('load', __name__)
 
 
-def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestData: List[str], count=0):
+def makeFolders(folderPath: str) -> None:
+    """
+    Creates the folder for the shift models and the temporary data needed.
+
+    Args:
+        folderPath (str): The base of the folder path to make other folders
+    """
+    
+    makeDir(folderPath)
+    makeDir(os.path.join(folderPath, "tmp"))
+    makeDir(os.path.join(folderPath, "tmp", "original"))
+    makeDir(os.path.join(folderPath, "tmp", "base"))
+    makeDir(os.path.join(folderPath, "tmp", "mask"))
+
+
+def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestData: List[str], count=0) -> None:
     """
     Saves the data from a werkzeug file object to the file system
 
@@ -37,15 +52,16 @@ def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestD
     """
 
     filename = secure_filename(data.filename)
-    _, extension = os.path.splitext(filename)
-
-    folderPath = os.path.join(current_app.config["SHIFT_MODELS_FOLDER"], uuid)
-    makeDir(folderPath)
-    makeDir(os.path.join(folderPath, "tmp"))
+    folderPath = os.path.join(current_app.root_path, SHIFT_PATH, uuid)
+    makeFolders(folderPath)
 
     #FileStorage.save deletes the object
-    data.save(os.path.join(folderPath, "tmp",
-                           "{}media{}{}".format(requestData[count], count+1, extension)))
+    if count == 0:
+        data.save(os.path.join(folderPath, "tmp", "original", filename))
+    elif requestData[count] == "base":
+        data.save(os.path.join(folderPath, "tmp", "base", filename))
+    elif requestData[count] == "mask":
+        data.save(os.path.join(folderPath, "tmp", "mask", filename))
 
 
 @loadBP.route("/loadData", methods=["POST"])

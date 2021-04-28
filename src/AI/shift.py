@@ -8,6 +8,7 @@ __author__ = "Noupin"
 import os
 import types
 import random
+from flask.globals import current_app
 import moviepy
 import numpy as np
 import tensorflow as tf
@@ -29,9 +30,8 @@ from src.utils.image import (resizeImage, blendImageAndColor,
                              replaceAreaOfImage, viewImage,
                              drawPolygon, applyMask,
                              imagesToVideo)
-from src.variables.constants import (OBJECT_CLASSIFIER,
+from src.variables.constants import (OBJECT_CLASSIFIER, SHIFT_PATH,
                                      VIDEO_FRAME_GRAB_INTERVAL,
-                                     TEMP_MEDIA_PATH,
                                      HUE_ADJUSTMENT)
 
 
@@ -264,7 +264,7 @@ class Shift:
         if isImage:
             return next(mediaGenerator)
         else:
-            return imagesToVideo(mediaGenerator, shape, os.path.join(TEMP_MEDIA_PATH, f"{str(self.id_)}.mp4"), fps)
+            return imagesToVideo(mediaGenerator, shape, os.path.join(current_app.root_path, SHIFT_PATH, self.id_, f"{str(self.id_)}.mp4"), fps)
         
 
 
@@ -326,12 +326,11 @@ class Shift:
                                       optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, imageType: str, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> Generator[None, np.ndarray, None]:
+    def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> Generator[None, np.ndarray, None]:
         """
         Loads the images and videos for either the mask or base model
 
         Args:
-            imageType (str): Either 'mask' or 'base' to load the correct files
             dataPath (str): The path to the folder holding the data
             interval (int): The interval to grab images from a video
             action (function): The classifier to determine whether the frame of
@@ -352,9 +351,6 @@ class Shift:
         files = os.listdir(dataPath)
 
         for media in files:
-            if media.find(imageType) == -1:
-                continue
-
             mediaType = getMediaType(media)
 
             if mediaType == 'video':
