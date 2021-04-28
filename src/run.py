@@ -14,5 +14,4 @@ celery = makeCelery(app)
 app = createApp(app)
 
 if __name__ == '__main__':
-    print("App Running")
     app.run()

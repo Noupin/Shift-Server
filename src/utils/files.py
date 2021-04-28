@@ -8,10 +8,13 @@ __author__ = "Noupin"
 import os
 import uuid
 import base64
-from typing import Union
+import werkzeug
+from flask import current_app
+from typing import Union, List
+from werkzeug.utils import secure_filename
 
 #First Party Imports
-from src.variables.constants import EXTENSION_FILE_TYPES
+from src.variables.constants import EXTENSION_FILE_TYPES, SHIFT_PATH
 
 
 def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> Union[uuid.UUID, str]:
@@ -88,3 +91,43 @@ def getMediaType(filePath: str) -> str:
     _, extension = os.path.splitext(filePath)
 
     return EXTENSION_FILE_TYPES[extension.lower()[1:]]
+
+
+def makeShiftFolders(folderPath: str) -> None:
+    """
+    Creates the folder for the shift models and the temporary data needed.
+
+    Args:
+        folderPath (str): The base of the folder path to make other folders
+    """
+    
+    makeDir(folderPath)
+    makeDir(os.path.join(folderPath, "tmp"))
+    makeDir(os.path.join(folderPath, "tmp", "original"))
+    makeDir(os.path.join(folderPath, "tmp", "base"))
+    makeDir(os.path.join(folderPath, "tmp", "mask"))
+
+
+def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestData: List[str], count=0) -> None:
+    """
+    Saves the data from a werkzeug file object to the file system
+
+    Args:
+        data (werkzeug.datastructures.FileStorage): The data to be saved to the file system.
+        uuid (str): The uuid of the folder to save the files to.
+        requestData (list of str): The additional data with the request needed for naming the file.
+        count (int, optional): The counter to change the filename of the data
+                               being saved. Defaults to 0.
+    """
+
+    filename = secure_filename(data.filename)
+    folderPath = os.path.join(current_app.root_path, SHIFT_PATH, uuid)
+    makeShiftFolders(folderPath)
+
+    #FileStorage.save deletes the object
+    if count == 0:
+        data.save(os.path.join(folderPath, "tmp", "original", filename))
+    elif requestData[count] == "base":
+        data.save(os.path.join(folderPath, "tmp", "base", filename))
+    elif requestData[count] == "mask":
+        data.save(os.path.join(folderPath, "tmp", "mask", filename))

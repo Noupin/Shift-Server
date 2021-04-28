@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Routes for the Shift API
+Routes for the Inference part of the Shift API
 """
 __author__ = "Noupin"
 
