@@ -71,7 +71,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
 
     from src.main.routes import main
     from src.api.load.blueprint import loadBP
-    from src.api.train.routes import trainBP
+    from src.api.train.blueprint import trainBP
     from src.api.inference.blueprint import inferenceBP
     from src.api.users.blueprint import usersBP
     from src.api.content.blueprint import contentBP

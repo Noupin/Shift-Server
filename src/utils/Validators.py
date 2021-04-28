@@ -8,6 +8,7 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 import re
 import os
 import json
+from src.DataModels.JSON.TrainRequest import TrainRequest
 import werkzeug
 import tensorflow as tf
 from flask import current_app
@@ -144,5 +145,37 @@ def validateInferenceRequest(request: Request) -> Union[InferenceRequest, dict]:
                                        requestData.shiftUUID, "maskDecoder"))
         except OSError:
             return {'msg': "That model does not exist"}
+    
+    return requestData
+
+
+def validateBaseTrainRequest(request: Request) -> Union[TrainRequest, dict]:
+    """
+    Vialidates the basic version of the train request
+
+    Returns:
+        Union[TrainRequest, dict]: The train request data or the error to send
+    """
+
+    if not request.is_json:
+        return {'msg': "Your train request had no JSON payload"}
+
+    try:
+        requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
+    except ValueError as e:
+        print("Value:", e)
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+    except TypeError as e:
+        print("Type:", e)
+        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+
+    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+        return {'msg': "Your train request had no shiftUUID"}
+
+    if requestData.usePTM is None:
+        return {'msg': "Your train request had not indication to use the prebuilt model or not"}
+
+    if requestData.trainType != "basic" and requestData.trainType != "advanced":
+        return {'msg': "Your train request did not have the correct training type"}
     
     return requestData
