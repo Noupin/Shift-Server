@@ -14,11 +14,11 @@ from flask.helpers import send_from_directory
 from src.variables.constants import IMAGE_PATH, VIDEO_PATH
 
 
-content = Blueprint('content', __name__)
+contentBP = Blueprint('content', __name__)
 
 
-@content.route("/image/<string:filename>", methods=["GET"])
-@content.route("/image/<string:filename>/<string:download>", methods=["GET"])
+@contentBP.route("/image/<string:filename>", methods=["GET"])
+@contentBP.route("/image/<string:filename>/<string:download>", methods=["GET"])
 def image(filename: str='default', download: str='False'):
     asAttachment = json.loads(download.lower())
 
@@ -29,8 +29,8 @@ def image(filename: str='default', download: str='False'):
                                cache_timeout=0)
 
 
-@content.route("/video/<string:filename>", methods=["GET"])
-@content.route("/video/<string:filename>/<string:download>", methods=["GET"])
+@contentBP.route("/video/<string:filename>", methods=["GET"])
+@contentBP.route("/video/<string:filename>/<string:download>", methods=["GET"])
 def video(filename: str, download: str='False'):
     asAttachment = json.loads(download.lower())
 

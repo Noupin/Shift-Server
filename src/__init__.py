@@ -73,16 +73,16 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.load.routes import loadBP
     from src.api.train.routes import trainBP
     from src.api.inference.routes import inferenceBP
-    from src.api.users.routes import users
-    from src.api.content.routes import content
+    from src.api.users.blueprint import usersBP
+    from src.api.content.routes import contentBP
 
 
     app.register_blueprint(main)
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
-    app.register_blueprint(users, url_prefix='/api/users')
-    app.register_blueprint(content, url_prefix='/api/content')
+    app.register_blueprint(usersBP, url_prefix='/api/users')
+    app.register_blueprint(contentBP, url_prefix='/api/content')
 
     return app
 

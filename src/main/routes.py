@@ -8,6 +8,9 @@ __author__ = "Noupin"
 import flask
 from flask import Blueprint
 
+#First Party Imports
+from src import login_manager
+
 
 main = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")
 
@@ -20,3 +23,14 @@ def index() -> flask.wrappers.Response:
 @main.app_errorhandler(404)
 def error404(error) -> flask.wrappers.Response:
     return main.send_static_file('index.html')
+
+@login_manager.unauthorized_handler
+def unauthorized() -> dict:
+    """
+    The unauthorized endpoint for the Shift app.
+
+    Returns:
+        dict: The msg telling the user they are not authorized
+    """
+
+    return {"msg": "You are not logged in and don't have access"}
