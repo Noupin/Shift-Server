@@ -72,7 +72,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.main.routes import main
     from src.api.load.routes import loadBP
     from src.api.train.routes import trainBP
-    from src.api.inference.routes import inferenceBP
+    from src.api.inference.blueprint import inferenceBP
     from src.api.users.blueprint import usersBP
     from src.api.content.blueprint import contentBP
 

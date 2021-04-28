@@ -6,14 +6,20 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 
 #Third Party Imports
 import re
+import os
+import json
 import werkzeug
-from typing import Tuple
+import tensorflow as tf
+from flask import current_app
+from typing import Tuple, Union
+from flask.wrappers import Request
 from email_validator import validate_email, EmailNotValidError
+from src.DataModels.JSON.InferenceRequest import InferenceRequest
 
 #First Party Imports
 from src.variables.constants import (
     ALLOWED_EXTENSIONS, PASSWORD_LENGTH, ALLOWED_NUMBERS,
-    ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS
+    ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS, SHIFT_PATH
     )
 
 
@@ -102,3 +108,41 @@ def validateFileRequest(fileDict: werkzeug.datastructures.MultiDict, fileIndicat
         break
     
     return valid
+
+
+def validateInferenceRequest(request: Request) -> Union[InferenceRequest, dict]:
+    """
+    Vialidates the inference request
+
+    Returns:
+        Union[TrainRequest, dict]: The inference request data or the error to send
+    """
+
+    if not request.is_json:
+        return {'msg': "Your inference request had no JSON payload"}
+
+    try:
+        requestData: InferenceRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: InferenceRequest(**d))
+    except ValueError:
+        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
+    except TypeError:
+        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
+
+    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+        return {'msg': "Your inference request had no shiftUUID"}
+
+    if requestData.usePTM is None:
+        return {'msg': "Your inference request had not indication to use the prebuilt model or not"}
+
+    if requestData.prebuiltShiftModel:
+        try:
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
+                                       requestData.prebuiltShiftModel, "encoder"))
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
+                                       requestData.prebuiltShiftModel, "baseDecoder"))
+            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
+                                       requestData.shiftUUID, "maskDecoder"))
+        except OSError:
+            return {'msg': "That model does not exist"}
+    
+    return requestData
