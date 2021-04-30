@@ -7,7 +7,10 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import datetime
+from apispec import APISpec
 from dotenv import load_dotenv
+from apispec_webframeworks.flask import FlaskPlugin
+from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
@@ -19,6 +22,7 @@ load_dotenv()
 class Config(object):
     SECRET_KEY = open('keys/jwt-key').read()
 
+    #MongoDB
     MONGO_URI = f"mongodb://{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_PROJECT')}"
     MONGODB_SETTINGS = {
         'db': os.environ.get('DB_PROJECT'),
@@ -27,8 +31,20 @@ class Config(object):
     }
     OBJECTID = ObjectIdConverter
 
+    #Authentication
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
     SEND_FILE_MAX_AGE_DEFAULT = 0
 
+    #Celery
     CELERY_BROKER_URL = "amqp://localhost//"
     CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
+    
+    #SwaggerUI
+    APISPEC_SPEC = APISpec(
+        title='Shift',
+        version='1.0.0',
+        plugins=[MarshmallowPlugin(), FlaskPlugin()],
+        openapi_version='3.0.2'
+    )
+    APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON 
+    APISPEC_SWAGGER_UI_URL = '/swagger-ui/'  # URI to access UI of API Doc

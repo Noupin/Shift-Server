@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
+from flask_restful import Api
 
 #First Party Imports
 from src.api.users.routes.Login import Login
@@ -17,10 +18,11 @@ from src.api.users.routes.Authenticated import Authenticated
 
 
 usersBP = Blueprint('users', __name__)
+usersAPI = Api(usersBP)
 
-usersBP.add_url_rule("/login", view_func=Login.as_view("login"))
-usersBP.add_url_rule("/logout", view_func=Logout.as_view("logout"))
-usersBP.add_url_rule("/shifts", view_func=Shifts.as_view("shifts"))
-usersBP.add_url_rule("/profile", view_func=Profile.as_view("profile"))
-usersBP.add_url_rule("/register", view_func=Register.as_view("register"))
-usersBP.add_url_rule("/authenticated", view_func=Authenticated.as_view("authenticated"))
+usersAPI.add_resource(Login, "/login")
+usersAPI.add_resource(Logout, "/logout")
+usersAPI.add_resource(Shifts, "/shifts")
+usersAPI.add_resource(Profile, "/profile")
+usersAPI.add_resource(Register, "/register")
+usersAPI.add_resource(Authenticated, "/authenticated")

@@ -5,19 +5,22 @@ Authentication endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask.views import MethodView
+from flask_restful import Resource
 from flask_login import current_user
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 
 
-class Authenticated(MethodView):
+class AuthenticatedResponse(Schema):
+    authenticated = fields.Boolean()
 
-    @staticmethod
-    def get() -> dict:
+class Authenticated(MethodResource, Resource):
+
+    @marshal_with(AuthenticatedResponse)
+    def get(self) -> dict:
         """
         Whether the user is logged in currently or not
-
-        Returns:
-            dict: A bool of whether the user is currently logged in
         """
 
         if current_user.is_authenticated:

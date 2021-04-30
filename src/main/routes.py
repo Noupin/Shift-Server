@@ -5,8 +5,9 @@ Routes for the Shift webapp
 __author__ = "Noupin"
 
 #Third Party Imports
-import flask
 from flask import Blueprint
+from flask.wrappers import Response
+from werkzeug.exceptions import NotFound
 
 #First Party Imports
 from src import login_manager
@@ -16,13 +17,14 @@ main = Blueprint('main', __name__, static_folder="../static/build", static_url_p
 
 
 @main.route('/')
-def index() -> flask.wrappers.Response:
+def index() -> Response:
     return main.send_static_file('index.html')
 
 
-@main.app_errorhandler(404)
-def error404(error) -> flask.wrappers.Response:
-    return main.send_static_file('index.html')
+'''@main.app_errorhandler(404)
+def error404(error: NotFound) -> Response:
+    return main.send_static_file('index.html')'''
+
 
 @login_manager.unauthorized_handler
 def unauthorized() -> dict:

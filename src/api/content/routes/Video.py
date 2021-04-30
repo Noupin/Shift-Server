@@ -8,7 +8,7 @@ __author__ = "Noupin"
 import os
 import json
 from flask import current_app
-from flask.views import MethodView
+from flask_restful import Resource
 from flask.wrappers import Response
 from flask.helpers import send_from_directory
 
@@ -16,12 +16,11 @@ from flask.helpers import send_from_directory
 from src.variables.constants import VIDEO_PATH
 
 
-class Video(MethodView):
+class Video(Resource):
 
-    @staticmethod
-    def get(filename: str='default', download: str='False') -> Response:
+    def get(self, filename: str='default.mp4', download: str='False') -> Response:
         """
-        The video protion of the CDN.
+        The video portion of the CDN.
 
         Returns:
             Response: The file requested.

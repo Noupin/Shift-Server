@@ -9,14 +9,17 @@ import flask
 from flask import Flask
 from celery import Celery
 from flask_cors import CORS
+from flask_mail import Mail
+from flask_restful import Api
+from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mongoengine import MongoEngine
-from flask_bcrypt import Bcrypt
-from flask_mail import Mail
+from flask_apispec.extension import FlaskApiSpec
 
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
+from src.variables.constants import BLUEPRINT_NAMES
 
 
 cors = CORS()
@@ -24,6 +27,7 @@ login_manager = LoginManager()
 db = MongoEngine()
 bcrypt = Bcrypt()
 mail = Mail()
+docs = FlaskApiSpec()
 
 
 def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
@@ -48,6 +52,7 @@ def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
     db.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
+    docs.init_app(app)
 
     return app
 
@@ -68,14 +73,12 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     if not app:
         app = initApp(appName, configClass)
 
-
     from src.main.routes import main
     from src.api.load.blueprint import loadBP
     from src.api.train.blueprint import trainBP
-    from src.api.inference.blueprint import inferenceBP
     from src.api.users.blueprint import usersBP
     from src.api.content.blueprint import contentBP
-
+    from src.api.inference.blueprint import inferenceBP
 
     app.register_blueprint(main)
     app.register_blueprint(loadBP, url_prefix="/api")
@@ -87,7 +90,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     return app
 
 
-def makeCelery(app: flask.app.Flask):
+def makeCelery(app: flask.app.Flask) -> Celery:
     celery = Celery(app.import_name,
                     backend=app.config['CELERY_RESULT_BACKEND'],
                     broker=app.config['CELERY_BROKER_URL'])

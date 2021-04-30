@@ -6,7 +6,10 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
+from flask_apispec import marshal_with
+from marshmallow import Schema, fields
+from flask_apispec.views import MethodResource
 from flask_login import login_user, current_user
 
 #First Party Imports
@@ -15,15 +18,15 @@ from src.DataModels.MongoDB.User import User
 from src.utils.validators import validateEmail, validatePassword
 
 
-class Register(MethodView):
+class RegisterResponse(Schema):
+    msg = fields.String()
 
-    @staticmethod
-    def post() -> dict:
+class Register(MethodResource, Resource):
+
+    @marshal_with(RegisterResponse)
+    def post(self) -> dict:
         """
         The regitration for the user
-
-        Returns:
-            JSON: A JSON with a success or failure msg.
         """
 
         if current_user.is_authenticated:

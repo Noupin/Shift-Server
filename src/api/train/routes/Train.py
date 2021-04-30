@@ -8,9 +8,12 @@ __author__ = "Noupin"
 import os
 import mongoengine
 import tensorflow as tf
-from flask.views import MethodView
+from flask_restful import Resource
+from flask import current_app, request
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import current_user, login_required
-from flask import request, current_app
 
 #First Party Imports
 from src.api.train.tasks import trainShift
@@ -20,11 +23,14 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 
 
-class Train(MethodView):
+class TrainResponse(Schema):
+    msg = fields.String()
+
+class Train(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(TrainResponse)
+    def post(self) -> dict:
         """
         Given training data Shift specializes a model for the training data. Yeilds
         more relaisitic results than just an inference though it takes longer.

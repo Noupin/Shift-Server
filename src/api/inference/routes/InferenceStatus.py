@@ -6,8 +6,11 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
 from celery.result import AsyncResult
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import login_required
 
 #First Party Import
@@ -18,17 +21,19 @@ from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 
 
+class InferenceStatusResponse(Schema):
+    msg = fields.String(default="The status is status")
+    stopped = fields.Boolean()
+    imagePath = fields.String()
+    
 
-class InferenceStatus(MethodView):
+class InferenceStatus(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(InferenceStatusResponse)
+    def post(self) -> dict:
         """
         The status of the current inferencing task.
-
-        Returns:
-            dict: A response with the status of the inferencing.
         """
 
         requestData = validateInferenceRequest(request)

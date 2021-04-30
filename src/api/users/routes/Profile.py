@@ -5,18 +5,18 @@ Profile endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask.views import MethodView
+from flask_restful import Resource
+from flask_apispec.views import MethodResource
 from flask_login import current_user, login_required
 
 #First Party Imports
 from src.DataModels.MongoDB.User import User
 
 
-class Profile(MethodView):
+class Profile(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def get() -> dict:
+    def get(self) -> dict:
         """
         The users profile to display the on users the account page
 

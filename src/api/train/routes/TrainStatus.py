@@ -7,9 +7,12 @@ __author__ = "Noupin"
 #Third Party Imports
 import mongoengine
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
 from celery.result import AsyncResult
+from marshmallow import Schema, fields
 from flask_login import login_required
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.run import celery
@@ -18,11 +21,16 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 
 
-class TrainStatus(MethodView):
+class TrainStatusResponse(Schema):
+    msg = fields.String()
+    stopped = fields.Boolean()
+    exhibit = fields.List(fields.String)
+
+class TrainStatus(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(TrainStatusResponse)
+    def post(self) -> dict:
         """
         The status of of the current training task if called while training the task
         will switch to give an update image. After a certain amount of time the training

@@ -6,7 +6,10 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import login_required
 
 #First Party Imports
@@ -15,11 +18,14 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 
 
-class StopTrain(MethodView):
+class StopTrainResponse(Schema):
+    msg = fields.String()
+
+class StopTrain(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(StopTrainResponse)
+    def post(self) -> dict:
         """
         Stop the training with the UUID of the shift model being trained.
 

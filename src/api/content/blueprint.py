@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
+from flask_restful import Api
 
 #First Party Imports
 from src.api.content.routes.Image import Image
@@ -13,8 +14,9 @@ from src.api.content.routes.Video import Video
 
 
 contentBP = Blueprint('content', __name__)
+contentAPI = Api(contentBP)
 
-contentBP.add_url_rule("/image/<string:filename>", view_func=Image.as_view("image"))
-contentBP.add_url_rule("/image/<string:filename>/<string:download>", view_func=Image.as_view("imageBool"))
-contentBP.add_url_rule("/video/<string:filename>", view_func=Video.as_view("video"))
-contentBP.add_url_rule("/video/<string:filename>/<string:download>", view_func=Video.as_view("videoBool"))
+contentAPI.add_resource(Image, "/image/<string:filename>")
+contentAPI.add_resource(Image, "/image/<string:filename>/<string:download>", endpoint="imageBool")
+contentAPI.add_resource(Video, "/video/<string:filename>")
+contentAPI.add_resource(Video, "/image/<string:filename>/<string:download>", endpoint="videoBool")

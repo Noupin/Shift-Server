@@ -42,3 +42,11 @@ FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
 IMAGE_PATH = os.path.join("static", "image")
 VIDEO_PATH = os.path.join("static", "video")
 SHIFT_PATH = os.path.join("static", "shift")
+
+BLUEPRINT_NAMES = {
+    'inference': 'inference',
+    'train': 'train',
+    'load': 'load',
+    'content': 'content',
+    'users': 'users'
+}

@@ -6,23 +6,26 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import request
-from flask.views import MethodView
-from flask_login import login_user, current_user
+from flask_restful import Resource
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
+from flask_login import current_user, login_user
 
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
 
 
-class Login(MethodView):
+class LoginResponse(Schema):
+    msg = fields.String()
 
-    @staticmethod
-    def post() -> dict:
+class Login(MethodResource, Resource):
+
+    @marshal_with(LoginResponse)
+    def post(self) -> dict:
         """
         The login for the user.
-
-        Returns:
-            JSON: A JSON with a success or failure msg.
         """
 
         if current_user.is_authenticated:

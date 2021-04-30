@@ -5,20 +5,23 @@ Logout endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask.views import MethodView
+from flask_restful import Resource
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import logout_user, current_user, login_required
 
 
-class Logout(MethodView):
+class LogoutRepsonse(Schema):
+    msg = fields.String()
+
+class Logout(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def get() -> dict:
+    @marshal_with(LogoutRepsonse)
+    def get(self) -> dict:
         """
         The logout for the user.
-
-        Returns:
-            JSON: A JSON with a msg.
         """
 
         username = current_user.username

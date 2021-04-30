@@ -7,7 +7,10 @@ __author__ = "Noupin"
 #Third Party Imports
 import mongoengine
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import login_required, current_user
 
 #First Party Imports
@@ -17,18 +20,18 @@ from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 
 
-class Inference(MethodView):
+class InferenceRepsonse(Schema):
+    msg = fields.String(default="Shifting as current_user")
+
+class Inference(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(InferenceRepsonse)
+    def post(self) -> dict:
         """
-        Inferenceing based on a specialized pretrained model(PTM) where, the input is
+        Inferencing based on a specialized pretrained model(PTM) where, the input is
         the face to be put on the media and inferenced with PTM. Alternativley inferencing
         with a given base video and shift face with a non specialized PTM.
-
-        Returns:
-            Shifted Media: The media that has been shifted by the pretrained model.
         """
 
         requestData = validateInferenceRequest(request)

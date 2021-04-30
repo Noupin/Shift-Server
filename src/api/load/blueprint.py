@@ -6,11 +6,14 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
+from flask_restful import Api
 
 #First Party Imports
 from src.api.load.routes.LoadData import LoadData
+from src.variables.constants import BLUEPRINT_NAMES
 
 
-loadBP = Blueprint('load', __name__)
+loadBP = Blueprint(BLUEPRINT_NAMES.get("load"), __name__)
+loadAPI = Api(loadBP)
 
-loadBP.add_url_rule("/loadData", view_func=LoadData.as_view("loadData"))
+loadAPI.add_resource(LoadData, "/loadData")

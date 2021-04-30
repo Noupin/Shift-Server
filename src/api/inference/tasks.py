@@ -84,15 +84,16 @@ def shiftMedia(requestJSON: dict) -> str:
                   os.path.join(shiftFilePath, "maskDecoder"))
 
     mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.shiftUUID)
-    baseMediaFilename = ""
-    for name in os.listdir(os.path.join(shiftFilePath, "tmp", "original")):
-        baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", name)
+    baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", os.listdir(os.path.join(shiftFilePath, "tmp", "original"))[0])
+    _, extension = os.path.splitext(baseMediaFilename)
 
-    fps = loadVideo(baseMediaFilename).fps
+    fps=30
+    if getMediaType(baseMediaFilename) == 'video':
+        fps = loadVideo(baseMediaFilename).fps
+
     inferencingData = list(shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), 1, firstMedia=True))
     shifted = shft.shift(shft.maskAE, inferencingData, fps, **HAAR_CASCADE_KWARGS, gray=True)
 
-    _, extension = os.path.splitext(baseMediaFilename)
     if getMediaType(baseMediaFilename) == 'video':
         baseAudio = extractAudio(loadVideo(baseMediaFilename))
         shifted = insertAudio(shifted, baseAudio)

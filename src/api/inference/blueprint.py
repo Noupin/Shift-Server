@@ -6,13 +6,16 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
+from flask_restful import Api
 
 #First Party Imports
+from src.variables.constants import BLUEPRINT_NAMES
 from src.api.inference.routes.Inference import Inference
 from src.api.inference.routes.InferenceStatus import InferenceStatus
 
 
-inferenceBP = Blueprint('inference', __name__)
+inferenceBP = Blueprint(BLUEPRINT_NAMES.get("inference"), __name__)
+inferenceAPI = Api(inferenceBP)
 
-inferenceBP.add_url_rule("/inference", view_func=Inference.as_view("inference"))
-inferenceBP.add_url_rule("/inferenceStatus", view_func=InferenceStatus.as_view("inferenceStatus"))
+inferenceAPI.add_resource(Inference, "/inference")
+inferenceAPI.add_resource(InferenceStatus, "/inferenceStatus")

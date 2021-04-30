@@ -8,7 +8,10 @@ __author__ = "Noupin"
 import json
 from typing import List
 from flask import request
-from flask.views import MethodView
+from flask_restful import Resource
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.views import MethodResource
 from flask_login import current_user, login_required
 
 #First Party Imports
@@ -17,11 +20,15 @@ from src.utils.validators import (validateFilename,
 from src.utils.files import generateUniqueFilename, saveFlaskFile
 
 
-class LoadData(MethodView):
+class LoadDataResponse(Schema):
+    msg = fields.String()
+    shiftUUID = fields.String()
+
+class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
-    @staticmethod
-    def post() -> dict:
+    @marshal_with(LoadDataResponse)
+    def post(self) -> dict:
         """
         Given training data Shift specializes a model for the training data. Yeilds
         more relaisitic results than just an inference though it takes longer.
@@ -31,9 +38,6 @@ class LoadData(MethodView):
 
         Request Body Arguments:
             file: The training data to be saved.
-
-        Returns:
-            Shifted Media: The media that has been shifted by the specialized model.
         """
 
         if not validateFileRequest(request.files):
