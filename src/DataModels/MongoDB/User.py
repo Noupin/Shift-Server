@@ -10,13 +10,15 @@ from flask_login import UserMixin
 
 #First Party Imports
 from src import db, login_manager
+from src.utils.converter import utcnow_string
 
 
 class User(db.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
-    imageFile = StringField(required=True, default='default.jpg')
+    imagePath = StringField(required=True, default='default.jpg')
+    dateCreated = StringField(default=utcnow_string)
 
 
     @staticmethod
