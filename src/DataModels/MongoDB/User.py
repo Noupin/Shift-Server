@@ -5,8 +5,7 @@ The MongoDB data model for a User
 __author__ = "Noupin"
 
 #Third Party Imports
-import mongoengine
-from mongoengine import StringField, EmbeddedDocumentListField
+from mongoengine import StringField
 from flask_login import UserMixin
 
 #First Party Imports

@@ -15,11 +15,16 @@ from flask_login import current_user, login_required
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 
+
+class ShiftsResponse(Schema):
+    shifts = fields.List(fields.Nested(ShiftSchema))
 
 class Shifts(MethodResource, Resource):
     decorators = [login_required]
 
+    @marshal_with(ShiftsResponse)
     def get(self) -> dict:
         """
         The users shifts to display the users account page
