@@ -9,14 +9,15 @@ from flask import Blueprint
 from flask_restful import Api
 
 #First Party Imports
-from src.api.train.routes.Train import Train
 from src.variables.constants import BLUEPRINT_NAMES
-from src.api.train.routes.StopTrain import StopTrain
-from src.api.train.routes.TrainStatus import TrainStatus
 
 
 trainBP = Blueprint(BLUEPRINT_NAMES.get("train"), __name__)
 trainAPI = Api(trainBP)
+
+from src.api.train.routes.Train import Train
+from src.api.train.routes.StopTrain import StopTrain
+from src.api.train.routes.TrainStatus import TrainStatus
 
 trainAPI.add_resource(Train, "/train")
 trainAPI.add_resource(TrainStatus, "/trainStatus")

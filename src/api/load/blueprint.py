@@ -9,11 +9,12 @@ from flask import Blueprint
 from flask_restful import Api
 
 #First Party Imports
-from src.api.load.routes.LoadData import LoadData
 from src.variables.constants import BLUEPRINT_NAMES
 
 
 loadBP = Blueprint(BLUEPRINT_NAMES.get("load"), __name__)
 loadAPI = Api(loadBP)
+
+from src.api.load.routes.LoadData import LoadData
 
 loadAPI.add_resource(LoadData, "/loadData")

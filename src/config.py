@@ -43,7 +43,7 @@ class Config(object):
     APISPEC_SPEC = APISpec(
         title='Shift',
         version='1.0.0',
-        plugins=[MarshmallowPlugin(), FlaskPlugin()],
+        plugins=[MarshmallowPlugin()],
         openapi_version='3.0.2'
     )
     APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON 

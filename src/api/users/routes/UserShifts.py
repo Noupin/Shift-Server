@@ -18,13 +18,13 @@ from src.DataModels.MongoDB.Shift import Shift
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 
-class ShiftsResponse(Schema):
+class UserShiftsResponse(Schema):
     shifts = fields.List(fields.Nested(ShiftSchema))
 
-class Shifts(MethodResource, Resource):
+class UserShifts(MethodResource, Resource):
     decorators = [login_required]
 
-    @marshal_with(ShiftsResponse)
+    @marshal_with(UserShiftsResponse)
     def get(self) -> dict:
         """
         The users shifts to display the users account page

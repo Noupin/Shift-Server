@@ -6,12 +6,13 @@ Runs the server for Shift
 __author__ = "Noupin"
 
 #First Party Imports
-from src import initApp, createApp, makeCelery
+from src import initApp, createApp, makeCelery, generateSwagger
 
 
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)
+generateSwagger()
 
 if __name__ == '__main__':
     app.run()

@@ -10,14 +10,21 @@ import json
 from flask import current_app
 from flask_restful import Resource
 from flask.wrappers import Response
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
 from flask.helpers import send_from_directory
+from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.variables.constants import IMAGE_PATH
 
 
-class Image(Resource):
+class ImageResponse(Schema):
+    image = fields.Field()
 
+class Image(MethodResource, Resource):
+
+    @marshal_with(ImageResponse)
     def get(self, filename: str='default.jpg', download: str='False') -> Response:
         """
         The image portion of the CDN.

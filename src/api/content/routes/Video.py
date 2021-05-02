@@ -10,14 +10,21 @@ import json
 from flask import current_app
 from flask_restful import Resource
 from flask.wrappers import Response
+from marshmallow import Schema, fields
+from flask_apispec import marshal_with
 from flask.helpers import send_from_directory
+from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.variables.constants import VIDEO_PATH
 
 
-class Video(Resource):
+class VideoResponse(Schema):
+    video = fields.Field()
 
+class Video(MethodResource, Resource):
+
+    @marshal_with(VideoResponse)
     def get(self, filename: str='default.mp4', download: str='False') -> Response:
         """
         The video portion of the CDN.
