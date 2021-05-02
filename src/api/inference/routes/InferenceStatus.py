@@ -9,15 +9,16 @@ from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
 from marshmallow import Schema, fields
-from flask_apispec import marshal_with
-from flask_apispec.views import MethodResource
 from flask_login import login_required
+from flask_apispec.views import MethodResource
+from flask_apispec import marshal_with, use_kwargs
 
 #First Party Import
 from src.run import celery
 from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
+from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 
 
@@ -25,16 +26,16 @@ class InferenceStatusResponse(Schema):
     msg = fields.String(default="The status is status")
     stopped = fields.Boolean()
     imagePath = fields.String()
-    
 
 class InferenceStatus(MethodResource, Resource):
     decorators = [login_required]
 
-    @marshal_with(InferenceStatusResponse)
-    def post(self) -> dict:
-        """
-        The status of the current inferencing task.
-        """
+    #@use_kwargs(InferenceRequest.Schema())
+    @marshal_with(InferenceStatusResponse,
+                  description="""
+                  The status of the current inferencing task.
+                  """)
+    def post(self):
 
         requestData = validateInferenceRequest(request)
         if isinstance(requestData, dict):

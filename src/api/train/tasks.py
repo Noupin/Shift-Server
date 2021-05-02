@@ -130,7 +130,7 @@ def trainShift(requestJSON: dict, userID: str):
     """
 
     userID = ObjectId(userID)
-    requestData: TrainRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: TrainRequest(**d))
+    requestData: TrainRequest = TrainRequest(**requestJSON)
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)

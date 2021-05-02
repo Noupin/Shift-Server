@@ -7,13 +7,12 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 #Third Party Imports
 import re
 import os
-import json
-from src.DataModels.JSON.TrainRequest import TrainRequest
 import werkzeug
 import tensorflow as tf
 from flask import current_app
 from typing import Tuple, Union
 from flask.wrappers import Request
+from src.DataModels.JSON.TrainRequest import TrainRequest
 from email_validator import validate_email, EmailNotValidError
 from src.DataModels.JSON.InferenceRequest import InferenceRequest
 
@@ -123,7 +122,7 @@ def validateInferenceRequest(request: Request) -> Union[InferenceRequest, dict]:
         return {'msg': "Your inference request had no JSON payload"}
 
     try:
-        requestData: InferenceRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: InferenceRequest(**d))
+        requestData: InferenceRequest = InferenceRequest(**request.get_json())
     except ValueError:
         return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
     except TypeError:
@@ -161,7 +160,7 @@ def validateBaseTrainRequest(request: Request) -> Union[TrainRequest, dict]:
         return {'msg': "Your train request had no JSON payload"}
 
     try:
-        requestData: TrainRequest = json.loads(json.dumps(request.get_json()), object_hook=lambda d: TrainRequest(**d))
+        requestData: TrainRequest = TrainRequest(**request.get_json())
     except ValueError as e:
         print("Value:", e)
         return {"msg": "Not all fields for the TrainRequest object were POSTed"}

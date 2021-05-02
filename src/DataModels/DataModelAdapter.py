@@ -5,7 +5,7 @@ The MongoDB data model for a Train Worker
 __author__ = "Noupin"
 
 #Third Party Imports
-from typing import TypeVar, Generic
+from typing import TypeVar
 
 
 T = TypeVar('T')

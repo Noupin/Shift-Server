@@ -5,7 +5,7 @@ The Train Request Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from dataclasses import dataclass
+from marshmallow_dataclass import dataclass
 
 
 @dataclass(frozen=True)
@@ -14,5 +14,5 @@ class TrainRequest:
     shiftTitle: str
     usePTM: bool
     prebuiltShiftModel: str
-    epochs: int
+    statusInterval: int
     trainType: str

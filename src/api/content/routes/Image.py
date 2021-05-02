@@ -9,11 +9,10 @@ import os
 import json
 from flask import current_app
 from flask_restful import Resource
-from flask.wrappers import Response
 from marshmallow import Schema, fields
-from flask_apispec import marshal_with
 from flask.helpers import send_from_directory
 from flask_apispec.views import MethodResource
+from flask_apispec import marshal_with, use_kwargs
 
 #First Party Imports
 from src.variables.constants import IMAGE_PATH
@@ -25,7 +24,7 @@ class ImageResponse(Schema):
 class Image(MethodResource, Resource):
 
     @marshal_with(ImageResponse)
-    def get(self, filename: str='default.jpg', download: str='False') -> Response:
+    def get(self, filename: str='default.jpg', download: str='False'):
         """
         The image portion of the CDN.
 
