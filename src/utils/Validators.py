@@ -12,9 +12,9 @@ import tensorflow as tf
 from flask import current_app
 from typing import Tuple, Union
 from flask.wrappers import Request
-from src.DataModels.JSON.TrainRequest import TrainRequest
+from src.DataModels.Request.TrainRequest import TrainRequest
 from email_validator import validate_email, EmailNotValidError
-from src.DataModels.JSON.InferenceRequest import InferenceRequest
+from src.DataModels.Request.InferenceRequest import InferenceRequest
 
 #First Party Imports
 from src.variables.constants import (

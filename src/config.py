@@ -9,7 +9,6 @@ import os
 import datetime
 from apispec import APISpec
 from dotenv import load_dotenv
-from apispec_webframeworks.flask import FlaskPlugin
 from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports

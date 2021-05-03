@@ -18,8 +18,8 @@ from flask import current_app
 from src.run import celery
 from src.AI.shift import Shift
 from src.utils.image import encodeImage
-from src.DataModels.JSON.TrainRequest import TrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
+from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,

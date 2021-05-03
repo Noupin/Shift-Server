@@ -8,8 +8,8 @@ __author__ = "Noupin"
 from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
-from marshmallow import Schema, fields
 from flask_login import login_required
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs
 
@@ -18,33 +18,33 @@ from src.run import celery
 from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
-from src.DataModels.JSON.InferenceRequest import InferenceRequest
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.DataModels.Request.InferenceRequest import (InferenceRequest,
+                                                     InferenceRequestDescription)
+from src.DataModels.Response.InferenceStatusResponse import (InferenceStatusReponse,
+                                                             InferenceStatusReponseDescription)
 
-
-class InferenceStatusResponse(Schema):
-    msg = fields.String(default="The status is status")
-    stopped = fields.Boolean()
-    imagePath = fields.String()
 
 class InferenceStatus(MethodResource, Resource):
     decorators = [login_required]
 
-    #@use_kwargs(InferenceRequest.Schema())
-    @marshal_with(InferenceStatusResponse,
-                  description="""
-                  The status of the current inferencing task.
-                  """)
-    def post(self):
+    @use_kwargs(InferenceRequest.Schema(),
+                description=InferenceRequestDescription)
+    @marshal_with(InferenceStatusReponse.Schema(),
+                  description=InferenceStatusReponseDescription)
+    @doc(description="""
+The status of the current shift model while inferencing on the \
+original media and whether or not it has stopped inferencing.""")
+    def post(self, requestData: InferenceRequest):
 
-        requestData = validateInferenceRequest(request)
+        requestError = validateInferenceRequest(request)
         if isinstance(requestData, dict):
-            return requestData
-        requestData = DataModelAdapter(requestData)
+            return requestError
+        requestModel = DataModelAdapter(requestData)
 
         try:
-            worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
-            mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.getModel().shiftUUID)
+            worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestModel.getModel().shiftUUID)
+            mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestModel.getModel().shiftUUID)
         except Exception as e:
             return {"msg": "That inference worker does not exist", 'stopped': True}
 

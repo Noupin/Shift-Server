@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-from src.DataModels.JSON.TrainRequest import TrainRequest
 import mongoengine
 import tensorflow as tf
 from flask_restful import Resource
@@ -49,24 +48,24 @@ class Train(MethodResource, Resource):
         requestData = validateBaseTrainRequest(request)
         if isinstance(requestData, dict):
             return requestData
-        #requestData = DataModelAdapter(requestData)
+        requestData = DataModelAdapter(requestData)
 
-        if requestData.prebuiltShiftModel:
+        if requestData.getModel().prebuiltShiftModel:
             try:
                 tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
-                                        requestData.prebuiltShiftModel, "encoder"))
+                                        requestData.getModel().prebuiltShiftModel, "encoder"))
                 tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
-                                        requestData.prebuiltShiftModel, "baseDecoder"))
+                                        requestData.getModel().prebuiltShiftModel, "baseDecoder"))
             except OSError:
                 return {'msg': "That model does not exist"}
 
-        worker = TrainWorker(shiftUUID=requestData.shiftUUID, training=True, inferencing=False)
+        worker = TrainWorker(shiftUUID=requestData.getModel().shiftUUID, training=True, inferencing=False)
         try:
             worker.save()
         except mongoengine.errors.NotUniqueError:
             return {'msg': "That AI is already training."}
         
-        job = trainShift.delay(TrainRequest.Schema().dump(requestData), str(current_user.id))
+        job = trainShift.delay(requestData.getSerializable(), str(current_user.id))
         worker.update(set__workerID=job.id)
 
         return {'msg': f"Training as {current_user.username}"}

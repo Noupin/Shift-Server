@@ -9,8 +9,8 @@ from flask import request
 from flask_restful import Resource
 from marshmallow import Schema, fields
 from flask_apispec import marshal_with
-from flask_apispec.views import MethodResource
 from flask_login import login_required
+from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.utils.validators import validateBaseTrainRequest

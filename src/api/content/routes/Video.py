@@ -10,29 +10,23 @@ import json
 from flask import current_app
 from flask_restful import Resource
 from flask.wrappers import Response
-from marshmallow import Schema, fields
+from flask_apispec import marshal_with
+from flask_apispec.annotations import doc
 from flask.helpers import send_from_directory
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
 
 #First Party Imports
 from src.variables.constants import VIDEO_PATH
+from src.DataModels.Response.VideoResponse import (VideoResponse,
+                                                   VideoResponseDescription)
 
-
-class VideoResponse(Schema):
-    video = fields.Field()
 
 class Video(MethodResource, Resource):
 
-    @marshal_with(VideoResponse)
+    @marshal_with(VideoResponse.Schema(),
+                  description=VideoResponseDescription)
+    @doc(description="""The video portion of the Shift CDN.""")
     def get(self, filename: str='default.mp4', download: str='False') -> Response:
-        """
-        The video portion of the CDN.
-
-        Returns:
-            Response: The file requested.
-        """
-
         asAttachment = json.loads(download.lower())
 
         return send_from_directory(os.path.join(current_app.root_path, VIDEO_PATH),

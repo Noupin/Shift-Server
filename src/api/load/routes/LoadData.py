@@ -10,8 +10,8 @@ from typing import List
 from flask import request
 from flask_restful import Resource
 from marshmallow import Schema, fields
-from flask_apispec import marshal_with
 from flask_apispec.views import MethodResource
+from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
 
 #First Party Imports
@@ -27,6 +27,7 @@ class LoadDataResponse(Schema):
 class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
+    #@use_kwargs()
     @marshal_with(LoadDataResponse)
     def post(self) -> dict:
         """

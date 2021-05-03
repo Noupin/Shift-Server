@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Inference Request Data Model for the Shift API
+The Login Response Data Model for the Shift API
 """
 __author__ = "Noupin"
 
@@ -9,7 +9,7 @@ from marshmallow_dataclass import dataclass
 
 
 @dataclass(frozen=True)
-class InferenceRequest:
-    shiftUUID: str
-    usePTM: bool
-    prebuiltShiftModel: str
+class LoginResponse:
+    msg: str
+
+LoginResponseDescription = """The status of the login attempt."""

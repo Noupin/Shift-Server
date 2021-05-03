@@ -14,11 +14,11 @@ from flask import current_app
 #First Party Imports
 from src.run import celery
 from src.AI.shift import Shift
-from src.utils.files import getMediaType
 from src.utils.image import saveImage
-from src.DataModels.JSON.InferenceRequest import InferenceRequest
-from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
+from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.DataModels.Request.InferenceRequest import InferenceRequest
 from src.utils.video import (loadVideo, extractAudio, insertAudio,
                              saveVideo)
 from src.variables.constants import (HAAR_CASCADE_KWARGS, SHIFT_PATH,

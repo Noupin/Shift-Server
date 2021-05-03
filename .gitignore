@@ -10,3 +10,4 @@ ServerData.py
 openh264-1.8.0-win64.dll
 /videos
 shape_predictor_68_face_landmarks.dat
+killCelery.py
