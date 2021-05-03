@@ -9,7 +9,7 @@ import json
 from typing import List
 from flask import request
 from flask_restful import Resource
-from marshmallow import Schema, fields
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
@@ -18,29 +18,28 @@ from flask_login import current_user, login_required
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename, saveFlaskFile
+from src.DataModels.Request.LoadDataRequest import (LoadDataBodyRequest,
+                                                    LoadDataBodyRequestDescription,
+                                                    LoadDataHeaderRequest,
+                                                    LoadDataHeaderRequestDescription)
+from src.DataModels.Response.LoadDataResponse import (LoadDataResponse,
+                                                      LoadResponseDescription)
 
-
-class LoadDataResponse(Schema):
-    msg = fields.String()
-    shiftUUID = fields.String()
 
 class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
-    #@use_kwargs()
-    @marshal_with(LoadDataResponse)
-    def post(self) -> dict:
-        """
-        Given training data Shift specializes a model for the training data. Yeilds
-        more relaisitic results than just an inference though it takes longer.
-
-        Request Header Arguments:
-            trainingDataTypes: Whether the data is 'base' or 'mask'
-
-        Request Body Arguments:
-            file: The training data to be saved.
-        """
-
+    #@use_kwargs(LoadDataBodyRequest,
+    #            description=LoadDataBodyRequestDescription)
+    #@use_kwargs(LoadDataHeaderRequest,
+    #            description=LoadDataHeaderRequestDescription)
+    @marshal_with(LoadDataResponse,
+                  description=LoadResponseDescription)
+    @doc(description="""
+Given training data Shift specializes a model for the training data. \
+Yeilds more relaisitic results than just an inference though it \
+takes longer.""")
+    def post(self, **kwargs):
         if not validateFileRequest(request.files):
             return {'msg': "The request payload had no file"}
 

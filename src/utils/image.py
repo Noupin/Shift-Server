@@ -9,7 +9,6 @@ import io
 import os
 import cv2
 import types
-import scipy.misc
 import base64
 import moviepy
 import numpy as np
@@ -120,15 +119,17 @@ def saveImage(image: np.ndarray, path: str) -> None:
 
 
 
-def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False) -> np.ndarray:
+def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False, interpolation=cv2.INTER_AREA) -> np.ndarray:
     """
     Given a cv2 image it is resized to the given size
 
     Args:
         image (numpy.ndarray): The image object to be resized
-        size (tuple of int): A tuple of the desired x and y dimension
+        size (tuple of int): A tuple of the desired x(width) and y(height) dimension
         keepAR (bool): Whether or not to keep the aspect ratio of the
                        image. Defaults to False.
+        interpolation (int): The type of image interpolation to downscale the image.
+                          Defaults to cv2.INTER_AREA.
 
     Returns:
         numpy.ndarray: The resized CV image
@@ -137,9 +138,18 @@ def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False) -> np.ndarray
     resized = PILToCV(image)
 
     if keepAR:
-        resized = cv2.resize(resized, size)
+        height, width = image.shape[:2]
+        if size[0] is None:
+            ratio = size[1] / float(height)
+            dimensions = (int(width * ratio), size[0])
+        elif size[1] is None:
+            ratio = size[0] / float(width)
+            dimensions = (size[0], int(height * ratio))
+        else:
+            dimensions = (image.shape[1], image.shape[0])
+        resized = cv2.resize(resized, dimensions, interpolation=interpolation)
     else:
-        resized = cv2.resize(resized, size, interpolation=cv2.INTER_AREA)
+        resized = cv2.resize(resized, size, interpolation=interpolation)
 
     return resized
 
@@ -197,21 +207,16 @@ def viewImage(image, **kwargs) -> None:
     plt.show()
 
 
-def encodeImage(image) -> str:
+def encodeImage(image: Image.Image) -> str:
     """
     Takes in an image array then encodes it as a bytestring to be streamed through JSON to JavaScript.
 
     Args:
-        image (numpy.ndarray or PIL.Image.Image): The image to be converted to binary string
+        image (numpy.ndarray): The image to be converted to binary string
 
     Returns:
         str: The binary encoding of the image
     """
-
-    image = PILToCV(image)
-
-    image = image.astype(np.uint8)
-    image = CVToPIL(image)
 
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")

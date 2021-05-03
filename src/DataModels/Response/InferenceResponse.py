@@ -7,10 +7,13 @@ __author__ = "Noupin"
 #Third Party Imports
 from marshmallow_dataclass import dataclass
 
+#First Party Imports
+from src.DataModels.Response.DefaultResponse import DefaultResponse
+
 
 @dataclass(frozen=True)
-class InferenceResponse:
-    msg: str
+class InferenceResponse(DefaultResponse):
+    pass
 
 InferenceResponseDescription = """
 Whether the shifting/inferencing went according to plan. \

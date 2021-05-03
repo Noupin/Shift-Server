@@ -12,7 +12,12 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 
 @dataclass(frozen=True)
-class LoginResponse(DefaultResponse):
-    pass
+class LoadDataResponse(DefaultResponse):
+    shiftUUID: str
+    
 
-LoginResponseDescription = """The status of the login attempt."""
+LoadResponseDescription = """
+Given training data Shift specializes a model for the training data. \
+Yeilds more relaisitic results than just an inference though it \
+takes longer.
+"""

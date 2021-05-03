@@ -7,10 +7,12 @@ __author__ = "Noupin"
 #Third Party Imports
 from marshmallow_dataclass import dataclass
 
+#First Party Imports
+from src.DataModels.Response.DefaultResponse import DefaultResponse
+
 
 @dataclass(frozen=True)
-class InferenceStatusReponse:
-    msg: str
+class InferenceStatusReponse(DefaultResponse):
     stopped: bool
     imagePath: str
 
