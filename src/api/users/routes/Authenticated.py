@@ -7,22 +7,22 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask_restful import Resource
 from flask_login import current_user
-from marshmallow import Schema, fields
 from flask_apispec import marshal_with
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 
+#First Party Imports
+from src.DataModels.Response.AuthenticatedResponse import (AuthenticatedResponse,
+                                                           AuthenticatedResponseDescription)
 
-class AuthenticatedResponse(Schema):
-    authenticated = fields.Boolean()
 
 class Authenticated(MethodResource, Resource):
 
-    @marshal_with(AuthenticatedResponse)
+    @marshal_with(AuthenticatedResponse.Schema(),
+                  description=AuthenticatedResponseDescription)
+    @doc(description="""
+         Whether the user is logged in currently or not.""")
     def get(self) -> dict:
-        """
-        Whether the user is logged in currently or not
-        """
-
         if current_user.is_authenticated:
             return {'authenticated': True}
 

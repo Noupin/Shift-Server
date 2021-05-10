@@ -6,24 +6,24 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask_restful import Resource
-from marshmallow import Schema, fields
 from flask_apispec import marshal_with
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 from flask_login import logout_user, current_user, login_required
 
+#First Party Imports
+from src.DataModels.Response.LogoutResponse import (LogoutResponse,
+                                                    LogoutResponseDescription)
 
-class LogoutRepsonse(Schema):
-    msg = fields.String()
 
 class Logout(MethodResource, Resource):
     decorators = [login_required]
 
-    @marshal_with(LogoutRepsonse)
+    @marshal_with(LogoutResponse.Schema(),
+                  description=LogoutResponseDescription)
+    @doc(description="""
+         Logs the user out.""")
     def get(self) -> dict:
-        """
-        The logout for the user.
-        """
-
         username = current_user.username
         logout_user()
 
