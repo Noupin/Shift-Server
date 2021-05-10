@@ -1,6 +1,8 @@
 #pylint: disable=C0103, C0301
 """
-Mongo ObjectID Converter
+Image class to convert between 8 bit uint images for cv processing, \
+32 bit float images for tensorflow, PIL images for ease of use, and \
+8 bit BGR uint images to save using CV.
 """
 __author__ = "Noupin"
 
@@ -120,5 +122,13 @@ class MultiImage:
 
 
     def crop(self, cropArea: Tuple[int]):
+        """
+        Crops the crop area out of image and updates all other forms of the image.
+
+        Args:
+            cropArea (tuple of int): The x, y, width and height values of
+                                    the rectange to be cropped from image
+        """        
+
         image = cropImage(self.CVImage, cropArea)
         self.update(image)

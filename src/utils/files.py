@@ -119,7 +119,6 @@ def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestD
         count (int, optional): The counter to change the filename of the data
                                being saved. Defaults to 0.
     """
-
     filename = secure_filename(data.filename)
     folderPath = os.path.join(current_app.root_path, SHIFT_PATH, uuid)
     makeShiftFolders(folderPath)

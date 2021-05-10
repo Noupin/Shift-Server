@@ -12,7 +12,7 @@ from marshmallow_dataclass import dataclass
 
 @dataclass(frozen=True)
 class LoadDataBodyRequest:
-    files: werkzeug.datastructures.FileMultiDict
+    files: werkzeug.datastructures.FileStorage
 
 @dataclass(frozen=True)
 class LoadDataHeaderRequest:

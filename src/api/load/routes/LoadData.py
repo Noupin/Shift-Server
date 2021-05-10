@@ -29,22 +29,22 @@ from src.DataModels.Response.LoadDataResponse import (LoadDataResponse,
 class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
-    #@use_kwargs(LoadDataBodyRequest,
-    #            description=LoadDataBodyRequestDescription)
-    #@use_kwargs(LoadDataHeaderRequest,
-    #            description=LoadDataHeaderRequestDescription)
-    #@marshal_with(LoadDataResponse,
-    #              description=LoadResponseDescription)
+    @use_kwargs(LoadDataHeaderRequest.Schema(), location="headers",
+                description="**The body contains media in FormData, since APISpec \
+does not allow for two parameter locations this is paired with the Header Schema.**"+
+                LoadDataHeaderRequestDescription)
+    @marshal_with(LoadDataResponse.Schema(),
+                  description=LoadResponseDescription)
     @doc(description="""
 Given training data Shift specializes a model for the training data. \
 Yeilds more relaisitic results than just an inference though it \
 takes longer.""")
-    def post(self, **kwargs):
+    def post(self, requestHeaders: LoadDataHeaderRequest):
         if not validateFileRequest(request.files):
             return {'msg': "The request payload had no file"}
 
         try:
-            requestData: List[str] = json.loads(request.headers["trainingDataTypes"])
+            requestData: List[str] = json.loads(requestHeaders.trainingDataTypes[0])
         except ValueError:
             return {"msg": "Not all fields for the LoadRequest object were POSTed"}
         except TypeError:
