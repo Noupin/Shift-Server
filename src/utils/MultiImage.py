@@ -49,8 +49,11 @@ class MultiImage:
             self.CVBGRImage = cv2.cvtColor(self.CVImage, cv2.COLOR_RGB2BGR)
         
         if isinstance(image, np.ndarray):
-            self.CVImage = image.astype(np.uint8)
-            self.PILImage = CVToPIL(image)
+            if image.dtype == np.float32:
+                self.CVImage = (image*255).astype(np.uint8)
+            else:
+                self.CVImage = image.astype(np.uint8)
+            self.PILImage = CVToPIL(self.CVImage)
             self.CVBGRImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
         if isinstance(image, str):
@@ -101,7 +104,7 @@ class MultiImage:
             path (str): The path to save the image to.
         """
 
-        saveImage(self.CVImage, path)
+        saveImage(self.CVBGRImage, path) #CV save images in BGR format
 
 
     def view(self, **kwargs):

@@ -6,14 +6,13 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import types
-import random
-from flask.globals import current_app
 import moviepy
 import numpy as np
 import tensorflow as tf
+from flask import current_app
 from typing import List, Union, Generator
-from skimage.util import img_as_float
+
+from tensorflow.python.ops.gen_math_ops import Mul
 
 #First Party Imports
 from src.AI.TFModel import TFModel
@@ -22,6 +21,7 @@ from src.AI.decoder import Decoder
 from src.utils.video import videoToImages
 from src.AI.autoencoder import AutoEncoder
 from src.utils.memory import chunkIterable
+from src.utils.MultiImage import MultiImage
 from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.detection import detectObject, getFacialLandmarks
@@ -99,9 +99,11 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, flipCodes=["y"], **kwargs) -> Generator[None, np.ndarray, None]:
+    def formatTrainingData(self, images: Generator[MultiImage, None, None], objectClassifier=OBJECT_CLASSIFIER,
+                           flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
         """
-        Formats and shuffles images with objectClassifier ready to train the Shift models.
+        Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
+        images from MultiImage to np.ndarray or MultiImage.CVImage.
 
         Args:
             images (types.GeneratorType): The images to be formatted for Shift model training
@@ -117,17 +119,17 @@ class Shift:
         trainingData = []
 
         for image in images:
-            objects = detectObject(objectClassifier, image=image, **kwargs)
+            objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
             if isinstance(objects, tuple):
                 continue
             
             augmented = []
             augmentedItems = 0
-            resized = resizeImage(cropImage(image, getLargestRectangle(objects)), (self.imageShape[0], self.imageShape[1]))
-            floatImage = (resized / 255.).astype('float32')
+            image.crop(getLargestRectangle(objects))
+            image.resize(self.imageShape[0], self.imageShape[1])
 
             for hue in HUE_ADJUSTMENT:
-                yield tf.image.adjust_hue(floatImage, hue)
+                yield tf.image.adjust_hue(image.TFImage, hue)
             #trainingData.append(resized)
             '''
             coloredImages = [resized]
@@ -167,7 +169,7 @@ class Shift:
             self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
     
 
-    def predict(self, model: TFModel, image: np.ndarray) -> np.ndarray:
+    def predict(self, model: TFModel, image: np.ndarray) -> MultiImage:
         """
         Uses model to predict on image
 
@@ -181,11 +183,12 @@ class Shift:
 
         image = model.predict(image.reshape(1, self.imageShape[0], self.imageShape[1], self.imageShape[2]))
         image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
-
-        return image
+        
+        return MultiImage(image)
 
     
-    def shiftImages(self, model: tf.keras.Model, images: types.GeneratorType, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> np.ndarray:
+    def shiftImages(self, model: tf.keras.Model, images: Generator[MultiImage, None, None], objectClassifier=OBJECT_CLASSIFIER,
+                    imageResizer=resizeImage, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -203,40 +206,41 @@ class Shift:
         """
 
         for image in images:
-            image = image.astype(np.uint8)
-            objects = detectObject(objectClassifier, image=image, **kwargs)
+            objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
 
             if isinstance(objects, tuple):
                 yield image
                 continue
             
             replaceArea = getLargestRectangle(objects)
-            originalCroppedImage = cropImage(image, replaceArea)
+            originalCroppedImage = cropImage(image.CVImage, replaceArea)
             replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
 
-            replaceImage = imageResizer(originalCroppedImage, (self.imageShape[0], self.imageShape[1]))
-            shiftedReplace = self.predict(model, replaceImage.astype(np.float32)) #TF needs float32 not uint8
-            shiftedReplace = shiftedReplace.astype(np.uint8)
-            replaceImage = imageResizer(shiftedReplace, replaceImageXY)
+            replaceImage = MultiImage(image.CVImage)
+            replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
+            replaceImage = self.predict(model, replaceImage.TFImage)
+            replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
 
-            landmarks = getFacialLandmarks(image, replaceArea)
+            landmarks = getFacialLandmarks(image.CVImage, replaceArea)
             maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
-            mask = drawPolygon(image, maskLandmarks, mask=True)
+            mask = drawPolygon(image.CVImage, maskLandmarks, mask=True)
             mask = cropImage(mask, replaceArea) #Cropping the mask to fit the shifted image
 
-            maskedImage = applyMask(originalCroppedImage, replaceImage, mask)
-            shiftedImage = replaceAreaOfImage(image, replaceArea, maskedImage)
+            maskedImage = applyMask(originalCroppedImage, replaceImage.CVImage, mask)
+            shiftedImage = replaceAreaOfImage(image.CVImage, replaceArea, maskedImage)
     
-            yield shiftedImage
+            yield MultiImage(shiftedImage)
     
 
-    def shift(self, model: tf.keras.Model, media: Union[types.GeneratorType, List[np.ndarray], np.ndarray], fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage, **kwargs) -> Union[moviepy.video.io.VideoFileClip.VideoFileClip, np.ndarray]:
+    def shift(self, model: tf.keras.Model, media: Union[Generator[MultiImage, None, None], List[MultiImage], MultiImage],
+              fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
+              **kwargs)-> Union[moviepy.video.io.VideoFileClip.VideoFileClip, MultiImage]:
         """
         Shifts the desired objects in the media.
 
         Args:
             model (tf.keras.Model): The model used to shift the objects.
-            media (types.GeneratorType or np.ndarray): The media to be shifted
+            media (generator of MultiImage or list of MultiImage or MultiImage]): The media to be shifted
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
@@ -244,20 +248,20 @@ class Shift:
             **kwargs: The key word arguments to pass into detectObject function
 
         Returns:
-            moviepy.video.io.VideoFileClip.VideoFileClip or np.ndarray: The shifted media
+            moviepy.video.io.VideoFileClip.VideoFileClip or MultiImage: The shifted media
         """
 
         isImage = False
 
-        if isinstance(media, np.ndarray) and media.ndim == 3:
+        if isinstance(media, MultiImage) and media.CVImage.ndim == 3:
             mediaGenerator = self.shiftImages(model, [media], objectClassifier, imageResizer, **kwargs)
             isImage = True
-        elif len(media) == 1 and isinstance(media[0], np.ndarray) and media[0].ndim == 3:
+        elif len(media) == 1 and isinstance(media[0], MultiImage) and media[0].CVImage.ndim == 3:
             mediaGenerator = self.shiftImages(model, [media[0]], objectClassifier, imageResizer, **kwargs)
             isImage = True
         else:
             mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
-            shape = media.shape
+            shape = media.CVImage.shape
 
             mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
 
@@ -326,7 +330,8 @@ class Shift:
                                       optimizer=self.optimizer, loss=self.loss)
     
 
-    def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False, firstImage=False, **kwargs) -> Generator[None, np.ndarray, None]:
+    def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False,
+                 firstImage=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -355,9 +360,9 @@ class Shift:
 
             if mediaType == 'video':
                 for image in videoToImages(os.path.join(dataPath, media), interval=interval, firstImage=firstImage, action=action, **kwargs):
-                    yield image
+                    yield MultiImage(image)
             elif mediaType == "image":
-                yield loadImage(os.path.join(dataPath, media))
+                yield MultiImage(os.path.join(dataPath, media))
             
             if firstMedia:
                 break

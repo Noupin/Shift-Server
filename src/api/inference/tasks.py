@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import cv2
 import json
 import numpy as np
 from flask import current_app
@@ -65,7 +64,6 @@ def shiftMedia(requestJSON: dict) -> str:
     """
 
     requestData: InferenceRequest = json.loads(json.dumps(requestJSON), object_hook=lambda d: InferenceRequest(**d))
-    worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
     shft = Shift(id_=requestData.shiftUUID)
     inferencingData = [np.ones(shft.imageShape)]
@@ -100,8 +98,7 @@ def shiftMedia(requestJSON: dict) -> str:
         print(shifted.filename) ### Checking if deleteOld will work ###
         saveVideo(shifted, os.path.join(current_app.root_path, VIDEO_PATH, f"{requestData.shiftUUID}{extension}"), fps)
     elif getMediaType(baseMediaFilename) == 'image':
-        shifted = cv2.cvtColor(shifted, cv2.COLOR_RGB2BGR)
-        saveImage(shifted, os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
+        shifted.save(os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
     
     mongoShift.update(set__imagePath=f"{requestData.shiftUUID}{extension}")
 

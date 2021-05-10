@@ -5,18 +5,13 @@ Base tensorflow model
 __author__ = "Noupin"
 
 #Third Party Imports
-import os
-import gc
-import sys
 import time
 import numpy as np
 import tensorflow as tf
-from colorama import Fore
-from itertools import chain
-from typing import List, Tuple, Union, Generator
+from typing import List, Union, Generator
 
 #First Party Imports
-from src.utils.image import viewImage
+from src.utils.MultiImage import MultiImage
 from src.utils.memory import allowTFMemoryGrowth
 from src.Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
@@ -130,20 +125,20 @@ class TFModel(tf.keras.Model):
         val_logits = self(x, training=False)
 
 
-    def train(self, xTrainData: Union[List[np.ndarray], Generator[None, np.ndarray, None]],
-                    yTrainData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
-                    xTestData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
-                    yTestData: Union[List[np.ndarray], Generator[None, np.ndarray, None]]=None,
+    def train(self, xTrainData: Union[List[np.ndarray], Generator[np.ndarray, None, None]],
+                    yTrainData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
+                    xTestData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
+                    yTestData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
                     epochs: int=1, batch_size: int=1) -> None:
 
         """
         Trains the model given traingin data. This an an alternative to the .fit() with more customizability.
 
         Args:
-            xTrainData (list of numpy.ndarray or Generator): The inputs for training the model.
-            yTrainData (list of numpy.ndarray or Generator, optional): The expected outputs for training the model. Defaults to None.
-            xTestData (list of numpy.ndarray or Generator, optional): The inputs for testing or validating the model. Defaults to None.
-            yTestData (list of numpy.ndarray or Generator, optional): The expected outputs for testing or validating the model. Defaults to None.
+            xTrainData (list of np.ndarray or Generator of np.ndarray): The inputs for training the model.
+            yTrainData (list of np.ndarray or Generator of np.ndarray, optional): The expected outputs for training the model. Defaults to None.
+            xTestData (list of np.ndarray or Generator of np.ndarray, optional): The inputs for testing or validating the model. Defaults to None.
+            yTestData (list of np.ndarray or Generator of np.ndarray, optional): The expected outputs for testing or validating the model. Defaults to None.
             epochs (int, optional): The amount of iterations to train. Defaults to 1.
             batch_size (int, optional): Then size to batch the data into. Defaults to 1.
         """

@@ -85,9 +85,9 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
 
     inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
-    shiftedImage = encodeImage(shft.shift(shft.maskAE, next(inferencingData), **HAAR_CASCADE_KWARGS, gray=True))
+    shiftedImage = shft.shift(shft.maskAE, next(inferencingData), **HAAR_CASCADE_KWARGS, gray=True)
 
-    return [shiftedImage]
+    return [shiftedImage.encode()]
 
 
 def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
@@ -106,17 +106,17 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     maskInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
                                         1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
-    baseInferenceImage = next(baseInferencingData)
-    baseImage = encodeImage(baseInferenceImage)
-    baseRemake = encodeImage(shft.shift(shft.baseAE, baseInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
+    baseImage = next(baseInferencingData)
+    baseRemake = shft.shift(shft.baseAE, baseImage, **HAAR_CASCADE_KWARGS, gray=True)
 
-    maskInferenceImage = next(maskInferencingData)
-    maskImage = encodeImage(maskInferenceImage)
-    maskRemake = encodeImage(shft.shift(shft.maskAE, maskInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
+    maskImage = next(maskInferencingData)
+    maskRemake = shft.shift(shft.maskAE, maskImage, **HAAR_CASCADE_KWARGS, gray=True)
 
-    shiftedImage = encodeImage(shft.shift(shft.maskAE, baseInferenceImage, **HAAR_CASCADE_KWARGS, gray=True))
+    shiftedImage = shft.shift(shft.maskAE, baseImage, **HAAR_CASCADE_KWARGS, gray=True)
 
-    return [baseImage, baseRemake, maskImage, maskRemake, shiftedImage]
+    return [baseImage.encode(), baseRemake.encode(),
+            maskImage.encode(), maskRemake.encode(), 
+            shiftedImage.encode()]
 
 
 @celery.task(name="train.trainShift")
@@ -139,10 +139,10 @@ def trainShift(requestJSON: dict, userID: str):
     loadPTM(requestData, shft)
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
-        originalImage = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
+        originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
         baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
 
-        baseImageArray = list(shft.formatTrainingData(originalImage, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True))
+        baseImageArray = list(shft.formatTrainingData(originalImageList, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True))
         baseImageArray += list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True))
 
         baseTrainingData = np.array(baseImageArray)

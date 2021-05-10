@@ -33,8 +33,8 @@ class LoadData(MethodResource, Resource):
     #            description=LoadDataBodyRequestDescription)
     #@use_kwargs(LoadDataHeaderRequest,
     #            description=LoadDataHeaderRequestDescription)
-    @marshal_with(LoadDataResponse,
-                  description=LoadResponseDescription)
+    #@marshal_with(LoadDataResponse,
+    #              description=LoadResponseDescription)
     @doc(description="""
 Given training data Shift specializes a model for the training data. \
 Yeilds more relaisitic results than just an inference though it \
