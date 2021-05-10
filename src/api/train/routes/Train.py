@@ -10,9 +10,9 @@ import mongoengine
 import tensorflow as tf
 from flask_restful import Resource
 from flask import current_app, request
-from marshmallow import Schema, fields
-from flask_apispec import marshal_with
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
+from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
 
 #First Party Imports
@@ -21,33 +21,27 @@ from src.variables.constants import SHIFT_PATH
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
+from src.DataModels.Request.TrainRequest import (TrainRequest,
+                                                 TrainRequestDescription)
+from src.DataModels.Response.TrainResponse import (TrainResponse,
+                                                   TrainResponseDescription)
 
-
-class TrainResponse(Schema):
-    msg = fields.String()
 
 class Train(MethodResource, Resource):
     decorators = [login_required]
 
-    @marshal_with(TrainResponse)
-    def post(self) -> dict:
-        """
-        Given training data Shift specializes a model for the training data. Yeilds
-        more relaisitic results than just an inference though it takes longer.
+    @use_kwargs(TrainRequest.Schema(),
+                description=TrainRequestDescription)
+    @marshal_with(TrainResponse.Schema(),
+                  description=TrainResponseDescription)
+    @doc(description="""
+         Given training data Shift specializes a model for the training data. Yeilds \
+more relaisitic results than just an inference though it takes longer.""")
+    def post(self, requestData: TrainRequest) -> dict:
+        requestError = validateBaseTrainRequest(request)
+        if isinstance(requestError, dict):
+            return requestError
 
-        Request Body Arguments:
-            shiftUUID (str): The UUID of the current shift training session
-            usePTM (bool): Whether or not to use the pre-trained model to enhace shifting
-            prebuiltShiftModel (str): The id of the prebuilt model to use or an empty
-                                    string if not using a prebuilt model
-
-        Returns:
-            Shifted Media: The media that has been shifted by the specialized model.
-        """
-
-        requestData = validateBaseTrainRequest(request)
-        if isinstance(requestData, dict):
-            return requestData
         requestData = DataModelAdapter(requestData)
 
         if requestData.getModel().prebuiltShiftModel:

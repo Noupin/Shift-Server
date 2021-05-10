@@ -5,37 +5,38 @@ Stop Training endpoint for the Train part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+from src.DataModels.Request.TrainRequest import TrainRequest
 from flask import request
 from flask_restful import Resource
-from marshmallow import Schema, fields
-from flask_apispec import marshal_with
 from flask_login import login_required
+from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
+from flask_apispec import marshal_with, use_kwargs
 
 #First Party Imports
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
+from src.DataModels.Request.TrainRequest import (TrainRequest,
+                                                 TrainRequestDescription)
+from src.DataModels.Response.StopTrainResponse import (StopTrainResponse,
+                                                       StopTrainResponseDescription)
 
-
-class StopTrainResponse(Schema):
-    msg = fields.String()
 
 class StopTrain(MethodResource, Resource):
     decorators = [login_required]
 
-    @marshal_with(StopTrainResponse)
-    def post(self) -> dict:
-        """
-        Stop the training with the UUID of the shift model being trained.
+    @use_kwargs(TrainRequest.Schema(),
+                description=TrainRequestDescription)
+    @marshal_with(StopTrainResponse.Schema(),
+                  description=StopTrainResponseDescription)
+    @doc(description="""
+         Stop the training with the UUID of the shift model being trained.""")
+    def post(self, requestData: TrainRequest) -> dict:
+        requestError = validateBaseTrainRequest(request)
+        if isinstance(requestError, dict):
+            return requestError
 
-        Returns:
-            dict: A msg confirming the cancellation of the shift training.
-        """
-
-        requestData = validateBaseTrainRequest(request)
-        if isinstance(requestData, dict):
-            return requestData
         requestData = DataModelAdapter(requestData)
 
         try:
