@@ -188,7 +188,7 @@ class Shift:
 
     
     def shiftImages(self, model: tf.keras.Model, images: Generator[MultiImage, None, None], objectClassifier=OBJECT_CLASSIFIER,
-                    imageResizer=resizeImage, **kwargs) -> Generator[MultiImage, None, None]:
+                    imageResizer=resizeImage, asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -199,6 +199,8 @@ class Shift:
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
+            asNumpy (bool, optional): Whether or not to yield np.ndarray as opposed to the default
+                                      MultiImage. Defaults to False.
             **kwargs: The key word arguments to pass into detectObject function
 
         Yields:
@@ -209,7 +211,7 @@ class Shift:
             objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
 
             if isinstance(objects, tuple):
-                yield image
+                yield image.CVImage if asNumpy else image
                 continue
             
             replaceArea = getLargestRectangle(objects)
@@ -228,8 +230,8 @@ class Shift:
 
             maskedImage = applyMask(originalCroppedImage, replaceImage.CVImage, mask)
             shiftedImage = replaceAreaOfImage(image.CVImage, replaceArea, maskedImage)
-    
-            yield MultiImage(shiftedImage)
+            
+            yield shiftedImage if asNumpy else MultiImage(shiftedImage)
     
 
     def shift(self, model: tf.keras.Model, media: Union[Generator[MultiImage, None, None], List[MultiImage], MultiImage],
@@ -261,9 +263,9 @@ class Shift:
             isImage = True
         else:
             mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
-            shape = media.CVImage.shape
+            shape = next(mediaGenerator).CVImage.shape
 
-            mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, **kwargs)
+            mediaGenerator = self.shiftImages(model, media, objectClassifier, imageResizer, asNumpy=True, **kwargs)
 
         if isImage:
             return next(mediaGenerator)

@@ -297,12 +297,12 @@ def flipImage(image, flipCode: str) -> np.ndarray:
     return cv2.flip(image, flipMap[flipCode])
 
 
-def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, fps: float) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+def imagesToVideo(images: Generator[np.ndarray, None, None], shape: Tuple[int], outPath: str, fps: float) -> moviepy.video.io.VideoFileClip.VideoFileClip:
     """
     Given a path with all of the image arrays a .mp4 video will be exported
 
     Args:
-        images (types.GeneratorType): An array of cv images
+        images (generator of np.ndarray): An array of CV images
         shape (tuple of int): The height, width and color dimension of the frames to converted to a video.
         outPath (str): The path to save the video to
         fps (float): The fps at which to combine the video at
@@ -317,7 +317,7 @@ def imagesToVideo(images: types.GeneratorType, shape: Tuple[int], outPath: str, 
                                  (width, height))
 
     for image in images:
-        if image.shape != shape:
+        if isinstance(image, np.ndarray) and image.shape != shape:
             raise IncompatibleShapeError(image.shape, shape)
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

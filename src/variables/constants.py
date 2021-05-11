@@ -48,5 +48,9 @@ BLUEPRINT_NAMES = {
     'train': 'train',
     'load': 'load',
     'content': 'content',
-    'users': 'users'
+    'users': 'users',
+    'fpn': 'fpn'
 }
+
+ANMOUNT_OF_NEW = 10
+AMOUNT_OF_POPULAR = 10

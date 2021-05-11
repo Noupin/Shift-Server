@@ -74,6 +74,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
 
 
     from src.main.routes import main
+    from src.api.FPN.blueprint import fpnBP
     from src.api.load.blueprint import loadBP
     from src.api.train.blueprint import trainBP
     from src.api.users.blueprint import usersBP
@@ -84,6 +85,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
+    app.register_blueprint(fpnBP, url_prefix="/api/shift")
     app.register_blueprint(usersBP, url_prefix='/api/users')
     app.register_blueprint(contentBP, url_prefix='/api/content')
 
@@ -96,10 +98,11 @@ def generateSwagger():
     """
 
     from src.api.load.blueprint import LoadData
-    from src.api.train.blueprint import Train, TrainStatus, StopTrain
-    from src.api.users.blueprint import Register, Authenticated, Login, Logout, Profile, UserShifts
     from src.api.content.blueprint import Image, Video
+    from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
+    from src.api.FPN.blueprint import NewShifts, PopularShifts, FeaturedShifts
+    from src.api.users.blueprint import Register, Authenticated, Login, Logout, Profile, UserShifts
     
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
@@ -121,6 +124,10 @@ def generateSwagger():
     docs.register(Image, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
     docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"))
     docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="videoBool")
+    
+    docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
+    docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
+    docs.register(FeaturedShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
 
 
 def makeCelery(app: flask.app.Flask) -> Celery:
