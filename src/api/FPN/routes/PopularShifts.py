@@ -28,4 +28,4 @@ class PopularShifts(MethodResource, Resource):
         popularShifts = Shift.objects().limit(10)
         popularShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in popularShifts]
 
-        return {"shifts": popularShiftsJSON}
+        return PopularShiftsResponse().dump(dict(shifts=popularShiftsJSON))
