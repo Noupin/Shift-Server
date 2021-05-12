@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import json
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 from typing import List
 from flask_restful import Resource
 from flask_apispec import marshal_with
@@ -14,6 +15,7 @@ from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.DataModels.MongoDB.Featured import Featured
 from src.DataModels.Response.FeaturedShiftsResponse import (FeaturedShiftsResponse,
                                                             FeaturedShiftsResponseDescription)
 
@@ -25,7 +27,10 @@ class FeaturedShifts(MethodResource, Resource):
     @doc(description="""
          The featured shifts to display on the home page.""")
     def get(self) -> dict:
-        userShifts = Shift.objects().limit(2)
-        userShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in userShifts]
+        featuredShiftUUIDs = Featured.objects().values_list('uuid')
+        featuredShifts = []
+        for uuid in featuredShiftUUIDs:
+            shift = Shift.objects(uuid=uuid).first()
+            featuredShifts.append(ShiftSchema().dump(shift))
 
-        return {"shifts": userShiftsJSON}
+        return FeaturedShiftsResponse().load(dict(shifts=featuredShifts))

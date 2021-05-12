@@ -92,7 +92,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     return app
 
 
-def generateSwagger():
+def generateSwagger() -> None:
     """
     Generates all the swagger documentation for eeach endpoint.
     """

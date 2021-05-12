@@ -7,7 +7,6 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask import Blueprint
 from flask.wrappers import Response
-from werkzeug.exceptions import NotFound
 
 #First Party Imports
 from src import login_manager
