@@ -92,9 +92,12 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     return app
 
 
-def generateSwagger() -> None:
+def generateSwagger() -> FlaskApiSpec:
     """
     Generates all the swagger documentation for eeach endpoint.
+    
+    Returns:
+        FlaskApiSpec: The updates docs to create yaml file.
     """
 
     from src.api.load.blueprint import LoadData
@@ -128,6 +131,8 @@ def generateSwagger() -> None:
     docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
     docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
     docs.register(FeaturedShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
+    
+    return docs
 
 
 def makeCelery(app: flask.app.Flask) -> Celery:

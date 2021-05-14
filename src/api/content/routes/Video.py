@@ -22,7 +22,7 @@ from src.DataModels.Response.VideoResponse import (VideoResponse,
 
 class Video(MethodResource, Resource):
 
-    @marshal_with(VideoResponse.Schema(),
+    @marshal_with(VideoResponse,
                   description=VideoResponseDescription)
     @doc(description="""The video portion of the Shift CDN.""")
     def get(self, filename: str='default.mp4', download: str='False'):

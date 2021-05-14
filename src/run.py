@@ -9,13 +9,15 @@ Runs the server for Shift
 __author__ = "Noupin"
 
 #First Party Imports
+from src.utils.swagger import swaggerToYAML, swaggerToJSON
 from src import initApp, createApp, makeCelery, generateSwagger
 
 
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)
-generateSwagger()
+docs = generateSwagger()
+swaggerToJSON(docs.spec)
 
 if __name__ == '__main__':
     app.run()

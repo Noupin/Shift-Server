@@ -5,12 +5,10 @@ The Image Response Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import werkzeug.datastructures
-from marshmallow_dataclass import dataclass
+from marshmallow import Schema, fields
 
 
-@dataclass(frozen=True)
-class ImageResponse:
-    file: werkzeug.datastructures.FileStorage
+class ImageResponse(Schema):
+    image = fields.Raw(type='image')
 
 ImageResponseDescription = """The image file requested as a download or file."""

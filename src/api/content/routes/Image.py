@@ -22,7 +22,7 @@ from src.DataModels.Response.ImageResponse import (ImageResponse,
 
 class Image(MethodResource, Resource):
 
-    @marshal_with(ImageResponse.Schema(),
+    @marshal_with(ImageResponse,
                   description=ImageResponseDescription)
     @doc(description="""The image portion of the Shift CDN.""")
     def get(self, filename: str='default.jpg', download: str='False'):
