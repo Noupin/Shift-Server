@@ -18,12 +18,9 @@ class LoadDataBodyRequest:
 class LoadDataHeaderRequest:
     trainingDataTypes: List[str]
 
-LoadDataBodyRequestDescription = """
-The files to be downloaded to the server for the training of the shift model.
-"""
+LoadDataBodyRequestDescription = """The files to be downloaded to the server for \
+the training of the shift model."""
 
-LoadDataHeaderRequestDescription = """
-A list of file types (base or mask) to determine which folder to save the \
-files to. The first type does not matter as it is reserved for the \
-original media.
-"""
+LoadDataHeaderRequestDescription = """A list of file types (base or mask) to \
+determine which folder to save the files to. The first type does not matter \
+as it is reserved for the original media."""

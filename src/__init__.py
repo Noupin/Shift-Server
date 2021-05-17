@@ -22,11 +22,11 @@ from src.variables.constants import BLUEPRINT_NAMES
 
 
 cors = CORS()
-login_manager = LoginManager()
-db = MongoEngine()
-bcrypt = Bcrypt()
 mail = Mail()
+bcrypt = Bcrypt()
+db = MongoEngine()
 docs = FlaskApiSpec()
+login_manager = LoginManager()
 
 
 def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:

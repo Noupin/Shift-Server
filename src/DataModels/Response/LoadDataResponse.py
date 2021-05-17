@@ -16,8 +16,6 @@ class LoadDataResponse(DefaultResponse):
     shiftUUID: str
     
 
-LoadResponseDescription = """
-Given training data Shift specializes a model for the training data. \
-Yeilds more relaisitic results than just an inference though it \
-takes longer.
-"""
+LoadResponseDescription = """Given training data Shift specializes a \
+model for the training data. Yeilds more relaisitic results than just \
+an inference though it takes longer."""

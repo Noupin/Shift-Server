@@ -14,9 +14,6 @@ class RegisterRequest:
     password: str
     email: str
 
-RegisterRequestDescription = """
-The name the user has picked for their account, \
-the password associated with the username of the \
-user logging in, and the email to be registered with \
-the new account.
-"""
+RegisterRequestDescription = """The name the user has picked for their account, \
+the password associated with the username of the user logging in, and the email \
+to be registered with the new account."""

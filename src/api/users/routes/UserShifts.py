@@ -24,8 +24,8 @@ class UserShifts(MethodResource, Resource):
 
     @marshal_with(UserShiftsResponse,
                   description=UserShiftsResponseDescription)
-    @doc(description="""
-         The users shifts to display the users account page.""")
+    @doc(description="""The users shifts to display the users account page.""", tags=["User"],
+operationId="userShfits")
     def get(self) -> dict:
         userShifts = Shift.objects(userID=current_user.id)
         userShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in userShifts]

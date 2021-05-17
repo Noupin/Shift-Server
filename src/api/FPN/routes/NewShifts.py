@@ -22,8 +22,8 @@ class NewShifts(MethodResource, Resource):
 
     @marshal_with(NewShiftsResponse,
                   description=NewShiftsResponseDescription)
-    @doc(description="""
-         The new shifts to display on the home page.""")
+    @doc(description="""The new shifts to display on the home page.""", tags=["FPN"],
+operationId="new")
     def get(self) -> dict:
         newShifts = Shift.objects().order_by('-views').limit(10)
         newShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in newShifts]

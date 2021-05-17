@@ -24,8 +24,8 @@ class FeaturedShifts(MethodResource, Resource):
 
     @marshal_with(FeaturedShiftsResponse,
                   description=FeaturedShiftsResponseDescription)
-    @doc(description="""
-         The featured shifts to display on the home page.""")
+    @doc(description="""The featured shifts to display on the home page.""", tags=["FPN"],
+operationId="featured")
     def get(self) -> dict:
         featuredShiftUUIDs = Featured.objects().values_list('uuid')
         featuredShifts = []

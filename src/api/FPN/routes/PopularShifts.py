@@ -22,8 +22,8 @@ class PopularShifts(MethodResource, Resource):
 
     @marshal_with(PopularShiftsResponse,
                   description=PopularShiftsResponseDescription)
-    @doc(description="""
-         The popular shifts to display on the home page.""")
+    @doc(description="""The popular shifts to display on the home page.""", tags=["FPN"],
+operationId="popular")
     def get(self) -> dict:
         popularShifts = Shift.objects().limit(10)
         popularShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in popularShifts]

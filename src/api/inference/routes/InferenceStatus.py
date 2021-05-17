@@ -32,9 +32,9 @@ class InferenceStatus(MethodResource, Resource):
                 description=InferenceRequestDescription)
     @marshal_with(InferenceStatusReponse.Schema(),
                   description=InferenceStatusReponseDescription)
-    @doc(description="""
-The status of the current shift model while inferencing on the \
-original media and whether or not it has stopped inferencing.""")
+    @doc(description="""The status of the current shift model while inferencing on the \
+original media and whether or not it has stopped inferencing.""", tags=["Inference"],
+operationId="inferenceStatus")
     def post(self, requestData: InferenceRequest):
 
         requestError = validateInferenceRequest(request)

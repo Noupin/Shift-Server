@@ -14,9 +14,6 @@ class LoginRequest:
     password: str
     remember: bool = True
 
-LoginRequestDescription = """
-The username or email of the user logging in, \
-the password associated with the username of the \
-user logging in, and whether or not the user \
-should be remebered when they are logged in.
-"""
+LoginRequestDescription = """The username or email of the user logging in, \
+the password associated with the username of the user logging in, and whether \
+or not the user should be remebered when they are logged in."""

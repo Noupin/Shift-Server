@@ -31,10 +31,10 @@ class Inference(MethodResource, Resource):
                 description=InferenceRequestDescription)
     @marshal_with(InferenceResponse.Schema(),
                   description=InferenceResponseDescription)
-    @doc(description="""
-Inferencing based on a specialized pretrained model(PTM) where, the input is \
-the face to be put on the media and inferenced with PTM. Alternativley inferencing \
-with a given base video and shift face with a non specialized PTM.""")
+    @doc(description="""Inferencing based on a specialized pretrained model(PTM) where, \
+the input is the face to be put on the media and inferenced with PTM. Alternativley inferencing \
+with a given base video and shift face with a non specialized PTM.""", tags=["Inference"],
+operationId="inference")
     def post(self, requestData: InferenceRequest) -> dict:
         requestError = validateInferenceRequest(request)
         if isinstance(requestError, dict):

@@ -17,12 +17,8 @@ class TrainRequest:
     statusInterval: int = 10
     trainType: str = "basic"
 
-TrainRequestDescription = """
-The uuid of the shift model being inferenced with, \
-the title of the shift that is being trained, whether \
-or not the the PTM is being used, the uuid of the \
-prebuilt shift model if one is being used, the amount \
-of epochs inbetween the training status updates, and \
-the type of trainign to send four pictures or one \
-picture for front end.
-"""
+TrainRequestDescription = """The uuid of the shift model being inferenced with, \
+the title of the shift that is being trained, whether or not the the PTM is being \
+used, the uuid of the prebuilt shift model if one is being used, the amount \
+of epochs inbetween the training status updates, and the type of trainign to send \
+four pictures or one picture for front end."""

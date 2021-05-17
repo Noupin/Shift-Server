@@ -27,7 +27,7 @@ class Login(MethodResource, Resource):
                 description=LoginRequestDescription)
     @marshal_with(LoginResponse.Schema(),
                   description=LoginResponseDescription)
-    @doc(description="""The login for the user.""")
+    @doc(description="""The login for the user.""", tags=["User"], operationId="login")
     def post(self, requestData: LoginRequest) -> dict:
         """
         The login for the user.

@@ -33,10 +33,9 @@ does not allow for two parameter locations this is paired with the Header Schema
                 LoadDataHeaderRequestDescription)
     @marshal_with(LoadDataResponse.Schema(),
                   description=LoadResponseDescription)
-    @doc(description="""
-Given training data Shift specializes a model for the training data. \
-Yeilds more relaisitic results than just an inference though it \
-takes longer.""")
+    @doc(description="""Given training data Shift specializes a model for the training data. \
+Yeilds more relaisitic results than just an inference though it takes longer.""", tags=["Load"],
+operationId="loadData")
     def post(self, requestHeaders: LoadDataHeaderRequest):
         if not validateFileRequest(request.files):
             return {'msg': "The request payload had no file"}

@@ -32,10 +32,10 @@ class TrainStatus(MethodResource, Resource):
                 description=TrainRequestDescription)
     @marshal_with(TrainStatusResponse.Schema(),
                   description=TrainStatusResponseDescription)
-    @doc(description="""
-         The status of of the current training task if called while training the task \
-will switch to give an update image. After a certain amount of time the training \
-will be completed automatically to allow for multiple users to train.""")
+    @doc(description="""The status of of the current training task if called while training \
+the task will switch to give an update image. After a certain amount of time the training \
+will be completed automatically to allow for multiple users to train.""", tags=["Train"],
+operationId="trainStatus")
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):

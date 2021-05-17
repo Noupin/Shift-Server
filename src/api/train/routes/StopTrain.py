@@ -30,8 +30,8 @@ class StopTrain(MethodResource, Resource):
                 description=TrainRequestDescription)
     @marshal_with(StopTrainResponse.Schema(),
                   description=StopTrainResponseDescription)
-    @doc(description="""
-         Stop the training with the UUID of the shift model being trained.""")
+    @doc(description="""Stop the training with the UUID of the shift model being \
+trained.""", tags=["Train"], operationId="stopTrain")
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):

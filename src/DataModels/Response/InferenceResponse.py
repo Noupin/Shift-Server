@@ -15,6 +15,4 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 class InferenceResponse(DefaultResponse):
     pass
 
-InferenceResponseDescription = """
-Whether the shifting/inferencing went according to plan. \
-"""
+InferenceResponseDescription = """Whether the shifting/inferencing went according to plan."""

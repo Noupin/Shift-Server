@@ -34,9 +34,9 @@ class Train(MethodResource, Resource):
                 description=TrainRequestDescription)
     @marshal_with(TrainResponse.Schema(),
                   description=TrainResponseDescription)
-    @doc(description="""
-         Given training data Shift specializes a model for the training data. Yeilds \
-more relaisitic results than just an inference though it takes longer.""")
+    @doc(description="""Given training data Shift specializes a model for the \
+training data. Yeilds more relaisitic results than just an inference though it \
+takes longer.""", tags=["Train"], operationId="train")
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):
