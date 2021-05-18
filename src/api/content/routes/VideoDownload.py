@@ -19,15 +19,16 @@ from flask_apispec.views import MethodResource
 from src.variables.constants import VIDEO_PATH
 
 
-class Video(MethodResource, Resource):
+class VideoDownload(MethodResource, Resource):
 
     @marshal_with(None)
     @doc(description="""The video portion of the Shift CDN.""", tags=["CDN"],
-operationId="getVideo")
-    def get(self, filename: str='default.mp4') -> Response:
+operationId="getVideoDownload")
+    def get(self, filename: str='default.mp4', download: str='False') -> Response:
+        asAttachment = json.loads(download.lower())
 
         return send_from_directory(os.path.join(current_app.root_path, VIDEO_PATH),
                                   filename=filename,
-                                  as_attachment=False,
+                                  as_attachment=asAttachment,
                                   mimetype='video/mp4',
                                   cache_timeout=0)

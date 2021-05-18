@@ -19,15 +19,16 @@ from flask_apispec.views import MethodResource
 from src.variables.constants import IMAGE_PATH
 
 
-class Image(MethodResource, Resource):
+class ImageDownload(MethodResource, Resource):
 
     @marshal_with(None)
     @doc(description="""The image portion of the Shift CDN.""", tags=["CDN"],
-operationId="image")
-    def get(self, filename: str='default.jpg') -> Response:
+operationId="getImageDownload")
+    def get(self, filename: str='default.jpg', download: str='False') -> Response:
+        asAttachment = json.loads(download.lower())
 
         return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
                                   filename=filename,
-                                  as_attachment=False,
+                                  as_attachment=asAttachment,
                                   mimetype="image",
                                   cache_timeout=0)

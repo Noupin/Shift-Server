@@ -17,8 +17,10 @@ contentAPI = Api(contentBP)
 
 from src.api.content.routes.Image import Image
 from src.api.content.routes.Video import Video
+from src.api.content.routes.ImageDownload import ImageDownload
+from src.api.content.routes.VideoDownload import VideoDownload
 
 contentAPI.add_resource(Image, "/image/<string:filename>")
-contentAPI.add_resource(Image, "/image/<string:filename>/<string:download>", endpoint="imageBool")
+contentAPI.add_resource(ImageDownload, "/image/<string:filename>/<string:download>", endpoint="imageBool")
 contentAPI.add_resource(Video, "/video/<string:filename>")
-contentAPI.add_resource(Video, "/video/<string:filename>/<string:download>", endpoint="videoBool")
+contentAPI.add_resource(VideoDownload, "/video/<string:filename>/<string:download>", endpoint="videoBool")

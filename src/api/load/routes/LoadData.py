@@ -18,7 +18,9 @@ from flask_login import current_user, login_required
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename, saveFlaskFile
-from src.DataModels.Request.LoadDataRequest import (LoadDataHeaderRequest,
+from src.DataModels.Request.LoadDataRequest import (LoadDataBodyRequest,
+                                                    LoadDataBodyRequestDescription,
+                                                    LoadDataHeaderRequest,
                                                     LoadDataHeaderRequestDescription)
 from src.DataModels.Response.LoadDataResponse import (LoadDataResponse,
                                                       LoadResponseDescription)
@@ -27,16 +29,16 @@ from src.DataModels.Response.LoadDataResponse import (LoadDataResponse,
 class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
+    #@use_kwargs(LoadDataBodyRequest, location="files",
+    #            description=LoadDataBodyRequestDescription)
     @use_kwargs(LoadDataHeaderRequest.Schema(), location="headers",
-                description="**The body contains media in FormData, since APISpec \
-does not allow for two parameter locations this is paired with the Header Schema.**"+
-                LoadDataHeaderRequestDescription)
+                description=LoadDataHeaderRequestDescription)
     @marshal_with(LoadDataResponse.Schema(),
                   description=LoadResponseDescription)
     @doc(description="""Given training data Shift specializes a model for the training data. \
 Yeilds more relaisitic results than just an inference though it takes longer.""", tags=["Load"],
-operationId="loadData")
-    def post(self, requestHeaders: LoadDataHeaderRequest):
+operationId="loadData", consumes=['multipart/form-data'])
+    def post(self, requestHeaders: LoadDataHeaderRequest):# **kwargs):
         if not validateFileRequest(request.files):
             return {'msg': "The request payload had no file"}
 

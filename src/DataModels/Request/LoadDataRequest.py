@@ -6,13 +6,13 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from typing import List
-import werkzeug.datastructures
+from marshmallow import fields
+from marshmallow.schema import Schema
 from marshmallow_dataclass import dataclass
 
 
-@dataclass(frozen=True)
-class LoadDataBodyRequest:
-    files: werkzeug.datastructures.FileStorage
+class LoadDataBodyRequest(Schema):
+    files = fields.Raw(required=True)
 
 @dataclass(frozen=True)
 class LoadDataHeaderRequest:

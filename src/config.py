@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import yaml
 import datetime
 from apispec import APISpec
 from dotenv import load_dotenv
@@ -38,12 +39,17 @@ class Config(object):
     CELERY_BROKER_URL = "amqp://localhost//"
     CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
     
-    #SwaggerUI
+    #OpenAPI
+    OPENAPI_SPEC = """
+    info:
+        description: Shift Server API documentation
+    """
     APISPEC_SPEC = APISpec(
         title='Shift',
         version='1.0.0',
         plugins=[MarshmallowPlugin()],
-        openapi_version='2.0'
+        openapi_version='2.0',
+        **yaml.safe_load(OPENAPI_SPEC)
     )
     APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON 
     APISPEC_SWAGGER_UI_URL = '/swagger-ui/'  # URI to access UI of API Doc

@@ -5,13 +5,12 @@ Featured endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import json
-from src.DataModels.Marshmallow.Shift import ShiftSchema
 from typing import List
 from flask_restful import Resource
 from flask_apispec import marshal_with
 from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
