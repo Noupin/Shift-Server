@@ -43,6 +43,7 @@ class Config(object):
     OPENAPI_SPEC = """
     info:
         description: Shift Server API documentation
+    host: localhost:5000
     """
     APISPEC_SPEC = APISpec(
         title='Shift',
