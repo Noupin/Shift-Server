@@ -15,6 +15,7 @@ from flask_login import current_user, login_required
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.variables.constants import SECURITY_SCHEME_NAME
 from src.DataModels.Response.UserShiftsResponse import (UserShiftsResponse,
                                                         UserShiftsResponseDescription)
 
@@ -25,7 +26,7 @@ class UserShifts(MethodResource, Resource):
     @marshal_with(UserShiftsResponse,
                   description=UserShiftsResponseDescription)
     @doc(description="""The users shifts to display the users account page.""", tags=["User"],
-operationId="userShfits")
+operationId="userShifts", security={SECURITY_SCHEME_NAME: []})
     def get(self) -> dict:
         userShifts = Shift.objects(userID=current_user.id)
         userShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in userShifts]

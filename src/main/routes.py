@@ -12,17 +12,17 @@ from flask.wrappers import Response
 from src import login_manager
 
 
-main = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")
+mainBP = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")
 
 
-@main.route('/')
+@mainBP.route('/')
 def index() -> Response:
-    return main.send_static_file('index.html')
+    return mainBP.send_static_file('index.html')
 
 
-'''@main.app_errorhandler(404)
+'''@mainBP.app_errorhandler(404)
 def error404(error: NotFound) -> Response:
-    return main.send_static_file('index.html')'''
+    return mainBP.send_static_file('index.html')'''
 
 
 @login_manager.unauthorized_handler

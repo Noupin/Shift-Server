@@ -18,7 +18,7 @@ from flask_apispec.extension import FlaskApiSpec
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import BLUEPRINT_NAMES
+from src.variables.constants import BLUEPRINT_NAMES, SECURITY_SCHEME_NAME
 
 
 cors = CORS()
@@ -31,11 +31,13 @@ login_manager = LoginManager()
 
 def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
     """
-    Creates the Shift Flask App and if given a config class the default config class is overridden.
+    Creates the Shift Flask App and if given a config class the default config \
+class is overridden.
 
     Args:
         appName (str): The name of the Flask applcation
-        configClass (Config, optional): The configuration settings for the Flask app. Defaults to Config.
+        configClass (Config, optional): The configuration settings for the Flask app. \
+Defaults to Config.
 
     Returns:
         flask.app.Flask: The created Flask app.
@@ -73,7 +75,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
         app = initApp(appName, configClass)
 
 
-    from src.main.routes import main
+    from src.main.routes import mainBP
     from src.api.FPN.blueprint import fpnBP
     from src.api.load.blueprint import loadBP
     from src.api.train.blueprint import trainBP
@@ -81,7 +83,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.content.blueprint import contentBP
     from src.api.inference.blueprint import inferenceBP
 
-    app.register_blueprint(main)
+    app.register_blueprint(mainBP)
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
@@ -131,6 +133,9 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
     docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
     docs.register(FeaturedShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
+
+    user_auth_scheme = {"type": "apiKey", "in": "cookie", "name": "session"}
+    docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, user_auth_scheme)
     
     return docs
 

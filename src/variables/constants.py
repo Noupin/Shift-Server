@@ -52,5 +52,9 @@ BLUEPRINT_NAMES = {
     'fpn': 'fpn'
 }
 
+#FPN
 ANMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
+
+#OpenAPI
+SECURITY_SCHEME_NAME = "UserAuth"
