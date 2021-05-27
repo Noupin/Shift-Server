@@ -5,6 +5,7 @@ The Inference Status Response Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+from typing import Optional
 from marshmallow_dataclass import dataclass
 
 #First Party Imports
@@ -13,8 +14,8 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class InferenceStatusReponse(DefaultResponse):
-    stopped: bool
-    imagePath: str
+    stopped: Optional[bool]
+    imagePath: Optional[str]
 
 InferenceStatusReponseDescription = """A msg describing the current state of \
 inferencing on the original media, whether or not the inferencing has been \

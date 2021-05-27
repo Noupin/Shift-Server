@@ -33,5 +33,5 @@ def unauthorized() -> dict:
     Returns:
         dict: The msg telling the user they are not authorized
     """
-
+    print("Not Logged In.")
     return {"msg": "You are not logged in and don't have access"}

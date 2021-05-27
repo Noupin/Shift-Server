@@ -14,11 +14,14 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mongoengine import MongoEngine
 from flask_apispec.extension import FlaskApiSpec
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import BLUEPRINT_NAMES, SECURITY_SCHEME_NAME
+from src.variables.constants import (BLUEPRINT_NAMES,
+                                     USER_AUTH_SCHEME,
+                                     SECURITY_SCHEME_NAME)
 
 
 cors = CORS()
@@ -94,6 +97,42 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     return app
 
 
+def addMiddleware(app: flask.app.Flask, middleware=ProxyFix) -> flask.app.Flask:
+    """
+    Adds middleware to an already created flask app.
+
+    Args:
+        app (flask.app.Flask): The application to add middleware to.
+        middleware (class): The middleware to be applied to the app. \
+Defaults to ProxyFix.
+
+    Returns:
+        flask.app.Flask: The Flask app with middleware.
+    """
+    
+    app.wsgi_app = middleware(app.wsgi_app)
+
+    return app
+
+
+def enableCORS(app: flask.app.Flask):
+    """
+    Enables CORS on an already created flask app.
+
+    Args:
+        app (flask.app.Flask): The application to enable CORS on.
+
+    Returns:
+        flask.app.Flask: The Flask app with CORS enabled.
+    """
+
+    @app.after_request
+    def after_request(response):
+        header = response.headers
+        header['Access-Control-Allow-Credentials'] = 'true'
+        return response
+
+
 def generateSwagger() -> FlaskApiSpec:
     """
     Generates all the swagger documentation for eeach endpoint.
@@ -134,8 +173,7 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
     docs.register(FeaturedShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
 
-    user_auth_scheme = {"type": "apiKey", "in": "cookie", "name": "session"}
-    docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, user_auth_scheme)
+    docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, USER_AUTH_SCHEME)
     
     return docs
 

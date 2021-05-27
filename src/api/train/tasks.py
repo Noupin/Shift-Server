@@ -165,7 +165,8 @@ def trainShift(requestJSON: dict, userID: str):
     except AttributeError:
         pass
 
-    amountForBuffer = getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
+    #Subprocess cannot complete task "FileNotFoundError: [WinError 2] The system cannot find the file specified"
+    amountForBuffer = LARGE_BATCH_SIZE#getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
 
     training = worker.training
     while training:

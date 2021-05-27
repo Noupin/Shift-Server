@@ -10,12 +10,14 @@ __author__ = "Noupin"
 
 #First Party Imports
 from src.utils.swagger import swaggerToYAML
-from src import initApp, createApp, makeCelery, generateSwagger
+from src import enableCORS, initApp, createApp, makeCelery, generateSwagger, addMiddleware
 
 
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)
+app = addMiddleware(app)
+enableCORS(app)
 docs = generateSwagger()
 swaggerToYAML(docs.spec)
 

@@ -8,6 +8,7 @@ __author__ = "Noupin"
 import os
 import cv2
 import dlib
+import yaml
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
@@ -57,4 +58,6 @@ ANMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
 
 #OpenAPI
+USER_AUTH_SCHEME = {"type": "apiKey", "in": "header", "name": "session"}
 SECURITY_SCHEME_NAME = "UserAuth"
+SECURITY_TAG = yaml.safe_load(f"""- {SECURITY_SCHEME_NAME}: []""")

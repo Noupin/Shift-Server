@@ -34,6 +34,7 @@ class Config(object):
     #Authentication
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
     SEND_FILE_MAX_AGE_DEFAULT = 0
+    CORS_HEADERS = "Content-Type"
 
     #Celery
     CELERY_BROKER_URL = "amqp://localhost//"

@@ -15,6 +15,7 @@ from flask_login import login_required, current_user
 
 #First Party Imports
 from src.api.inference.tasks import shiftMedia
+from src.variables.constants import SECURITY_TAG
 from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
@@ -34,7 +35,7 @@ class Inference(MethodResource, Resource):
     @doc(description="""Inferencing based on a specialized pretrained model(PTM) where, \
 the input is the face to be put on the media and inferenced with PTM. Alternativley inferencing \
 with a given base video and shift face with a non specialized PTM.""", tags=["Inference"],
-operationId="inference")
+operationId="inference", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest) -> dict:
         requestError = validateInferenceRequest(request)
         if isinstance(requestError, dict):

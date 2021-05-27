@@ -5,7 +5,6 @@ Train Status endpoint for the Train part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask_apispec.annotations import doc, use_kwargs
 import mongoengine
 from flask import request
 from flask_restful import Resource
@@ -13,9 +12,11 @@ from celery.result import AsyncResult
 from flask_login import login_required
 from flask_apispec import marshal_with
 from flask_apispec.views import MethodResource
+from flask_apispec.annotations import doc, use_kwargs
 
 #First Party Imports
 from src.run import celery
+from src.variables.constants import SECURITY_TAG
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
@@ -35,7 +36,7 @@ class TrainStatus(MethodResource, Resource):
     @doc(description="""The status of of the current training task if called while training \
 the task will switch to give an update image. After a certain amount of time the training \
 will be completed automatically to allow for multiple users to train.""", tags=["Train"],
-operationId="trainStatus")
+operationId="trainStatus", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):

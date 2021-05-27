@@ -12,6 +12,7 @@ from flask_apispec.views import MethodResource
 from flask_login import logout_user, current_user, login_required
 
 #First Party Imports
+from src.variables.constants import SECURITY_TAG
 from src.DataModels.Response.LogoutResponse import (LogoutResponse,
                                                     LogoutResponseDescription)
 
@@ -21,7 +22,8 @@ class Logout(MethodResource, Resource):
 
     @marshal_with(LogoutResponse.Schema(),
                   description=LogoutResponseDescription)
-    @doc(description="""Logs the user out.""", tags=["User"], operationId="logout")
+    @doc(description="""Logs the user out.""", tags=["User"],
+operationId="logout", security=SECURITY_TAG)
     def get(self) -> dict:
         username = current_user.username
         logout_user()

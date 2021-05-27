@@ -17,7 +17,8 @@ from flask_login import current_user, login_required
 
 #First Party Imports
 from src.api.train.tasks import trainShift
-from src.variables.constants import SHIFT_PATH
+from src.variables.constants import (SHIFT_PATH,
+                                     SECURITY_TAG)
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
@@ -36,7 +37,7 @@ class Train(MethodResource, Resource):
                   description=TrainResponseDescription)
     @doc(description="""Given training data Shift specializes a model for the \
 training data. Yeilds more relaisitic results than just an inference though it \
-takes longer.""", tags=["Train"], operationId="train")
+takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):

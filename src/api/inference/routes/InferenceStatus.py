@@ -15,6 +15,7 @@ from flask_apispec import marshal_with, use_kwargs
 
 #First Party Import
 from src.run import celery
+from src.variables.constants import SECURITY_TAG
 from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
@@ -34,7 +35,7 @@ class InferenceStatus(MethodResource, Resource):
                   description=InferenceStatusReponseDescription)
     @doc(description="""The status of the current shift model while inferencing on the \
 original media and whether or not it has stopped inferencing.""", tags=["Inference"],
-operationId="inferenceStatus")
+operationId="inferenceStatus", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest):
 
         requestError = validateInferenceRequest(request)

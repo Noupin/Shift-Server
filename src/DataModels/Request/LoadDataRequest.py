@@ -12,7 +12,7 @@ from marshmallow_dataclass import dataclass
 
 
 class LoadDataBodyRequest(Schema):
-    files = fields.Raw(required=True)
+    file = fields.Raw(required=True, type='file')
 
 @dataclass(frozen=True)
 class LoadDataHeaderRequest:

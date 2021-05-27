@@ -13,6 +13,7 @@ from flask_login import current_user, login_required
 
 #First Party Imports
 from src.DataModels.MongoDB.User import User
+from src.variables.constants import SECURITY_TAG
 from src.DataModels.Response.ProfileResponse import (ProfileResponse,
                                                      ProfileResponseDescription)
 
@@ -23,7 +24,7 @@ class Profile(MethodResource, Resource):
     @marshal_with(ProfileResponse,
                   description=ProfileResponseDescription)
     @doc(description="""The users profile to display the on users the account page""", tags=["User"],
-operationId="profile")
+operationId="profile", security=SECURITY_TAG)
     def get(self) -> dict:
         userJSON = User.objects(id=current_user.id).first()
 

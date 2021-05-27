@@ -14,6 +14,7 @@ from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs
 
 #First Party Imports
+from src.variables.constants import SECURITY_TAG
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
@@ -31,7 +32,7 @@ class StopTrain(MethodResource, Resource):
     @marshal_with(StopTrainResponse.Schema(),
                   description=StopTrainResponseDescription)
     @doc(description="""Stop the training with the UUID of the shift model being \
-trained.""", tags=["Train"], operationId="stopTrain")
+trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(request)
         if isinstance(requestError, dict):

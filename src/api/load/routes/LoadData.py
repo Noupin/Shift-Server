@@ -15,6 +15,7 @@ from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
 
 #First Party Imports
+from src.variables.constants import SECURITY_TAG
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename, saveFlaskFile
@@ -29,7 +30,7 @@ from src.DataModels.Response.LoadDataResponse import (LoadDataResponse,
 class LoadData(MethodResource, Resource):
     decorators = [login_required]
 
-    #@use_kwargs(LoadDataBodyRequest, location="files",
+    #@use_kwargs(LoadDataBodyRequest,
     #            description=LoadDataBodyRequestDescription)
     @use_kwargs(LoadDataHeaderRequest.Schema(), location="headers",
                 description=LoadDataHeaderRequestDescription)
@@ -37,11 +38,11 @@ class LoadData(MethodResource, Resource):
                   description=LoadResponseDescription)
     @doc(description="""Given training data Shift specializes a model for the training data. \
 Yeilds more relaisitic results than just an inference though it takes longer.""", tags=["Load"],
-operationId="loadData", consumes=['multipart/form-data'])
-    def post(self, requestHeaders: LoadDataHeaderRequest):# **kwargs):
+operationId="loadData", consumes=['multipart/form-data'], security=SECURITY_TAG)
+    def post(self, requestHeaders: LoadDataHeaderRequest):#**kwargs):
         if not validateFileRequest(request.files):
             return {'msg': "The request payload had no file"}
-
+        #print(kwargs)
         try:
             requestData: List[str] = json.loads(requestHeaders.trainingDataTypes[0])
         except ValueError:
