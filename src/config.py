@@ -18,6 +18,7 @@ from src.utils.ObjectIdConverter import ObjectIdConverter
 
 load_dotenv()
 
+marshmallowPlugin = MarshmallowPlugin()
 
 class Config(object):
     SECRET_KEY = open('keys/jwt-key').read()
@@ -49,7 +50,7 @@ class Config(object):
     APISPEC_SPEC = APISpec(
         title='Shift',
         version='1.0.0',
-        plugins=[MarshmallowPlugin()],
+        plugins=[marshmallowPlugin],
         openapi_version='2.0',
         **yaml.safe_load(OPENAPI_SPEC)
     )

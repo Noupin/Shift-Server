@@ -5,14 +5,18 @@ The Load Data Request Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from typing import List
+from typing import List, Union
 from marshmallow import fields
 from marshmallow.schema import Schema
 from marshmallow_dataclass import dataclass
 
+#First Party Imports
+from src.DataModels.Marshmallow.FileField import FileField
+from src.DataModels.Marshmallow.BinaryFileField import BinaryFileField
+
 
 class LoadDataBodyRequest(Schema):
-    file = fields.Raw(required=True, type='file')
+    requestFiles = fields.List(BinaryFileField(format="binary", required=True), required=True)
 
 @dataclass(frozen=True)
 class LoadDataHeaderRequest:

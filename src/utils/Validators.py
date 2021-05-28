@@ -7,11 +7,11 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 #Third Party Imports
 import re
 import os
-import werkzeug
 import tensorflow as tf
 from flask import current_app
-from typing import Tuple, Union
 from flask.wrappers import Request
+from typing import List, Tuple, Union
+from werkzeug.datastructures import FileStorage
 from src.DataModels.Request.TrainRequest import TrainRequest
 from email_validator import validate_email, EmailNotValidError
 from src.DataModels.Request.InferenceRequest import InferenceRequest
@@ -81,7 +81,7 @@ def validateFilename(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def validateFileRequest(fileDict: werkzeug.datastructures.MultiDict, fileIndicator="file") -> bool:
+def validateFileRequest(fileDict: List[FileStorage], fileIndicator="file") -> bool:
     """
     Given a dictionary of files from a flask request this will valiadate
     whether they are correctly keyed in the dicitonary.
@@ -101,7 +101,7 @@ def validateFileRequest(fileDict: werkzeug.datastructures.MultiDict, fileIndicat
         return False
 
     for currentFile in fileDict:
-        if currentFile.find(fileIndicator) != -1:
+        if isinstance(currentFile, FileStorage):
             continue
 
         valid = False
