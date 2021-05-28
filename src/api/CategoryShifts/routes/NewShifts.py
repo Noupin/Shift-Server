@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Featured endpoint for the Users part of the Shift API
+New endpoint for the Users part of the Shift API
 """
 __author__ = "Noupin"
 
@@ -21,7 +21,7 @@ class NewShifts(MethodResource, Resource):
 
     @marshal_with(NewShiftsResponse,
                   description=NewShiftsResponseDescription)
-    @doc(description="""The new shifts to display on the home page.""", tags=["FPN"],
+    @doc(description="""The new shifts to display on the home page.""", tags=["Shift Category"],
 operationId="new")
     def get(self) -> dict:
         newShifts = Shift.objects().order_by('-views').limit(10)

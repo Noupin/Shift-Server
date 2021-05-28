@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Featured endpoint for the Users part of the Shift API
+Popular endpoint for the Users part of the Shift API
 """
 __author__ = "Noupin"
 
@@ -21,7 +21,7 @@ class PopularShifts(MethodResource, Resource):
 
     @marshal_with(PopularShiftsResponse,
                   description=PopularShiftsResponseDescription)
-    @doc(description="""The popular shifts to display on the home page.""", tags=["FPN"],
+    @doc(description="""The popular shifts to display on the home page.""", tags=["Shift Category"],
 operationId="popular")
     def get(self) -> dict:
         popularShifts = Shift.objects().limit(10)

@@ -50,10 +50,11 @@ BLUEPRINT_NAMES = {
     'load': 'load',
     'content': 'content',
     'users': 'users',
-    'fpn': 'fpn'
+    'categoryShifts': 'categoryShifts',
+    'shift': 'shift'
 }
 
-#FPN
+#Shift Category Limits
 ANMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
 

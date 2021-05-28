@@ -25,6 +25,7 @@ class Shift(db.Document):
     maskDecoderPath = StringField(required=True)
     private = BooleanField(default=False)
     views = IntField(required=True, default=0)
+    verified = BooleanField(default=False)
 
     def __repr__(self) -> str:
         return f"Shift('{self.uuid}, {self.title}, {self.datePosted}, {self.imagePath}')"

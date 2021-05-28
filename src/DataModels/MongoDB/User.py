@@ -5,8 +5,8 @@ The MongoDB data model for a User
 __author__ = "Noupin"
 
 #Third Party Imports
-from mongoengine import StringField
 from flask_login import UserMixin
+from mongoengine import StringField, BooleanField
 
 #First Party Imports
 from src import db, login_manager
@@ -19,6 +19,8 @@ class User(db.Document, UserMixin):
     password = StringField(required=True)
     imagePath = StringField(required=True, default='default.jpg')
     dateCreated = StringField(default=utcnow_string)
+    verified = BooleanField(default=False)
+    admin = BooleanField(default=False)
 
 
     @staticmethod

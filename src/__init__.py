@@ -51,12 +51,12 @@ Defaults to Config.
     app.config.from_object(configClass)
 
 
-    cors.init_app(app)
-    login_manager.init_app(app)
     db.init_app(app)
-    bcrypt.init_app(app)
     mail.init_app(app)
     docs.init_app(app)
+    cors.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
 
     return app
 
@@ -79,20 +79,22 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
 
 
     from src.main.routes import mainBP
-    from src.api.FPN.blueprint import fpnBP
     from src.api.load.blueprint import loadBP
+    from src.api.shift.blueprint import shiftBP
     from src.api.train.blueprint import trainBP
     from src.api.users.blueprint import usersBP
     from src.api.content.blueprint import contentBP
     from src.api.inference.blueprint import inferenceBP
+    from src.api.CategoryShifts.blueprint import categoryShiftBP
 
     app.register_blueprint(mainBP)
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
-    app.register_blueprint(fpnBP, url_prefix="/api/shift")
     app.register_blueprint(usersBP, url_prefix='/api/users')
+    app.register_blueprint(shiftBP, url_prefix='/api/shift')
     app.register_blueprint(contentBP, url_prefix='/api/content')
+    app.register_blueprint(categoryShiftBP, url_prefix="/api/shift/category")
 
     return app
 
@@ -103,8 +105,7 @@ def addMiddleware(app: flask.app.Flask, middleware=ProxyFix) -> flask.app.Flask:
 
     Args:
         app (flask.app.Flask): The application to add middleware to.
-        middleware (class): The middleware to be applied to the app. \
-Defaults to ProxyFix.
+        middleware (class): The middleware to be applied to the app. Defaults to ProxyFix.
 
     Returns:
         flask.app.Flask: The Flask app with middleware.
@@ -142,9 +143,10 @@ def generateSwagger() -> FlaskApiSpec:
     """
 
     from src.api.load.blueprint import LoadData
+    from src.api.shift.blueprint import IndividualShift
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
-    from src.api.FPN.blueprint import NewShifts, PopularShifts, FeaturedShifts
+    from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.users.blueprint import Register, Authenticated, Login, Logout, Profile, UserShifts
     
@@ -168,10 +170,12 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(ImageDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
     docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"))
     docs.register(VideoDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="videoBool")
+
+    docs.register(Category, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
+    docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
+    docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
     
-    docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
-    docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
-    docs.register(FeaturedShifts, blueprint=BLUEPRINT_NAMES.get("fpn"))
+    docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
 
     docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, USER_AUTH_SCHEME)
     

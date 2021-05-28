@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Featured Shifts Response Data Model for the Shift API
+The Shift Category Response Data Model for the Shift API
 """
 __author__ = "Noupin"
 
@@ -11,7 +11,7 @@ from marshmallow import Schema, fields
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 
-class FeaturedShiftsResponse(Schema):
+class ShiftCategoryResponse(Schema):
     shifts = fields.List(fields.Nested(ShiftSchema))
 
-FeaturedShiftsResponseDescription = """The currently featured shifts."""
+ShiftCategoryResponseDescription = """The shifts for the queried category."""
