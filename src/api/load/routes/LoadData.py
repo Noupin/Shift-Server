@@ -6,13 +6,11 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from typing import List
-from flask import request
 from flask_restful import Resource
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 from werkzeug.datastructures import FileStorage
-from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src.variables.constants import SECURITY_TAG

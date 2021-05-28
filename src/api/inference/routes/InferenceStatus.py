@@ -9,9 +9,8 @@ from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
 from flask_login import login_required
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Import
 from src.run import celery

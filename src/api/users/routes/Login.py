@@ -7,10 +7,9 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask import request
 from flask_restful import Resource
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
 from flask_login import current_user, login_user
-from flask_apispec import marshal_with, use_kwargs
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src import bcrypt

@@ -10,21 +10,16 @@ import json
 from flask import current_app
 from werkzeug import Response
 from flask_restful import Resource
-from flask_apispec.annotations import doc
+from flask_apispec import marshal_with, doc
 from flask.helpers import send_from_directory
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
 
 #First Party Imports
 from src.variables.constants import VIDEO_PATH
-from src.DataModels.Request.MediaRequest import (MediaRequest,
-                                                 MediaRequestDescription)
 
 
 class Video(MethodResource, Resource):
 
-    #@use_kwargs(MediaRequest.Schema(), location='query',
-    #            description=MediaRequestDescription)
     @marshal_with(None)
     @doc(description="""The video portion of the Shift CDN.""", tags=["CDN"],
 operationId="getVideo")

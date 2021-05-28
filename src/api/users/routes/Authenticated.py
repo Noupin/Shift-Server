@@ -7,8 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask_restful import Resource
 from flask_login import current_user
-from flask_apispec import marshal_with
-from flask_apispec.annotations import doc
+from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
 
 #First Party Imports

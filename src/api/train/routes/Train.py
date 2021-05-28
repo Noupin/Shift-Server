@@ -10,10 +10,9 @@ import mongoengine
 import tensorflow as tf
 from flask_restful import Resource
 from flask import current_app, request
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
 from flask_login import current_user, login_required
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src.api.train.tasks import trainShift

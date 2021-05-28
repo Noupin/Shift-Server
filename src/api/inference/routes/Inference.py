@@ -8,10 +8,9 @@ __author__ = "Noupin"
 import mongoengine
 from flask import request
 from flask_restful import Resource
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
 from flask_login import login_required, current_user
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src.api.inference.tasks import shiftMedia

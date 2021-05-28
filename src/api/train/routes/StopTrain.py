@@ -5,19 +5,18 @@ Stop Training endpoint for the Train part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from src.DataModels.Request.TrainRequest import TrainRequest
 from flask import request
 from flask_restful import Resource
 from flask_login import login_required
-from flask_apispec.annotations import doc
 from flask_apispec.views import MethodResource
-from flask_apispec import marshal_with, use_kwargs
+from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src.variables.constants import SECURITY_TAG
 from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
+from src.DataModels.Request.TrainRequest import TrainRequest
 from src.DataModels.Request.TrainRequest import (TrainRequest,
                                                  TrainRequestDescription)
 from src.DataModels.Response.StopTrainResponse import (StopTrainResponse,
