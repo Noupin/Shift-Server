@@ -5,13 +5,17 @@ Individual shift endpoint for the shift part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import os
+import shutil
 from uuid import UUID
+from flask.globals import current_app
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 #First Party Imports
+from src.variables.constants import IMAGE_PATH, SHIFT_PATH
 from src.DataModels.MongoDB.Shift import Shift
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
@@ -48,6 +52,9 @@ class IndividualShift(MethodResource, Resource):
                 deleted because it does not exist."""))
 
         title = shift.title
+        
+        shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(shift.uuid)))
+        os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.imagePath))
         shift.delete()
         
         return IndividualShiftDeleteResponse().load(dict(msg=f"Shift {title} deleted."))
