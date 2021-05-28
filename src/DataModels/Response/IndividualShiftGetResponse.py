@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Individual Shift Response Data Model for the Shift API
+The Individual Shift Get Response Data Model for the Shift API
 """
 __author__ = "Noupin"
 
@@ -11,7 +11,7 @@ from marshmallow import Schema, fields
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 
-class IndividualShiftResponse(Schema):
+class IndividualShiftGetResponse(Schema):
     shift = fields.Nested(ShiftSchema)
 
-IndividualShiftResponseDescription = f"""The requested shift."""
+IndividualShiftGetResponseDescription = f"""The requested shift."""
