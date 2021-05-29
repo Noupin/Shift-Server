@@ -63,3 +63,13 @@ AMOUNT_OF_POPULAR = 10
 USER_AUTH_SCHEME = {"type": "apiKey", "in": "header", "name": "session"}
 SECURITY_SCHEME_NAME = "UserAuth"
 SECURITY_TAG = yaml.safe_load(f"""- {SECURITY_SCHEME_NAME}: []""")
+
+#MongoDB
+USER_EDITABLE_USER_FIELDS = ["username", "email", "password"]
+COSNTANT_USER_FIELDS = ["dateCreated", "id"]
+ADMIN_ACCESS_USER_FIELDS = ["verified", "admin"]
+
+USER_EDITABLE_SHIFT_FIELDS = ["title", "private"]
+COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
+BACKEND_ACCESS_SHIFT_FIELDS = ["views"]
+ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]

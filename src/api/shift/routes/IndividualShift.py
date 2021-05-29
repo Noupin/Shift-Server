@@ -19,7 +19,7 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 #First Party Imports
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
-from src.variables.constants import IMAGE_PATH, VIDEO_PATH, SHIFT_PATH, SECURITY_TAG
+from src.variables.constants import IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, VIDEO_PATH, SHIFT_PATH, SECURITY_TAG
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
 from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
@@ -97,8 +97,15 @@ updated because it does not exist.""")
         if(current_user.id != shift.author.id):
             return IndividualShiftPatchResponse(msg="""You cannot \
 delete a shift which you did not create.""")
-        
-        queries = {f"set__{field}":value for field, value in requestBody.data.items()}
+
+        queries = {}
+        for field, value in requestBody.data.items():
+            if field not in USER_EDITABLE_SHIFT_FIELDS:
+                return IndividualShiftPatchResponse(msg="You are not allowed to change this field.")
+            
+            else:
+                queries[f"set__{field}"] = value
+
         try:
             shift.update(**queries)
         except ValueError:

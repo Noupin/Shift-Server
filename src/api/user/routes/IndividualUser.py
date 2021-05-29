@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Individual shift endpoint for the shift part of the Shift API
+Individual user endpoint for the user part of the Shift API
 """
 __author__ = "Noupin"
 
@@ -17,12 +17,12 @@ from flask_apispec import marshal_with, doc, use_kwargs
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
-from src.variables.constants import IMAGE_PATH, SECURITY_TAG
-from src.utils.validators import validateEmail, validatePassword
+from src.utils.validators import validateEmail, validatePassword, validateFilename
+from src.variables.constants import IMAGE_PATH, SECURITY_TAG, USER_EDITABLE_USER_FIELDS
 from src.DataModels.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
                                                                IndividualUserPatchRequestDescription)
 from src.DataModels.Response.IndividualUserGetResponse import (IndividualUserGetResponse,
-                                                               IndividualShiftGetResponseDescription)
+                                                               IndividualUserGetResponseDescription)
 from src.DataModels.Response.IndividualUserPatchResponse import (IndividualUserPatchResponse,
                                                                  IndividualUserPatchResponseDescription)
 from src.DataModels.Response.IndividualUserDeleteResponse import (IndividualUserDeleteResponse,
@@ -40,7 +40,7 @@ class IndividualUser(MethodResource, Resource):
 
 
     @marshal_with(IndividualUserGetResponse,
-                  description=IndividualShiftGetResponseDescription)
+                  description=IndividualUserGetResponseDescription)
     @doc(description="""The queried user.""",
          tags=["User"], operationId="getIndivdualUser")
     def get(self, username: str):
@@ -50,8 +50,8 @@ class IndividualUser(MethodResource, Resource):
 
         userModel: UserSchema = UserSchema().dump(user)
 
-        return IndividualUserGetResponse().load(dict(shift=userModel))
-    
+        return IndividualUserGetResponse().load(dict(user=userModel))
+
 
     @marshal_with(IndividualUserDeleteResponse.Schema(),
                   description=IndividualUserDeleteResponseDescription)
@@ -81,8 +81,8 @@ is not you.")
                 description=IndividualUserPatchRequestDescription)
     @marshal_with(IndividualUserPatchResponse.Schema(),
                   description=IndividualUserPatchResponseDescription)
-    @doc(description="""Updates/modifies the queried shift.""",
-         tags=["User"], operationId="patchIndivdualShift", security=SECURITY_TAG)
+    @doc(description="""Updates/modifies the queried user.""",
+         tags=["User"], operationId="patchIndivdualUser", security=SECURITY_TAG)
     @login_required
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
         user = self.userExists(username)
@@ -96,12 +96,15 @@ is not you.""")
 
         queries = {}
         for field, value in requestBody.data.items():
-            if field == "username":
+            if field not in USER_EDITABLE_USER_FIELDS:
+                return IndividualUserPatchResponse(msg="You are not allowed to change this field.")
+            
+            elif field == "username":
                 if User.objects(username=value).first():
                     return IndividualUserPatchResponse(msg="A user with that username already exists")
                 queries[f"set__{field}"] = value
 
-            if field == "email":
+            elif field == "email":
                 emailValid, emailMsg = validateEmail(value)
                 if not emailValid:
                     return IndividualUserPatchResponse(msg=emailMsg)
@@ -109,14 +112,12 @@ is not you.""")
                     return IndividualUserPatchResponse(msg="A user with that email already exists")
                 queries[f"set__{field}"] = value
 
-            if field == "password":
+            elif field == "password":
                 passwordValid, passwordMsg = validatePassword(value)
                 if not passwordValid:
                     return IndividualUserPatchResponse(msg=passwordMsg)
                 queries[f"set__{field}"] = bcrypt.generate_password_hash(value).decode("utf-8")
-            else:
-                queries[f"set__{field}"] = value
-                
+
 
         try:
             user.update(**queries)

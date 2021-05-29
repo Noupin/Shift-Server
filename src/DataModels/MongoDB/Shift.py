@@ -19,7 +19,7 @@ class Shift(db.Document):
     uuid = UUIDField(required=True)
     author = ReferenceField(User, required=True)
     title = StringField(required=True)
-    datePosted = StringField(required=True, default=utcnow_string)
+    dateCreated = StringField(required=True, default=utcnow_string)
     mediaFilename = StringField(required=True, default='default.jpg')
     encoderPath = StringField(required=True)
     baseDecoderPath = StringField(required=True)

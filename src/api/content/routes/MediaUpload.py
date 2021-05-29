@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Image endpoint for the CDN part of the Shift API
+Media Upload endpoint for the CDN part of the Shift API
 """
 __author__ = "Noupin"
 
@@ -17,12 +17,12 @@ from flask_apispec.views import MethodResource
 from src.variables.constants import IMAGE_PATH
 
 
-class Image(MethodResource, Resource):
+class MediaUpload(MethodResource, Resource):
 
     @marshal_with(None)
     @doc(description="""The image portion of the Shift CDN.""", tags=["CDN"],
 operationId="image")
-    def get(self, filename: str='default.jpg') -> Response:
+    def post(self, filename: str='default.jpg') -> Response:
 
         return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
                                   filename=filename,

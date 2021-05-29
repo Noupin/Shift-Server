@@ -12,6 +12,6 @@ from src.DataModels.Marshmallow.User import UserSchema
 
 
 class IndividualUserGetResponse(Schema):
-    shift = fields.Nested(UserSchema)
+    user = fields.Nested(UserSchema)
 
-IndividualShiftGetResponseDescription = f"""The requested user."""
+IndividualUserGetResponseDescription = f"""The requested user."""
