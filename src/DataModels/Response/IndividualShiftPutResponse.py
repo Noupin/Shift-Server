@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Individual Shift Delete Response Data Model for the Shift API
+The Individual Shift Put Response Data Model for the Shift API
 """
 __author__ = "Noupin"
 
@@ -12,7 +12,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 
 @dataclass(frozen=True)
-class IndividualShiftDeleteResponse(DefaultResponse):
+class IndividualShiftPutResponse(DefaultResponse):
     pass
 
-IndividualShiftDeleteResponseDescription = f"""Deletes the requested shift."""
+IndividualShiftPutResponseDescription = """Updates the requested Shift."""

@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+from src.DataModels.Marshmallow.User import UserSchema
 import mongoengine
 import tensorflow as tf
 from flask_restful import Resource
@@ -58,7 +59,7 @@ takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
             worker.save()
         except mongoengine.errors.NotUniqueError:
             return {'msg': "That AI is already training."}
-        
+
         job = trainShift.delay(requestData.getSerializable(), str(current_user.id))
         worker.update(set__workerID=job.id)
 

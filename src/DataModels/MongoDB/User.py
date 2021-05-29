@@ -17,7 +17,7 @@ class User(db.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
-    imagePath = StringField(required=True, default='default.jpg')
+    mediaFilename = StringField(required=True, default='default.jpg')
     dateCreated = StringField(default=utcnow_string)
     verified = BooleanField(default=False)
     admin = BooleanField(default=False)

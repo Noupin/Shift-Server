@@ -100,6 +100,6 @@ def shiftMedia(requestJSON: dict) -> str:
     elif getMediaType(baseMediaFilename) == 'image':
         shifted.save(os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
     
-    mongoShift.update(set__imagePath=f"{requestData.shiftUUID}{extension}")
+    mongoShift.update(set__mediaFilename=f"{requestData.shiftUUID}{extension}")
 
     del shft

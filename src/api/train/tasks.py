@@ -17,7 +17,7 @@ from flask import current_app
 #First Party Imports
 from src.run import celery
 from src.AI.shift import Shift
-from src.utils.image import encodeImage
+from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
@@ -26,18 +26,18 @@ from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE, SHIFT_PATH)
 
 
-def saveShiftToDatabase(uuid: str, userID: bson.objectid.ObjectId, title: str, path: str):
+def saveShiftToDatabase(uuid: str, author: User, title: str, path: str):
     """
     Saves the paths and the relevant information for a shift model to the database.
 
     Args:
         uuid (str): The unique identifier for the shift model
-        userID (bson.objectid.ObjectId): The id of the user to associate the shift with
+        author (User): The author of the shift
         title (str): The title of the shift model
         path (str): The path to the encoder, base decoder and mask decoder models
     """
 
-    mongoShift = ShiftDataModel(uuid=uuid, userID=userID, title=title,
+    mongoShift = ShiftDataModel(uuid=uuid, author=author, title=title,
                                 encoderPath=os.path.join(path, "encoder"),
                                 baseDecoderPath=os.path.join(path, "baseDecoder"),
                                 maskDecoderPath=os.path.join(path, "maskDecoder"))
@@ -126,10 +126,10 @@ def trainShift(requestJSON: dict, userID: str):
 
     Args:
         requestJSON (dict): The JSON request data that can be serialized
-        userID (str): The id of the user to save the shift model with
+        userID (str): The id of the user to query and save with the shift model
     """
 
-    userID = ObjectId(userID)
+    author = User.objects(id=userID).first()
     requestData: TrainRequest = TrainRequest(**requestJSON)
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
@@ -192,6 +192,6 @@ def trainShift(requestJSON: dict, userID: str):
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
 
-    saveShiftToDatabase(uuid=shft.id_, userID=userID, title=requestData.shiftTitle, path=shiftFilePath)
+    saveShiftToDatabase(uuid=shft.id_, author=author, title=requestData.shiftTitle, path=shiftFilePath)
 
     del shft

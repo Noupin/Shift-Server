@@ -15,7 +15,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 @dataclass(frozen=True)
 class InferenceStatusReponse(DefaultResponse):
     stopped: Optional[bool]
-    imagePath: Optional[str]
+    mediaFilename: Optional[str]
 
 InferenceStatusReponseDescription = """A msg describing the current state of \
 inferencing on the original media, whether or not the inferencing has been \
