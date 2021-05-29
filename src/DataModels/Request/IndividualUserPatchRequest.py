@@ -9,8 +9,8 @@ from marshmallow_dataclass import dataclass
 
 
 @dataclass(frozen=True)
-class IndividualShiftPatchRequest:
+class IndividualUserPatchRequest:
     data: dict
 
-IndividualShiftPatchRequestDescription = """The field name and updated value \
-to update the queried shift."""
+IndividualUserPatchRequestDescription = """The field name and updated value \
+to update the queried user."""

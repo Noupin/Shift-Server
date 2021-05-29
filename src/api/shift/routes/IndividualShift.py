@@ -19,7 +19,7 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 #First Party Imports
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
-from src.variables.constants import IMAGE_PATH, VIDEO_PATH, SHIFT_PATH
+from src.variables.constants import IMAGE_PATH, VIDEO_PATH, SHIFT_PATH, SECURITY_TAG
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
 from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
@@ -57,7 +57,7 @@ class IndividualShift(MethodResource, Resource):
     @marshal_with(IndividualShiftDeleteResponse.Schema(),
                   description=IndividualShiftDeleteResponseDescription)
     @doc(description="""Deletes the queried shift.""",
-         tags=["Shift"], operationId="deleteIndivdualShift")
+         tags=["Shift"], operationId="deleteIndivdualShift", security=SECURITY_TAG)
     @login_required
     def delete(self, uuid: str):
         shift = self.shiftExists(uuid)
@@ -86,7 +86,7 @@ delete a shift which you did not create.""")
     @marshal_with(IndividualShiftPatchResponse.Schema(),
                   description=IndividualShiftPatchResponseDescription)
     @doc(description="""Updates/modifies the queried shift.""",
-         tags=["Shift"], operationId="patchIndivdualShift")
+         tags=["Shift"], operationId="patchIndivdualShift", security=SECURITY_TAG)
     @login_required
     def patch(self, requestBody: IndividualShiftPatchRequest, uuid: str):
         shift = self.shiftExists(uuid)

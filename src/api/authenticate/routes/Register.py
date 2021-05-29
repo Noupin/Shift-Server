@@ -47,9 +47,9 @@ class Register(MethodResource, Resource):
         if not passwordValid:
             return {'msg': passwordMsg}
 
-        hashed_password = bcrypt.generate_password_hash(requestData.password)
+        hashedPassword = bcrypt.generate_password_hash(requestData.password)
 
-        user = User(username=requestData.username, email=requestData.email, password=hashed_password)
+        user = User(username=requestData.username, email=requestData.email, password=hashedPassword)
         user.save()
 
         login_user(user, remember=True)
