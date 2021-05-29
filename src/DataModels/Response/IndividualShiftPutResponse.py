@@ -15,4 +15,4 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 class IndividualShiftPutResponse(DefaultResponse):
     pass
 
-IndividualShiftPutResponseDescription = """Updates the requested Shift."""
+IndividualShiftPutResponseDescription = """The status message pertaing to the update/replace."""

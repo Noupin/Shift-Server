@@ -12,6 +12,6 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 
 class IndividualShiftPutRequest(Schema):
-    shift = fields.Nested(ShiftSchema)
+    requestBody = fields.Nested(ShiftSchema)
 
 IndividualShiftPutRequestDescription = """The shift to update/replace the queried shift."""

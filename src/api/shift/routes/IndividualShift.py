@@ -24,19 +24,25 @@ from src.DataModels.Request.IndividualShiftPutRequest import (IndividualShiftPut
                                                               IndividualShiftPutRequestDescription)
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
+from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
+                                                                IndividualShiftPatchRequestDescription)
 from src.DataModels.Response.IndividualShiftPutResponse import (IndividualShiftPutResponse,
                                                                 IndividualShiftPutResponseDescription)
+from src.DataModels.Response.IndividualShiftPatchResponse import (IndividualShiftPatchResponse,
+                                                                  IndividualShiftPatchResponseDescription)
 from src.DataModels.Response.IndividualShiftDeleteResponse import (IndividualShiftDeleteResponse,
                                                                    IndividualShiftDeleteResponseDescription)
 
 
 class IndividualShift(MethodResource, Resource):
     
+    @staticmethod
     def shiftExists(uuid: str) -> Union[Shift, dict]:
         try:
             return Shift.objects(uuid=UUID(uuid)).first()
         except ValueError:
             return {}
+
 
     @marshal_with(IndividualShiftGetResponse,
                   description=IndividualShiftGetResponseDescription)
@@ -60,12 +66,12 @@ class IndividualShift(MethodResource, Resource):
     def delete(self, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
-            return IndividualShiftDeleteResponse().load(dict(msg="""Shift was not \
-deleted because it does not exist."""))
+            return IndividualShiftDeleteResponse(msg="""Shift was not \
+deleted because it does not exist.""")
 
         if(current_user.id != shift.author.id):
-            return IndividualShiftDeleteResponse().load(dict(msg="""You cannot \
-delete a shift which you did not create."""))
+            return IndividualShiftDeleteResponse(msg="""You cannot \
+delete a shift which you did not create.""")
 
         title = shift.title
         
@@ -76,20 +82,35 @@ delete a shift which you did not create."""))
             os.remove(os.path.join(current_app.root_path, VIDEO_PATH, shift.mediaFilename))
         shift.delete()
         
-        return IndividualShiftDeleteResponse().load(dict(msg=f"The Shift named: {title} has been deleted."))
+        return IndividualShiftDeleteResponse(msg=f"The Shift named: {title} has been deleted.")
 
 
-    @use_kwargs(IndividualShiftPutRequest,
-                description=IndividualShiftPutRequestDescription)
-    @marshal_with(IndividualShiftPutResponse.Schema(),
-                  description=IndividualShiftPutResponseDescription)
-    @doc(description="""Updates/repalces the queried shift.""",
-         tags=["Shift"], operationId="putIndivdualShift")
+    @use_kwargs(IndividualShiftPatchRequest.Schema(),
+                description=IndividualShiftPatchRequestDescription)
+    @marshal_with(IndividualShiftPatchResponse.Schema(),
+                  description=IndividualShiftPatchResponseDescription)
+    @doc(description="""Updates/modifies the queried shift.""",
+         tags=["Shift"], operationId="patchIndivdualShift")
     @login_required
-    def put(self, uuid, requestBody):
+    def patch(self, requestBody: IndividualShiftPatchRequest, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
-            return IndividualShiftDeleteResponse().load(dict(msg="""Shift was not \
-updated because it does not exist."""))
+            return IndividualShiftPatchResponse(msg="""Shift was not \
+updated because it does not exist.""")
+            
+        if(current_user.id != shift.author.id):
+            return IndividualShiftPatchResponse(msg="""You cannot \
+delete a shift which you did not create.""")
+        
+        queries = {f"set__{field}":value for field, value in requestBody.data.items()}
+        try:
+            shift.update(**queries)
+        except ValueError:
+            return IndividualShiftPatchResponse(msg=f"The field you are changing is \
+not the same type as the value you submitted"), 500
+        except TypeError:
+            return IndividualShiftPatchResponse(msg=f"The field you are changing is \
+not the same type as the value you submitted"), 500
 
-        return IndividualShiftPutResponse().load(dict(msg="Put Recieved"))
+        return IndividualShiftPatchResponse(msg=f"The fields \
+{[field for field, _ in requestBody.data.items()]} in the {shift.title} Shift have been modified.")
