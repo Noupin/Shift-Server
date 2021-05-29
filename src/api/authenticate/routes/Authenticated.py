@@ -19,7 +19,7 @@ class Authenticated(MethodResource, Resource):
 
     @marshal_with(AuthenticatedResponse.Schema(),
                   description=AuthenticatedResponseDescription)
-    @doc(description="""Whether the user is logged in currently or not.""", tags=["User"],
+    @doc(description="""Whether the user is logged in currently or not.""", tags=["Authenticate"],
 operationId="authenticated")
     def get(self) -> dict:
         if current_user.is_authenticated:

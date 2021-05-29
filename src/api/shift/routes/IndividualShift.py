@@ -7,8 +7,8 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import shutil
-from typing import Union
 from uuid import UUID
+from typing import Union
 from flask import current_app
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
@@ -20,14 +20,10 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
 from src.variables.constants import IMAGE_PATH, VIDEO_PATH, SHIFT_PATH
-from src.DataModels.Request.IndividualShiftPutRequest import (IndividualShiftPutRequest,
-                                                              IndividualShiftPutRequestDescription)
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
 from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
                                                                 IndividualShiftPatchRequestDescription)
-from src.DataModels.Response.IndividualShiftPutResponse import (IndividualShiftPutResponse,
-                                                                IndividualShiftPutResponseDescription)
 from src.DataModels.Response.IndividualShiftPatchResponse import (IndividualShiftPatchResponse,
                                                                   IndividualShiftPatchResponseDescription)
 from src.DataModels.Response.IndividualShiftDeleteResponse import (IndividualShiftDeleteResponse,

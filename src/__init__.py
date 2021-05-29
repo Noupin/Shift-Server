@@ -80,20 +80,22 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
 
     from src.main.routes import mainBP
     from src.api.load.blueprint import loadBP
+    from src.api.user.blueprint import userBP
     from src.api.shift.blueprint import shiftBP
     from src.api.train.blueprint import trainBP
-    from src.api.users.blueprint import usersBP
     from src.api.content.blueprint import contentBP
     from src.api.inference.blueprint import inferenceBP
+    from src.api.authenticate.blueprint import authenticateBP
     from src.api.CategoryShifts.blueprint import categoryShiftBP
 
     app.register_blueprint(mainBP)
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
-    app.register_blueprint(usersBP, url_prefix='/api/users')
+    app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift')
     app.register_blueprint(contentBP, url_prefix='/api/content')
+    app.register_blueprint(authenticateBP, url_prefix='/api/authenticate')
     app.register_blueprint(categoryShiftBP, url_prefix="/api/shift/category")
 
     return app
@@ -145,10 +147,11 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.load.blueprint import LoadData
     from src.api.shift.blueprint import IndividualShift
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
+    from src.api.user.blueprint import Shifts, Profile, IndividualUser
     from src.api.inference.blueprint import Inference, InferenceStatus
     from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
-    from src.api.users.blueprint import Register, Authenticated, Login, Logout, Profile, UserShifts
+    from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
     
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
@@ -156,12 +159,14 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
     docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))
 
-    docs.register(Register, blueprint=BLUEPRINT_NAMES.get("users"))
-    docs.register(Authenticated, blueprint=BLUEPRINT_NAMES.get("users"))
-    docs.register(Login, blueprint=BLUEPRINT_NAMES.get("users"))
-    docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("users"))
-    docs.register(Profile, blueprint=BLUEPRINT_NAMES.get("users"))
-    docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("users"))
+    docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(Authenticated, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    
+    docs.register(Shifts, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(Profile, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
 
     docs.register(Inference, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceStatus, blueprint=BLUEPRINT_NAMES.get("inference"))

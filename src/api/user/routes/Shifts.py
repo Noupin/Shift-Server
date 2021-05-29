@@ -20,7 +20,7 @@ from src.DataModels.Response.UserShiftsResponse import (UserShiftsResponse,
                                                         UserShiftsResponseDescription)
 
 
-class UserShifts(MethodResource, Resource):
+class Shifts(MethodResource, Resource):
     decorators = [login_required]
 
     @marshal_with(UserShiftsResponse,

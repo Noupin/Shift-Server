@@ -27,7 +27,7 @@ class Register(MethodResource, Resource):
                 description=RegisterRequestDescription)
     @marshal_with(RegisterResponse.Schema(),
                   description=RegisterResponseDescription)
-    @doc(description="""The regitration for the user.""", tags=["User"], operationId="register")
+    @doc(description="""The regitration for the user.""", tags=["Authenticate"], operationId="register")
     def post(self, requestData: RegisterRequest) -> dict:
         if current_user.is_authenticated:
             return {'msg': "You're already logged in"}

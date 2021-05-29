@@ -21,7 +21,7 @@ class Logout(MethodResource, Resource):
 
     @marshal_with(LogoutResponse.Schema(),
                   description=LogoutResponseDescription)
-    @doc(description="""Logs the user out.""", tags=["User"],
+    @doc(description="""Logs the user out.""", tags=["Authenticate"],
 operationId="logout", security=SECURITY_TAG)
     def get(self) -> dict:
         username = current_user.username

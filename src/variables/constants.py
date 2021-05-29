@@ -49,9 +49,10 @@ BLUEPRINT_NAMES = {
     'train': 'train',
     'load': 'load',
     'content': 'content',
-    'users': 'users',
+    'user': 'user',
     'categoryShifts': 'categoryShifts',
-    'shift': 'shift'
+    'shift': 'shift',
+    'authenticate': 'authenticate'
 }
 
 #Shift Category Limits
