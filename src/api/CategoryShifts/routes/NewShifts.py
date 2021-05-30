@@ -24,7 +24,7 @@ class NewShifts(MethodResource, Resource):
     @doc(description="""The new shifts to display on the home page.""", tags=["Shift Category"],
 operationId="new")
     def get(self) -> dict:
-        newShifts = Shift.objects().order_by('-views').limit(10)
+        newShifts = Shift.objects().limit(10)
         newShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in newShifts]
 
         return NewShiftsResponse().dump(dict(shifts=newShiftsJSON))

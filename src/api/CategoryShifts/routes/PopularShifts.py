@@ -24,7 +24,7 @@ class PopularShifts(MethodResource, Resource):
     @doc(description="""The popular shifts to display on the home page.""", tags=["Shift Category"],
 operationId="popular")
     def get(self) -> dict:
-        popularShifts = Shift.objects().limit(10)
+        popularShifts = Shift.objects().order_by('-views').limit(10)
         popularShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in popularShifts]
 
         return PopularShiftsResponse().dump(dict(shifts=popularShiftsJSON))
