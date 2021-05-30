@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import json
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 from typing import List
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
@@ -25,6 +26,6 @@ class PopularShifts(MethodResource, Resource):
 operationId="popular")
     def get(self) -> dict:
         popularShifts = Shift.objects().order_by('-views').limit(10)
-        popularShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in popularShifts]
+        popularShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in popularShifts]
 
         return PopularShiftsResponse().dump(dict(shifts=popularShiftsJSON))

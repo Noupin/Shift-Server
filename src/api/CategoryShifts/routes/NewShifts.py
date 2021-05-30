@@ -13,6 +13,7 @@ from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.DataModels.Response.NewShiftsResponse import (NewShiftsResponse,
                                                        NewShiftsResponseDescription)
 
@@ -25,6 +26,6 @@ class NewShifts(MethodResource, Resource):
 operationId="new")
     def get(self) -> dict:
         newShifts = Shift.objects().limit(10)
-        newShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in newShifts]
+        newShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in newShifts]
 
         return NewShiftsResponse().dump(dict(shifts=newShiftsJSON))
