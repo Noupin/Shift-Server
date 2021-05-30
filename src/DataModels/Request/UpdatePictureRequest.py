@@ -12,6 +12,6 @@ from src.DataModels.Marshmallow.FileField import FileField
 
 
 class UpdatePictureRequest(Schema):
-    requestFiles = FileField(required=True)
+    requestFile = FileField(required=True)
 
 UpdatePictureRequestDescription = """The image to update the profile picture to."""

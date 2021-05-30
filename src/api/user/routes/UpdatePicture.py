@@ -34,7 +34,7 @@ class UpdatePicture(MethodResource, Resource):
                   description=UpdatePictureResponseDescription)
     @doc(description="""Changes the users profile picture to the uploaded picture.""", tags=["User"],
 operationId="updatePicture", consumes=['multipart/form-data'], security=SECURITY_TAG)
-    def post(self, requestFile: FileStorage):
+    def put(self, requestFile: FileStorage):
         if not validateFileRequest([requestFile]):
             return UpdatePictureResponse(msg="The request payload had no files")
 
@@ -50,7 +50,11 @@ operationId="updatePicture", consumes=['multipart/form-data'], security=SECURITY
         else:
             return UpdatePictureResponse(msg="File not valid.")
         
-        user = User.objects(id=current_user.id).first()
+        user: User = User.objects(id=current_user.id).first()
+        
+        if user.mediaFilename.find("default") == -1:
+            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, user.mediaFilename))
+        
         user.update(set__mediaFilename=filename)
 
         return UpdatePictureResponse(msg="Picture updated.")
