@@ -7,8 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 from datetime import datetime
 from mongoengine import (StringField, DateTimeField,
-                         UUIDField, ObjectIdField,
-                         BooleanField)
+                         UUIDField)
 
 #First Party Imports
 from src import db

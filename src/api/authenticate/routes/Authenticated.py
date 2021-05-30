@@ -23,6 +23,6 @@ class Authenticated(MethodResource, Resource):
 operationId="authenticated")
     def get(self) -> dict:
         if current_user.is_authenticated:
-            return {'authenticated': True}
+            return AuthenticatedResponse(msg="", authenticated=True, username=current_user.username)
 
-        return {'authenticated': False}
+        return AuthenticatedResponse(msg="", authenticated=False)

@@ -33,24 +33,24 @@ class Login(MethodResource, Resource):
         """
 
         if current_user.is_authenticated:
-            return {'msg': "You are already logged in"}
+            return LoginResponse(msg="You are already logged in.")
         
         if not request.is_json:
-            return {'msg': "Your login had no JSON payload"}
+            return LoginResponse(msg="Your login had no JSON payload.")
         
         if not requestData.usernameOrEmail:
-            return {'msg': "Username or Email missing"}
+            return LoginResponse(msg="Username or Email missing.")
         
         if User.objects(email=requestData.usernameOrEmail).first():
-            user = User.objects(email=requestData.usernameOrEmail).first()
+            user: User = User.objects(email=requestData.usernameOrEmail).first()
         elif User.objects(username=requestData.usernameOrEmail).first():
-            user = User.objects(username=requestData.usernameOrEmail).first()
+            user: User = User.objects(username=requestData.usernameOrEmail).first()
         else:
-            return {'msg': "Username or Email incorrect"}
+            return LoginResponse(msg="Username or Email incorrect.")
 
         if bcrypt.check_password_hash(user.password, requestData.password):
             login_user(user, remember=requestData.remember)
         else:
-            return {'msg': 'Login unsuccesful, password incorrect'}
+            return LoginResponse(msg="Login unsuccesful, password incorrect.")
 
-        return {'msg': "Login success."}
+        return LoginResponse(msg="Login success.")

@@ -19,7 +19,8 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 #First Party Imports
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
-from src.variables.constants import IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, VIDEO_PATH, SHIFT_PATH, SECURITY_TAG
+from src.variables.constants import (IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, 
+                                     VIDEO_PATH, SHIFT_PATH, SECURITY_TAG)
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
 from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
@@ -31,7 +32,7 @@ from src.DataModels.Response.IndividualShiftDeleteResponse import (IndividualShi
 
 
 class IndividualShift(MethodResource, Resource):
-    
+
     @staticmethod
     def shiftExists(uuid: str) -> Union[Shift, dict]:
         try:
@@ -48,12 +49,17 @@ class IndividualShift(MethodResource, Resource):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
             return IndividualShiftGetResponse()
-        
+
         shift.update(set__views=shift.views+1)
 
         shiftModel: ShiftSchema = ShiftSchema().dump(shift)
+        
+        userID = ""
+        if current_user.is_authenticated:
+            userID = current_user.id
 
-        return IndividualShiftGetResponse().load(dict(shift=shiftModel))
+        return IndividualShiftGetResponse().load(dict(shift=shiftModel,
+                                                      owner=userID==shift.author.id))
 
 
     @marshal_with(IndividualShiftDeleteResponse.Schema(),
@@ -72,14 +78,14 @@ deleted because it does not exist.""")
 delete a shift which you did not create.""")
 
         title = shift.title
-        
+
         shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(shift.uuid)))
         if getMediaType(shift.mediaFilename) == "image":
             os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.mediaFilename))
         elif getMediaType(shift.mediaFilename) == "video":
             os.remove(os.path.join(current_app.root_path, VIDEO_PATH, shift.mediaFilename))
         shift.delete()
-        
+
         return IndividualShiftDeleteResponse(msg=f"The Shift named: {title} has been deleted.")
 
 
@@ -95,7 +101,7 @@ delete a shift which you did not create.""")
         if not isinstance(shift, Shift):
             return IndividualShiftPatchResponse(msg="""Shift was not \
 updated because it does not exist.""")
-            
+
         if(current_user.id != shift.author.id):
             return IndividualShiftPatchResponse(msg="""You cannot \
 delete a shift which you did not create.""")
@@ -104,7 +110,7 @@ delete a shift which you did not create.""")
         for field, value in requestBody.data.items():
             if field not in USER_EDITABLE_SHIFT_FIELDS:
                 return IndividualShiftPatchResponse(msg="You are not allowed to change this field.")
-            
+
             else:
                 queries[f"set__{field}"] = value
 

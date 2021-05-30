@@ -18,7 +18,7 @@ from src.DataModels.Response.UserShiftsResponse import (UserShiftsResponse,
                                                         UserShiftsResponseDescription)
 
 
-class UsersShifts(MethodResource, Resource):
+class UserShifts(MethodResource, Resource):
     
     @staticmethod
     def userExists(username: str) -> Union[User, dict]:
@@ -31,7 +31,7 @@ class UsersShifts(MethodResource, Resource):
     @marshal_with(UserShiftsResponse,
                   description=UserShiftsResponseDescription)
     @doc(description="""The shifts associated with the queried user.""",
-         tags=["User"], operationId="getUsersShifts")
+         tags=["User"], operationId="userShifts")
     def get(self, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):

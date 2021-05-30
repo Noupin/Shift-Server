@@ -148,10 +148,10 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.shift.blueprint import IndividualShift
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
+    from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts
     from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
-    from src.api.user.blueprint import Shifts, Profile, UpdatePicture, IndividualUser, UsersShifts
     
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
@@ -164,9 +164,7 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     
-    docs.register(Shifts, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(Profile, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(UsersShifts, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(UpdatePicture, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
 

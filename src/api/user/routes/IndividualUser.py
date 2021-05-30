@@ -49,8 +49,13 @@ class IndividualUser(MethodResource, Resource):
             return IndividualUserGetResponse()
 
         userModel: UserSchema = UserSchema().dump(user)
+        
+        userID = ""
+        if current_user.is_authenticated:
+            userID = current_user.id
 
-        return IndividualUserGetResponse().load(dict(user=userModel))
+        return IndividualUserGetResponse().load(dict(user=userModel,
+                                                     owner=userID==user.id))
 
 
     @marshal_with(IndividualUserDeleteResponse.Schema(),
@@ -75,7 +80,7 @@ is not you.")
         user.delete()
         
         return IndividualUserDeleteResponse(msg=f"User: {username} has been deleted")
-    
+
 
     @use_kwargs(IndividualUserPatchRequest.Schema(),
                 description=IndividualUserPatchRequestDescription)
@@ -89,7 +94,7 @@ is not you.")
         if not isinstance(user, User):
             return IndividualUserPatchResponse(msg="""User was not modified because \
 it does not exist.""")
-            
+
         if(current_user.id != user.id):
             return IndividualUserPatchResponse(msg="""You cannot modify a user that \
 is not you.""")
@@ -117,7 +122,6 @@ is not you.""")
                 if not passwordValid:
                     return IndividualUserPatchResponse(msg=passwordMsg)
                 queries[f"set__{field}"] = bcrypt.generate_password_hash(value).decode("utf-8")
-
 
         try:
             user.update(**queries)

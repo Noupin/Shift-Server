@@ -13,5 +13,6 @@ from src.DataModels.Marshmallow.User import UserSchema
 
 class IndividualUserGetResponse(Schema):
     user = fields.Nested(UserSchema)
+    owner = fields.Boolean(required=True)
 
 IndividualUserGetResponseDescription = f"""The requested user."""

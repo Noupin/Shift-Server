@@ -13,5 +13,6 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 class IndividualShiftGetResponse(Schema):
     shift = fields.Nested(ShiftSchema)
+    owner = fields.Boolean(required=True)
 
 IndividualShiftGetResponseDescription = f"""The requested shift."""
