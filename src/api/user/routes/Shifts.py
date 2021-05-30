@@ -5,7 +5,6 @@ Shifts endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import json
 from typing import List
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
@@ -16,6 +15,7 @@ from flask_login import current_user, login_required
 from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.Shift import Shift
 from src.variables.constants import SECURITY_TAG
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.DataModels.Response.UserShiftsResponse import (UserShiftsResponse,
                                                         UserShiftsResponseDescription)
 
@@ -30,6 +30,6 @@ operationId="userShifts", security=SECURITY_TAG)
     def get(self) -> dict:
         user = User.objects(id=current_user.id)
         userShifts = Shift.objects(author__in=user)
-        userShiftsJSON: List[dict] = [json.loads(x.to_json()) for x in userShifts]
+        userShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in userShifts]
 
         return {"shifts": userShiftsJSON}

@@ -5,7 +5,6 @@ New endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import json
 from typing import List
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
