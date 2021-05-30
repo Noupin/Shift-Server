@@ -26,10 +26,10 @@ class Shifts(MethodResource, Resource):
     @marshal_with(UserShiftsResponse,
                   description=UserShiftsResponseDescription)
     @doc(description="""The users shifts to display the users account page.""", tags=["User"],
-operationId="userShifts", security=SECURITY_TAG)
+operationId="shifts", security=SECURITY_TAG)
     def get(self) -> dict:
         user = User.objects(id=current_user.id)
         userShifts = Shift.objects(author__in=user)
         userShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in userShifts]
 
-        return {"shifts": userShiftsJSON}
+        return UserShiftsResponse().load(dict(shifts=userShiftsJSON))
