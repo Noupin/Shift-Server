@@ -48,6 +48,8 @@ class IndividualShift(MethodResource, Resource):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
             return IndividualShiftGetResponse()
+        
+        shift.update(set__views=shift.views+1)
 
         shiftModel: ShiftSchema = ShiftSchema().dump(shift)
 
