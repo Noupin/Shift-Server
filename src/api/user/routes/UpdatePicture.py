@@ -49,11 +49,14 @@ operationId="updatePicture", consumes=['multipart/form-data'], security=SECURITY
             requestFile.save(os.path.join(current_app.root_path, IMAGE_PATH, filename))
         else:
             return UpdatePictureResponse(msg="File not valid.")
-        
+
         user: User = User.objects(id=current_user.id).first()
         
         if user.mediaFilename.find("default") == -1:
-            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, user.mediaFilename))
+            try:
+                os.remove(os.path.join(current_app.root_path, IMAGE_PATH, user.mediaFilename))
+            except FileNotFoundError:
+                pass
         
         user.update(set__mediaFilename=filename)
 

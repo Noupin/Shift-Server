@@ -6,9 +6,12 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+from src.utils.image import viewImage
 import numpy as np
 from typing import List
 from flask import current_app
+from src.utils.MultiImage import MultiImage
+from src.utils.files import generateUniqueFilename
 
 #First Party Imports
 from src.run import celery
@@ -18,11 +21,12 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
-from src.variables.constants import (OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
+from src.variables.constants import (IMAGE_PATH, OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE, SHIFT_PATH)
 
 
-def saveShiftToDatabase(uuid: str, author: User, title: str, path: str):
+def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
+                        baseImageFilename: str, maskImageFilename: str):
     """
     Saves the paths and the relevant information for a shift model to the database.
 
@@ -31,9 +35,13 @@ def saveShiftToDatabase(uuid: str, author: User, title: str, path: str):
         author (User): The author of the shift
         title (str): The title of the shift model
         path (str): The path to the encoder, base decoder and mask decoder models
+        baseImageFilename (str): The filename for the base preview image.
+        maskImageFilename (str): The filename for the mask preview image.
     """
 
     mongoShift = ShiftDataModel(uuid=uuid, author=author, title=title,
+                                baseMediaFilename=baseImageFilename,
+                                maskMediaFilename=maskImageFilename,
                                 encoderPath=os.path.join(path, "encoder"),
                                 baseDecoderPath=os.path.join(path, "baseDecoder"),
                                 maskDecoderPath=os.path.join(path, "maskDecoder"))
@@ -187,7 +195,24 @@ def trainShift(requestJSON: dict, userID: str):
             worker.reload()
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
+    
+    _, basePreviewUUID = generateUniqueFilename()
+    baseFilename = f"{basePreviewUUID}.png"
+    baseImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
+                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+    basePreviewImage = next(baseImageGenerator)
+    basePreviewImage.resize(512, keepAR=True)
+    basePreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, baseFilename))
 
-    saveShiftToDatabase(uuid=shft.id_, author=author, title=requestData.shiftTitle, path=shiftFilePath)
+    _, maskPreviewUUID = generateUniqueFilename()
+    maskFilename = f"{maskPreviewUUID}.png"
+    maskImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
+                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
+    maskPreviewImage = next(maskImageGenerator)
+    maskPreviewImage.resize(512, keepAR=True)
+    maskPreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, maskFilename))
+
+    saveShiftToDatabase(uuid=shft.id_, author=author, title=requestData.shiftTitle, path=shiftFilePath,
+                        baseImageFilename=baseFilename, maskImageFilename=maskFilename)
 
     del shft

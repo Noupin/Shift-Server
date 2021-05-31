@@ -21,6 +21,8 @@ class Shift(db.Document):
     title = StringField(required=True)
     dateCreated = StringField(required=True, default=utcnow_string)
     mediaFilename = StringField(required=True, default='default.jpg')
+    baseMediaFilename = StringField(required=True, default='default.jpg')
+    maskMediaFilename = StringField(required=True, default='default.jpg')
     encoderPath = StringField(required=True)
     baseDecoderPath = StringField(required=True)
     maskDecoderPath = StringField(required=True)

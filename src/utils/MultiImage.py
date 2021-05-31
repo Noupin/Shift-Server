@@ -50,7 +50,7 @@ class MultiImage:
             self.CVImage = PILToCV(image).astype(np.uint8)
             self.CVBGRImage = cv2.cvtColor(self.CVImage, cv2.COLOR_RGB2BGR)
         
-        if isinstance(image, np.ndarray):
+        elif isinstance(image, np.ndarray):
             if image.dtype == np.float32:
                 self.CVImage = (image*255).astype(np.uint8)
             else:
@@ -58,10 +58,13 @@ class MultiImage:
             self.PILImage = CVToPIL(self.CVImage)
             self.CVBGRImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
-        if isinstance(image, str):
+        elif isinstance(image, str):
             self.CVImage = loadImage(image).astype(np.uint8)
             self.PILImage = CVToPIL(self.CVImage)
             self.CVBGRImage = cv2.cvtColor(self.CVImage, cv2.COLOR_RGB2BGR)
+        
+        else:
+            raise TypeError(f"The type {type(image)} is not supported in the MultiImage constructor")
         
         self.TFImage = (self.CVImage/255.).astype(np.float32)
 
