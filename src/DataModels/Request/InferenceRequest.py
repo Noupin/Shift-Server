@@ -7,9 +7,12 @@ __author__ = "Noupin"
 #Third Party Imports
 from marshmallow_dataclass import dataclass
 
+#First Party Imports
+from src.DataModels.Response.DefaultResponse import DefaultResponse
+
 
 @dataclass(frozen=True)
-class InferenceRequest:
+class InferenceRequest(DefaultResponse):
     shiftUUID: str
     usePTM: bool = False
     prebuiltShiftModel: str = ""

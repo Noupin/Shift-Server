@@ -15,13 +15,13 @@ from src import login_manager
 mainBP = Blueprint('main', __name__, static_folder="../static/build", static_url_path="/")
 
 
-@mainBP.route('/')
+@mainBP.route('/*')
 def index() -> Response:
     return mainBP.send_static_file('index.html')
 
 
 '''@mainBP.app_errorhandler(404)
-def error404(error: NotFound) -> Response:
+def error404(error) -> Response:
     return mainBP.send_static_file('index.html')'''
 
 

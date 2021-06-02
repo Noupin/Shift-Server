@@ -55,7 +55,10 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
             if status == "SUCCESS":
                 worker.delete()
-                return {'msg': "Shifting completed", 'stopped': True, "mediaFilename": mongoShift.mediaFilename}
+                return InferenceRequest(msg="Shifting completed", stopped=True,
+                                        mediaFilename=mongoShift.mediaFilename,
+                                        baseMediaFilename=mongoShift.baseMediaFilename,
+                                        maskMediaFilename=mongoShift.maskMediaFilename)
 
             elif status == "FAILURE":
                 worker.delete()
