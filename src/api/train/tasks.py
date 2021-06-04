@@ -6,23 +6,23 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-from src.utils.image import viewImage
 import numpy as np
 from typing import List
 from flask import current_app
-from src.utils.MultiImage import MultiImage
 from src.utils.files import generateUniqueFilename
 
 #First Party Imports
 from src.run import celery
 from src.AI.shift import Shift
+from src.utils.image import viewImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (IMAGE_PATH, OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
-                                     LARGE_BATCH_SIZE, SHIFT_PATH)
+                                     LARGE_BATCH_SIZE, PTM_DECODER_REALTIVE_PATH,
+                                     PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH)
 
 
 def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
@@ -48,7 +48,7 @@ def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
     mongoShift.save()
 
 
-def loadPTM(requestData: TrainRequest, shft: Shift):
+def loadPTM(requestData: TrainRequest, shiftAI: Shift):
     """
     Checks if a specialized mdoel was idnicated in the train request or loading the PTM if indicated.
 
@@ -58,22 +58,23 @@ def loadPTM(requestData: TrainRequest, shft: Shift):
     """
 
     if requestData.prebuiltShiftModel:
-        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
-                               requestData.prebuiltShiftModel, "encoder"),
-                  os.path.join(current_app.root_path, SHIFT_PATH,
-                               requestData.prebuiltShiftModel, "baseDecoder"))
+        shiftAI.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                              requestData.prebuiltShiftModel),
+                     basePath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                           requestData.prebuiltShiftModel))
 
         if requestData.usePTM:
-            shft.load(maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                            "PTM", "maskDecoder"))
+            shiftAI.load(maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                               PTM_DECODER_REALTIVE_PATH), absPath=True)
 
     elif requestData.usePTM:
-        shft.load(os.path.join(current_app.root_path, SHIFT_PATH,
-                               "PTM", "encoder"),
-                  os.path.join(current_app.root_path, SHIFT_PATH,
-                               "PTM", "decoder"),
-                  os.path.join(current_app.root_path, SHIFT_PATH,
-                               "PTM", "decoder"))
+        shiftAI.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                              PTM_ENCODER_REALTIVE_PATH),
+                     basePath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                           PTM_DECODER_REALTIVE_PATH),
+                     maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                           PTM_DECODER_REALTIVE_PATH),
+                     absPath=True)
 
 
 def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
@@ -137,9 +138,9 @@ def trainShift(requestJSON: dict, userID: str):
     requestData: TrainRequest = TrainRequest(**requestJSON)
     worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.shiftUUID)
 
-    shft = Shift(id_=requestData.shiftUUID)
-    shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
+    shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, requestData.shiftUUID)
 
+    shft = Shift(id_=requestData.shiftUUID)
     loadPTM(requestData, shft)
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
@@ -159,15 +160,7 @@ def trainShift(requestJSON: dict, userID: str):
             maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)
             maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **HAAR_CASCADE_KWARGS, gray=True)))
 
-
-    ### Work Around ###
-    try:
-        shft.encoder.modelLoaded
-        #Only needs built and compiled the first time
-        shft.build()
-        shft.compile()
-    except AttributeError:
-        pass
+    shft.compile()
 
     #Subprocess cannot complete task "FileNotFoundError: [WinError 2] The system cannot find the file specified"
     amountForBuffer = LARGE_BATCH_SIZE#getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
@@ -176,11 +169,11 @@ def trainShift(requestJSON: dict, userID: str):
     while training:
         while not worker.inferencing and training:
             if not baseTrainingData is None and baseTrainingData.any():
-                #print(f"\nTotal Base Training Images: {len(baseTrainingData.tolist())}\n")
-                shft.baseAE.train(baseTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+                shft.baseAE.fit(x=baseTrainingData, y=baseTrainingData, epochs=1,
+                                batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             if not maskTrainingData is None and maskTrainingData.any():
-                #print(f"\nTotal Mask Training Images: {len(maskTrainingData.tolist())}\n")
-                shft.maskAE.train(maskTrainingData, epochs=1, batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+                shft.maskAE.fit(x=maskTrainingData, y=maskTrainingData, epochs=1,
+                                batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
             
             worker.reload()
             training = worker.training

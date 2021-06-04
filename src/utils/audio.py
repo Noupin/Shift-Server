@@ -23,12 +23,12 @@ def loadAudio(path: str) -> moviepy.video.io.AudioFileClip.AudioFileClip:
     return mediaEditor.AudioFileClip(path)
 
 
-def saveAudio(audio: moviepy.audio.io.AudioFileClip.AudioFileClip, path: str) -> None:
+def saveAudio(audio: mediaEditor.AudioFileClip, path: str) -> None:
     """
     Saves audio to path.
 
     Args:
-        audio (moviepy.audio.io.AudioFileClip.AudioFileClip): The audio to be saved
+        audio (mediaEditor.AudioFileClip): The audio to be saved
         path (str): The path to save the audio to
     """
 

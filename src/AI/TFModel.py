@@ -8,12 +8,10 @@ __author__ = "Noupin"
 import time
 import numpy as np
 import tensorflow as tf
-from typing import List, Union, Generator
+from typing import List, Tuple, Union, Generator
 
 #First Party Imports
-from src.utils.MultiImage import MultiImage
 from src.utils.memory import allowTFMemoryGrowth
-from src.Exceptions.ModelAlreadyBuilt import ModelAlreadyBuiltError
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
 from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
@@ -48,18 +46,15 @@ class TFModel(tf.keras.Model):
         self.loss = loss
         self.optimizer = optimizer
 
-        self.modelLayers = []
+        self.modelLayers: Union[List[tf.keras.layers.Layer], Tuple[tf.keras.layers.Layer]] = []
         self.modelName = name
-        self.modelBuilt = False
-        self.modelLoaded = False
 
         self.modelLayers.append(inputLayer)
         self.modelLayers.append(outputLayer)
 
-        self.model = None
+        self.model: tf.keras.Model = None
 
 
-    @tf.function
     def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
@@ -73,12 +68,12 @@ class TFModel(tf.keras.Model):
         Returns:
             tensorflow.python.framework.ops.Tensor: The last layer in the connected model
         """
-
-        ###################################################################################################
-        # Need to figure out how to call layers with weights or return loaded models as conencted tensors #
-        ###################################################################################################
-        connectedLayers = [layer]
         
+        if not isinstance(self.modelLayers, tuple):
+            self.modelLayers = tuple(self.modelLayers)
+
+        connectedLayers = [layer]
+
         for modelLayer in range(1, len(self.modelLayers)):
             try:
                 connectedLayers.append(self.modelLayers[modelLayer](connectedLayers[modelLayer-1]))
@@ -170,7 +165,7 @@ class TFModel(tf.keras.Model):
         testDataset.batch(batch_size)
 
 
-        for epoch in range(epochs):
+        for _ in range(epochs):
             epochStart = time.time()
             reducedLoss = 0
             #Iterate over batches of dataset
@@ -223,6 +218,9 @@ class TFModel(tf.keras.Model):
             layer (tf.keras.layers.Layer): The layer to be added to self.model.
             index (int): The index at which to add layer. Defaults to -1.
         """
+        
+        if not isinstance(self.modelLayers, list):
+            self.modelLayers = list(self.modelLayers)
 
         if abs(index) > len(self.modelLayers):
             raise LayerIndexOutOfRangeError(index, len(self.modelLayers))
@@ -230,45 +228,30 @@ class TFModel(tf.keras.Model):
         self.modelLayers.insert(index, layer)
 
 
-    def buildModel(self) -> None:
-        """
-        \t*Model can only be made once. Once the model is made no more layers can be added.*\n
-        Creates a tensorflow model from the layers in self.modelLayers and assigns that model to self.model.
-
-        Raises:
-            IncompatibleTFLayerError: One or more of the layers in self.modelLayers are incompatible
-        """
-
-        if self.modelBuilt:
-            raise ModelAlreadyBuiltError
-
-        self.modelLayers = tuple(self.modelLayers)
-        connectedLayers = [self.modelLayers[0]]
-        
-        for modelLayer in range(1, len(self.modelLayers)):
-            try:
-                connectedLayers.append(self.modelLayers[modelLayer](connectedLayers[modelLayer-1]))
-            except ValueError:
-                raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer])
-
-        self.model = tf.keras.Model(inputs=connectedLayers[0], outputs=connectedLayers[-1], name=self.modelName)
-        self.modelBuilt = True
-
-        del connectedLayers
-
-
-    def load(self, path: str) -> None:
+    def load(self, path: str, compile=True, readyToPredict=False, imageShape=(128, 128, 3)) -> None:
         """
         Load the encoder given a filepath and a filename to load from.
 
         Args:
             path (str): Filepath to a tensorflow model to be loaded.
+            compile (bool, optional): Whether or not to compile the newly \
+                loaded model. Defaults to True.
+            readyToPredict (bool, optional): Whether or not to train on blank \
+                data to make sure the model is ready to be predicted with. Defaults to False.
+            imageShape (tuple of int): The shape of the image to prepare the model to predict.
         """
+        
+        if not isinstance(self.modelLayers, tuple):
+            self.modelLayers = tuple(self.modelLayers)
 
-        self.model = tf.keras.models.load_model(path)
-
-        self.modelLoaded = True
-        #self.modelBuilt = True
+        self.load_weights(path)
+        
+        if compile:
+            self.compileModel()
+        
+        if readyToPredict:
+            blankImage = np.array(np.zeros(imageShape))
+            #self.test_on_batch(blankImage, blankImage) #May need to be train_on_batch
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:

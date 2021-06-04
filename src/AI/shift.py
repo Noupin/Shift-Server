@@ -11,8 +11,7 @@ import numpy as np
 import tensorflow as tf
 from flask import current_app
 from typing import List, Union, Generator
-
-from tensorflow.python.ops.gen_math_ops import Mul
+from moviepy import editor as mediaEditor
 
 #First Party Imports
 from src.AI.TFModel import TFModel
@@ -48,14 +47,12 @@ class Shift:
         loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
         convolutionFilters (int, optional): The amount of filters for the coding layers. Defaults to 24.
         codingLayers (int, optional): The number of coding layers to add to the encoder and decoders. Defaults to 1.
-        name (str, optional): The name of the model. Defaults to "Default".
     """
 
     def __init__(self, id_=generateUniqueFilename()[1],
                        imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
                        optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
-                       convolutionFilters=24, codingLayers=-1, name="Default",
-                       modelPath=""):
+                       convolutionFilters=24, codingLayers=-1):
         self.id_ = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
@@ -99,14 +96,14 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: Generator[MultiImage, None, None], objectClassifier=OBJECT_CLASSIFIER,
+    def formatTrainingData(self, images: Union[Generator[MultiImage, None, None], List[MultiImage]], objectClassifier=OBJECT_CLASSIFIER,
                            flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
         images from MultiImage to np.ndarray or MultiImage.CVImage.
 
         Args:
-            images (types.GeneratorType): The images to be formatted for Shift model training
+            images (Generator of MultiImage or list of MultiImage): The images to be formatted for Shift model training
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             flipCodes (list of str): The codes to flip the image for augmentation. Defaults to ["x"].
@@ -116,43 +113,20 @@ class Shift:
             list of numpy.ndarray or Generator for numpy.ndarray: The list of training images ready to be input to the Shift models
         """
 
-        trainingData = []
-
         for image in images:
             objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
             if isinstance(objects, tuple):
                 continue
-            
-            augmented = []
-            augmentedItems = 0
+
             image.crop(getLargestRectangle(objects))
             image.resize(self.imageShape[0], self.imageShape[1])
 
             for hue in HUE_ADJUSTMENT:
+                huedImage = tf.image.adjust_hue(image.TFImage, hue)
                 yield tf.image.adjust_hue(image.TFImage, hue)
-            #trainingData.append(resized)
-            '''
-            coloredImages = [resized]
-            for colorCode in range(5):
-                coloredImages.append(blendImageAndColor(resized, colorCode))
-
-            randomColored = coloredImages.copy()
-            random.shuffle(randomColored)
-            augmentedItems += len(randomColored)
-            augmented.append(randomColored)
-
-            for flipCode in flipCodes:
-                flippedImages = []
-                for coloredImage in coloredImages:
-                    flippedImages.append(flipImage(coloredImage, flipCode))
-
-                random.shuffle(flippedImages)
-                augmentedItems += len(flippedImages)
-                augmented.append(flippedImages)
-
-            shuffledAugmented = random.sample(flattenList(augmented), augmentedItems)
-            trainingData.append(shuffledAugmented)
-        '''
+                
+                for flipCode in flipCodes:
+                    yield flipImage(huedImage, flipCode)
     
 
     def addCodingLayers(self, count: int) -> None:
@@ -236,7 +210,7 @@ class Shift:
 
     def shift(self, model: tf.keras.Model, media: Union[Generator[MultiImage, None, None], List[MultiImage], MultiImage],
               fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
-              **kwargs)-> Union[moviepy.video.io.VideoFileClip.VideoFileClip, MultiImage]:
+              **kwargs)-> Union[mediaEditor.VideoFileClip, MultiImage]:
         """
         Shifts the desired objects in the media.
 
@@ -250,7 +224,7 @@ class Shift:
             **kwargs: The key word arguments to pass into detectObject function
 
         Returns:
-            moviepy.video.io.VideoFileClip.VideoFileClip or MultiImage: The shifted media
+            mediaEditor.VideoFileClip or MultiImage: The shifted media
         """
 
         isImage = False
@@ -271,22 +245,7 @@ class Shift:
             return next(mediaGenerator)
         else:
             return imagesToVideo(mediaGenerator, shape, os.path.join(current_app.root_path, SHIFT_PATH, self.id_, f"{str(self.id_)}.mp4"), fps)
-        
-
-
-    def build(self) -> None:
-        """
-        Builds each of the models used in Shift. Building a model can only happen once
-        and will raise an error if done multiple times. Building is helpful when using
-        .summary() but not needed.
-        """
-
-        self.encoder.buildModel()
-        self.baseDecoder.buildModel()
-        self.maskDecoder.buildModel()
-        self.baseAE.buildModel()
-        self.maskAE.buildModel()
-    
+ 
 
     def compile(self) -> None:
         """
@@ -299,38 +258,56 @@ class Shift:
         self.baseAE.compileModel()
         self.maskAE.compileModel()
     
-    
-    def load(self, encoderPath: str=None, basePath: str = None, maskPath: str=None) -> None:
+
+    def load(self, encoderPath: str=None, basePath: str = None, maskPath: str=None, absPath=False, **kwargs) -> None:
         """
         Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
 
         Args:
-            encoderPath (str): The path to the encoder to be loaded
-            basePath (str): The path to the base decoder to be loaded
-            maskPath (str): The path to the mask decoder to be loaded
+            encoderPath (str, optional): The path to the encoder to be loaded. Defaults to None.
+            basePath (str, optional): The path to the base decoder to be loaded. Defaults to None.
+            maskPath (str, optional): The path to the mask decoder to be loaded. Defaults to None.
+            absPath (bool, optional): Whteher or not the absolute path is given. Defaults to False.
+            kwargs: Additional kwargs to be passed to the Shift.load() function.
         """
 
-        ##
-        #Work Around
-        ##
-        if encoderPath:
-            self.encoder = tf.keras.models.load_model(encoderPath)
-            #self.encoder.load(encoderPath)
-            #self.encoder.load_weights(encoderPath)
-
         if basePath:
-            self.baseDecoder = tf.keras.models.load_model(basePath)
-            #self.baseDecoder.load(basePath)
-            #self.baseDecoder.load_weights(basePath)
-            self.baseAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.baseDecoder,
-                                      optimizer=self.optimizer, loss=self.loss)
+            if absPath:
+                self.baseDecoder.load(basePath, **kwargs)
+            else:
+                self.baseDecoder.load(os.path.join(basePath, f"baseDecoder", f"baseDecoder"), **kwargs)
+
+            if not encoderPath:
+                self.baseAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                                                   decoder=self.baseDecoder, optimizer=self.optimizer,
+                                                   loss=self.loss, name="Base")
+
         if maskPath:
-            self.maskDecoder = tf.keras.models.load_model(maskPath)
-            #self.maskDecoder.load(maskPath)
-            #self.maskDecoder.load_weights(maskPath)
-            self.maskAE = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                      optimizer=self.optimizer, loss=self.loss)
-    
+            if absPath:
+                self.maskDecoder.load(maskPath, **kwargs)
+            else:
+                self.maskDecoder.load(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"), **kwargs)
+
+            if not encoderPath:
+                self.maskAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                                                   decoder=self.maskDecoder, optimizer=self.optimizer,
+                                                   loss=self.loss, name="Mask")
+        
+        if encoderPath:
+            if absPath:
+                self.encoder.load(encoderPath, **kwargs)
+            else:
+                self.encoder.load(os.path.join(encoderPath, f"encoder", f"encoder"), **kwargs)
+
+            self.baseAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                                               decoder=self.baseDecoder, optimizer=self.optimizer,
+                                               loss=self.loss, name="Base")
+            self.maskAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                                               decoder=self.maskDecoder, optimizer=self.optimizer,
+                                               loss=self.loss, name="Mask")
+
+        self.compile()
+
 
     def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False,
                  firstImage=False, **kwargs) -> Generator[MultiImage, None, None]:
@@ -352,7 +329,7 @@ class Shift:
             kwargs: The additional keyword arguments to pass to the action.
 
         Returns:
-            Generator of np.ndarray: The images to load in.
+            Generator of MultiImage: The images to load in.
         """
 
         files = os.listdir(dataPath)
@@ -373,7 +350,7 @@ class Shift:
                 break
 
 
-    def save(self, encoderPath: str=None, basePath: str=None, maskPath: str=None) -> None:
+    def save(self, encoderPath: str=None, basePath: str=None, maskPath: str=None, **kwargs) -> None:
         """
         Saves the encoder and both of the decoders to the given paths
 
@@ -381,11 +358,20 @@ class Shift:
             encoderPath (str, optional): The path to save self.encoder to. Defaults to None.
             basePath (str, optional): The path to save self.baseDecoder to. Defaults to None.
             maskPath (str, optional): The path to save self.maskDecoder to. Defaults to None.
+            kwargs: The kwargs to be passed to save_weights
         """
+        
+        saveFormat = 'tf'
+        if kwargs.get("save_format"):
+            saveFormat = kwargs.get("save_format")
+            kwargs.pop("save_item")
 
         if encoderPath:
-            self.encoder.save(os.path.join(encoderPath, f"encoder"), save_format='tf')
+            self.encoder.save_weights(os.path.join(encoderPath, f"encoder", f"encoder"),
+                                      save_format=saveFormat, **kwargs)
         if basePath:
-            self.baseDecoder.save(os.path.join(basePath, f"baseDecoder"), save_format='tf')
+            self.baseDecoder.save_weights(os.path.join(basePath, f"baseDecoder", f"baseDecoder"),
+                                          save_format=saveFormat, **kwargs)
         if maskPath:
-            self.maskDecoder.save(os.path.join(maskPath, f"maskDecoder"), save_format='tf')
+            self.maskDecoder.save_weights(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"),
+                                          save_format=saveFormat, **kwargs)

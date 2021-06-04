@@ -2,15 +2,13 @@
 """
 The utility functions related to images
 """
-__author__ = "Noupin"
+__author__ = "Noupin, KeeKee"
 
 #Third Party Imports
 import io
 import os
 import cv2
-import types
 import base64
-import moviepy
 import numpy as np
 from PIL import Image
 from colorama import Fore
@@ -297,7 +295,7 @@ def flipImage(image, flipCode: str) -> np.ndarray:
     return cv2.flip(image, flipMap[flipCode])
 
 
-def imagesToVideo(images: Generator[np.ndarray, None, None], shape: Tuple[int], outPath: str, fps: float) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+def imagesToVideo(images: Generator[np.ndarray, None, None], shape: Tuple[int], outPath: str, fps: float) -> mediaEditor.VideoFileClip:
     """
     Given a path with all of the image arrays a .mp4 video will be exported
 

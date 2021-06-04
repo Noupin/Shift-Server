@@ -37,9 +37,10 @@ the task will switch to give an update image. After a certain amount of time the
 will be completed automatically to allow for multiple users to train.""", tags=["Train"],
 operationId="trainStatus", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
-        requestError = validateBaseTrainRequest(request)
+        requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, dict):
             return requestError
+        del requestError
 
         requestData = DataModelAdapter(requestData)
 

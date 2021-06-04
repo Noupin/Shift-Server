@@ -9,7 +9,7 @@ import re
 import os
 import tensorflow as tf
 from flask import current_app
-from flask.wrappers import Request
+from src.AI.shift import Shift
 from typing import List, Tuple, Union
 from werkzeug.datastructures import FileStorage
 from src.DataModels.Request.TrainRequest import TrainRequest
@@ -110,23 +110,13 @@ def validateFileRequest(fileDict: List[FileStorage], fileIndicator="file") -> bo
     return valid
 
 
-def validateInferenceRequest(request: Request) -> Union[InferenceRequest, dict]:
+def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRequest, dict]:
     """
     Vialidates the inference request
 
     Returns:
         Union[TrainRequest, dict]: The inference request data or the error to send
     """
-
-    if not request.is_json:
-        return {'msg': "Your inference request had no JSON payload"}
-
-    try:
-        requestData: InferenceRequest = InferenceRequest(**request.get_json())
-    except ValueError:
-        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
-    except TypeError:
-        return {"msg": "Not all fields for the InferenceRequest object were POSTed"}
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
         return {'msg': "Your inference request had no shiftUUID"}
@@ -136,37 +126,26 @@ def validateInferenceRequest(request: Request) -> Union[InferenceRequest, dict]:
 
     if requestData.prebuiltShiftModel:
         try:
-            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
-                                       requestData.prebuiltShiftModel, "encoder"))
-            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
-                                       requestData.prebuiltShiftModel, "baseDecoder"))
-            tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
-                                       requestData.shiftUUID, "maskDecoder"))
+            shft = Shift()
+            shft.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                  requestData.prebuiltShiftModel),
+                      basePath=os.path.join(current_app.root_path, SHIFT_PATH,
+                               requestData.prebuiltShiftModel),
+                      maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                               requestData.prebuiltShiftModel))
         except OSError:
             return {'msg': "That model does not exist"}
     
     return requestData
 
 
-def validateBaseTrainRequest(request: Request) -> Union[TrainRequest, dict]:
+def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, dict]:
     """
     Vialidates the basic version of the train request
 
     Returns:
         Union[TrainRequest, dict]: The train request data or the error to send
     """
-
-    if not request.is_json:
-        return {'msg': "Your train request had no JSON payload"}
-
-    try:
-        requestData: TrainRequest = TrainRequest(**request.get_json())
-    except ValueError as e:
-        print("Value:", e)
-        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
-    except TypeError as e:
-        print("Type:", e)
-        return {"msg": "Not all fields for the TrainRequest object were POSTed"}
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
         return {'msg': "Your train request had no shiftUUID"}

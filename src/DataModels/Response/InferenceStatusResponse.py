@@ -14,10 +14,10 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class InferenceStatusReponse(DefaultResponse):
-    stopped: Optional[bool]
-    mediaFilename: Optional[str]
-    baseMediaFilename: Optional[str]
-    maskMediaFilename: Optional[str]
+    stopped: Optional[bool] = False
+    mediaFilename: Optional[str] = None
+    baseMediaFilename: Optional[str] = None
+    maskMediaFilename: Optional[str] = None
 
 InferenceStatusReponseDescription = """A msg describing the current state of \
 inferencing on the original media, whether or not the inferencing has been \

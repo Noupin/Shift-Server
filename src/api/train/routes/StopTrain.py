@@ -33,9 +33,10 @@ class StopTrain(MethodResource, Resource):
     @doc(description="""Stop the training with the UUID of the shift model being \
 trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
-        requestError = validateBaseTrainRequest(request)
+        requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, dict):
             return requestError
+        del requestError
 
         requestData = DataModelAdapter(requestData)
 

@@ -36,7 +36,7 @@ the input is the face to be put on the media and inferenced with PTM. Alternativ
 with a given base video and shift face with a non specialized PTM.""", tags=["Inference"],
 operationId="inference", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest) -> dict:
-        requestError = validateInferenceRequest(request)
+        requestError = validateInferenceRequest(requestData)
         if isinstance(requestError, dict):
             return requestError
 

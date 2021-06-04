@@ -39,9 +39,10 @@ class Train(MethodResource, Resource):
 training data. Yeilds more relaisitic results than just an inference though it \
 takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
-        requestError = validateBaseTrainRequest(request)
+        requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, dict):
             return requestError
+        del requestError
 
         requestData = DataModelAdapter(requestData)
 

@@ -16,40 +16,40 @@ from moviepy import editor as mediaEditor
 from src.utils.detection import detectObject
 
 
-def extractAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip) -> moviepy.audio.io.AudioFileClip.AudioFileClip:
+def extractAudio(video: mediaEditor.VideoFileClip) -> mediaEditor.AudioFileClip:
     """
     Given a video with an audio track the audio track is returned
 
     Args:
-        video (moviepy.video.io.VideoFileClip.VideoFileClip): The video to have the audio extracted
+        video (mediaEditor.VideoFileClip): The video to have the audio extracted
     
     Returns:
-        moviepy.audio.io.AudioFileClip.AudioFileClip: The audio track of the video
+        mediaEditor.AudioFileClip: The audio track of the video
     """
 
     if video.audio:
         return video.audio
     
-    return mediaEditor.AudioClip(lambda t: [0], duration=video.duration, fps=video.fps)
+    return mediaEditor.AudioFileClip(lambda t: [0], duration=video.duration, fps=video.fps)
 
 
-def insertAudio(video: moviepy.video.io.VideoFileClip.VideoFileClip,
-                audio: moviepy.audio.io.AudioFileClip.AudioFileClip) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+def insertAudio(video: mediaEditor.VideoFileClip,
+                audio: mediaEditor.AudioFileClip) -> mediaEditor.VideoFileClip:
     """
     Given an audio and video path they will be combined.
 
     Args:
-        video (moviepy.video.io.VideoFileClip.VideoFileClip): The video to have audio inserted into
-        audio (moviepy.audio.io.AudioFileClip.AudioFileClip): The audio to be inserted into the video
+        video (mediaEditor.VideoFileClip): The video to have audio inserted into
+        audio (mediaEditor.AudioFileClip): The audio to be inserted into the video
 
     Returns:
-        moviepy.video.io.VideoFileClip.VideoFileClip: A video clip that has the audio inserted
+        mediaEditor.VideoFileClip: A video clip that has the audio inserted
     """
 
     return video.set_audio(audio)
 
 
-def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[None, np.ndarray, None]:
+def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[np.ndarray, None, None]:
     """
     Converts a video into image frames
 
@@ -102,7 +102,7 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[Non
             break
 
 
-def loadVideo(path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
+def loadVideo(path: str) -> mediaEditor.VideoFileClip:
     """
     Loads a video from path.
 
@@ -110,18 +110,18 @@ def loadVideo(path: str) -> moviepy.video.io.VideoFileClip.VideoFileClip:
         path (str): The path to load the video from
 
     Returns:
-        moviepy.video.io.VideoFileClip.VideoFileClip: The loaded video clip
+        mediaEditor.VideoFileClip: The loaded video clip
     """
 
     return mediaEditor.VideoFileClip(path)
 
 
-def saveVideo(video: moviepy.video.io.VideoFileClip.VideoFileClip, path: str, fps=None, deleteOld=False) -> None:
+def saveVideo(video: mediaEditor.VideoFileClip, path: str, fps=None, deleteOld=False) -> None:
     """
     Saves the video to path at fps frame rate
 
     Args:
-        video (moviepy.video.io.VideoFileClip.VideoFileClip): The video to be saved
+        video (mediaEditor.VideoFileClip): The video to be saved
         path (str): The path to save video
         fps (int, optional): The fps for the video to be saved at. Defaults to None.
         deleteOld (bool, optional): Whehter or not to delete the old file. Defaults to False.

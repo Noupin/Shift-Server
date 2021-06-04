@@ -36,10 +36,11 @@ class InferenceStatus(MethodResource, Resource):
 original media and whether or not it has stopped inferencing.""", tags=["Inference"],
 operationId="inferenceStatus", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest):
-
-        requestError = validateInferenceRequest(request)
+        requestError = validateInferenceRequest(requestData)
         if isinstance(requestData, dict):
             return requestError
+        del requestError
+        
         requestModel = DataModelAdapter(requestData)
 
         try:
@@ -55,17 +56,17 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
             if status == "SUCCESS":
                 worker.delete()
-                return InferenceRequest(msg="Shifting completed", stopped=True,
-                                        mediaFilename=mongoShift.mediaFilename,
-                                        baseMediaFilename=mongoShift.baseMediaFilename,
-                                        maskMediaFilename=mongoShift.maskMediaFilename)
+                return InferenceStatusReponse(msg="Shifting completed", stopped=True,
+                                              mediaFilename=mongoShift.mediaFilename,
+                                              baseMediaFilename=mongoShift.baseMediaFilename,
+                                              maskMediaFilename=mongoShift.maskMediaFilename)
 
             elif status == "FAILURE":
                 worker.delete()
+                
+                return InferenceStatusReponse(msg="The shifting task failed.", stopped=True)
 
-                return {'msg': 'The shifting task failed.', 'stopped': True}
-
-            return {'msg': f"The status is {status}", 'stopped': False}
+            return InferenceStatusReponse(msg=f"The status is {status}", stopped=False)
 
         except AttributeError:
-            return {'msg': "There are currently no jobs", 'stopped': True}
+            return InferenceStatusReponse(msg="There are currently no jobs", stopped=True)
