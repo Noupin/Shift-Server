@@ -14,6 +14,7 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
+from src.variables.constants import SERVER_URL, SERVER_PORT
 
 
 load_dotenv()
@@ -42,10 +43,10 @@ class Config(object):
     CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
     
     #OpenAPI
-    OPENAPI_SPEC = """
+    OPENAPI_SPEC = f"""
     info:
         description: Shift Server API documentation
-    host: localhost:5000
+    host: {SERVER_URL}:{SERVER_PORT}
     """
     APISPEC_SPEC = APISpec(
         title='Shift',

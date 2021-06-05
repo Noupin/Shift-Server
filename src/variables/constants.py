@@ -65,6 +65,8 @@ AMOUNT_OF_POPULAR = 10
 USER_AUTH_SCHEME = {"type": "apiKey", "in": "header", "name": "session"}
 SECURITY_SCHEME_NAME = "UserAuth"
 SECURITY_TAG = yaml.safe_load(f"""- {SECURITY_SCHEME_NAME}: []""")
+SERVER_URL = "localhost" #os.environ.get("SERVER_URL")
+SERVER_PORT = "5000" ##os.environ.get("SERVER_PORT")
 
 #MongoDB
 USER_EDITABLE_USER_FIELDS = ["username", "email", "password"]
