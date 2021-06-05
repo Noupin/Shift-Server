@@ -244,7 +244,7 @@ class TFModel(tf.keras.Model):
         if not isinstance(self.modelLayers, tuple):
             self.modelLayers = tuple(self.modelLayers)
 
-        self.load_weights(path)
+        self.load_weights(path).expect_partial()
         
         if compile:
             self.compileModel()

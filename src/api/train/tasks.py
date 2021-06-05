@@ -41,10 +41,7 @@ def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
 
     mongoShift = ShiftDataModel(uuid=uuid, author=author, title=title,
                                 baseMediaFilename=baseImageFilename,
-                                maskMediaFilename=maskImageFilename,
-                                encoderPath=os.path.join(path, "encoder"),
-                                baseDecoderPath=os.path.join(path, "baseDecoder"),
-                                maskDecoderPath=os.path.join(path, "maskDecoder"))
+                                maskMediaFilename=maskImageFilename,)
     mongoShift.save()
 
 
