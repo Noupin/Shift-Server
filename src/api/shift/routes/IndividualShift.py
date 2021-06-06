@@ -79,13 +79,21 @@ delete a shift which you did not create.""")
 
         title = shift.title
 
-        shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(shift.uuid)))
-        os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.baseMediaFilename))
-        os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.maskMediaFilename))
-        if getMediaType(shift.mediaFilename) == "image":
-            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.mediaFilename))
-        elif getMediaType(shift.mediaFilename) == "video":
-            os.remove(os.path.join(current_app.root_path, VIDEO_PATH, shift.mediaFilename))
+        try:
+            shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(shift.uuid)))
+            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.baseMediaFilename))
+            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.maskMediaFilename))
+        except FileNotFoundError:
+            pass
+
+        try:
+            if getMediaType(shift.mediaFilename) == "image":
+                os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.mediaFilename))
+            elif getMediaType(shift.mediaFilename) == "video":
+                os.remove(os.path.join(current_app.root_path, VIDEO_PATH, shift.mediaFilename))
+        except FileNotFoundError:
+            pass
+
         shift.delete()
 
         return IndividualShiftDeleteResponse(msg=f"The Shift named: {title} has been deleted.")

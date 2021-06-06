@@ -21,8 +21,8 @@ from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 from src.DataModels.Request.InferenceRequest import (InferenceRequest,
                                                      InferenceRequestDescription)
-from src.DataModels.Response.InferenceStatusResponse import (InferenceStatusReponse,
-                                                             InferenceStatusReponseDescription)
+from src.DataModels.Response.InferenceStatusResponse import (InferenceStatusResponse,
+                                                             InferenceStatusResponseDescription)
 
 
 class InferenceStatus(MethodResource, Resource):
@@ -30,15 +30,15 @@ class InferenceStatus(MethodResource, Resource):
 
     @use_kwargs(InferenceRequest.Schema(),
                 description=InferenceRequestDescription)
-    @marshal_with(InferenceStatusReponse.Schema(),
-                  description=InferenceStatusReponseDescription)
+    @marshal_with(InferenceStatusResponse.Schema(),
+                  description=InferenceStatusResponseDescription)
     @doc(description="""The status of the current shift model while inferencing on the \
 original media and whether or not it has stopped inferencing.""", tags=["Inference"],
 operationId="inferenceStatus", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest):
         requestError = validateInferenceRequest(requestData)
-        if isinstance(requestData, dict):
-            return requestError
+        if isinstance(requestData, str):
+            return InferenceStatusResponse(msg=requestError, stopped=False)
         del requestError
         
         requestModel = DataModelAdapter(requestData)
@@ -56,7 +56,7 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
             if status == "SUCCESS":
                 worker.delete()
-                return InferenceStatusReponse(msg="Shifting completed", stopped=True,
+                return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                               mediaFilename=mongoShift.mediaFilename,
                                               baseMediaFilename=mongoShift.baseMediaFilename,
                                               maskMediaFilename=mongoShift.maskMediaFilename)
@@ -64,9 +64,9 @@ operationId="inferenceStatus", security=SECURITY_TAG)
             elif status == "FAILURE":
                 worker.delete()
                 
-                return InferenceStatusReponse(msg="The shifting task failed.", stopped=True)
+                return InferenceStatusResponse(msg="The shifting task failed.", stopped=True)
 
-            return InferenceStatusReponse(msg=f"The status is {status}", stopped=False)
+            return InferenceStatusResponse(msg=f"The status is {status}", stopped=False)
 
         except AttributeError:
-            return InferenceStatusReponse(msg="There are currently no jobs", stopped=True)
+            return InferenceStatusResponse(msg="There are currently no jobs", stopped=True)

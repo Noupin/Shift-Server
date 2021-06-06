@@ -11,4 +11,4 @@ from marshmallow_dataclass import dataclass
 
 @dataclass(frozen=True)
 class DefaultResponse:
-    msg: Optional[str]
+    msg: Optional[str] = ""

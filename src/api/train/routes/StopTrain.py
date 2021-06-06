@@ -34,8 +34,8 @@ class StopTrain(MethodResource, Resource):
 trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
-        if isinstance(requestError, dict):
-            return requestError
+        if isinstance(requestError, str):
+            return StopTrainResponse(msg=requestError)
         del requestError
 
         requestData = DataModelAdapter(requestData)
@@ -43,7 +43,7 @@ trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
         try:
             worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
         except Exception as e:
-            return {"msg": "That training worker does not exist"}
+            return StopTrainResponse(msg="That training worker does not exist")
         worker.update(set__training=False, set__imagesUpdated=False)
 
-        return {'msg': "Stop signal sent!"}
+        return StopTrainResponse(msg="Stop signal sent!")

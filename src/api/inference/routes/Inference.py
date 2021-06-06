@@ -37,8 +37,8 @@ with a given base video and shift face with a non specialized PTM.""", tags=["In
 operationId="inference", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest) -> dict:
         requestError = validateInferenceRequest(requestData)
-        if isinstance(requestError, dict):
-            return requestError
+        if isinstance(requestError, str):
+            return InferenceResponse(msg=requestError)
 
         requestModel = DataModelAdapter(requestData)
 

@@ -179,7 +179,11 @@ def trainShift(requestJSON: dict, userID: str):
             if requestData.trainType == "basic":
                 worker.update(set__exhibitImages=getBasicExhibitImage(shft))
             elif requestData.trainType == "advanced":
-                worker.update(set__exhibitImages=getAdvancedExhibitImages(shft))
+                worker.update(set__exhibitImages=[])
+
+                exhibitImages = getAdvancedExhibitImages(shft)
+                for image in exhibitImages:
+                    worker.update(add_to_set__exhibitImages=image)
                 
             worker.update(set__inferencing=False, set__imagesUpdated=True)
             worker.reload()

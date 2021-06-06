@@ -14,8 +14,8 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class TrainStatusResponse(DefaultResponse):
-    stopped: Optional[bool]
-    exhibit: Optional[List[str]]
+    stopped: Optional[bool] = False
+    exhibit: Optional[List[str]] = None
 
 TrainStatusResponseDescription = """The status of the current shift training, \
 whether the training has stopped, and encoded images to view on the front end."""

@@ -13,7 +13,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class LoadDataResponse(DefaultResponse):
-    shiftUUID: str
+    shiftUUID: str = ""
     
 
 LoadResponseDescription = """Given training data Shift specializes a \

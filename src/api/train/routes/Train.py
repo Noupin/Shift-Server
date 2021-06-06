@@ -40,8 +40,8 @@ training data. Yeilds more relaisitic results than just an inference though it \
 takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
-        if isinstance(requestError, dict):
-            return requestError
+        if isinstance(requestError, str):
+            return TrainResponse(msg=requestError)
         del requestError
 
         requestData = DataModelAdapter(requestData)
@@ -53,15 +53,15 @@ takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
                 tf.keras.models.load_model(os.path.join(current_app.root_path, SHIFT_PATH,
                                         requestData.getModel().prebuiltShiftModel, "baseDecoder"))
             except OSError:
-                return {'msg': "That model does not exist"}
+                return TrainResponse(msg="That model does not exist")
 
         worker = TrainWorker(shiftUUID=requestData.getModel().shiftUUID, training=True, inferencing=False)
         try:
             worker.save()
         except mongoengine.errors.NotUniqueError:
-            return {'msg': "That AI is already training."}
+            return TrainResponse(msg="That AI is already training.")
 
         job = trainShift.delay(requestData.getSerializable(), str(current_user.id))
         worker.update(set__workerID=job.id)
 
-        return {'msg': f"Training as {current_user.username}"}
+        return TrainResponse(msg=f"Training as {current_user.username}")

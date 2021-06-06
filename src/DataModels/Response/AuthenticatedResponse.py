@@ -14,7 +14,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class AuthenticatedResponse(DefaultResponse):
-    authenticated: bool
+    authenticated: bool = False
     username: Optional[str] = None
 
 AuthenticatedResponseDescription = """Whether the use is authenticated or \

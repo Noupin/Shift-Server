@@ -38,8 +38,8 @@ will be completed automatically to allow for multiple users to train.""", tags=[
 operationId="trainStatus", security=SECURITY_TAG)
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
-        if isinstance(requestError, dict):
-            return requestError
+        if isinstance(requestError, str):
+            return TrainStatusResponse(msg=requestError)
         del requestError
 
         requestData = DataModelAdapter(requestData)
@@ -47,7 +47,7 @@ operationId="trainStatus", security=SECURITY_TAG)
         try:
             worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
         except Exception as e:
-            return {"msg": "That training worker does not exist"}
+            return TrainStatusResponse(msg="That training worker does not exist")
 
         job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
 
@@ -67,20 +67,22 @@ operationId="trainStatus", security=SECURITY_TAG)
                     worker.update(set__imagesUpdated=False)
                     worker.reload()
 
-                    return {'msg': f"Update for current shift", 'exhibit': worker.exhibitImages}
+                    return TrainStatusResponse(msg=f"Update for current shift",
+                                               exhibit=worker.exhibitImages)
                 
             elif status == "SUCCESS":
                 worker.delete()
 
-                return {'msg': "Training stopped", 'stopped': True}
+                return TrainStatusResponse(msg="Training stopped", stopped=True)
+
             elif status == "FAILURE":
                 worker.delete()
 
-                return {'msg': "The training of your shift has encountered and error"}
+                return TrainStatusResponse(msg="The training of your shift has encountered and error")
 
-            return {'msg': f"The status is {status}"}
+            return TrainStatusResponse(msg=f"The status is {status}")
 
         except AttributeError as e:
-            return {'msg': "There are currently no jobs with the given ID"}
+            return TrainStatusResponse(msg="There are currently no jobs with the given ID")
         except mongoengine.DoesNotExist:
-            return {'msg': "The worker you are trying to get the status of has been deleted"}
+            return TrainStatusResponse(msg="The worker you are trying to get the status of has been deleted")

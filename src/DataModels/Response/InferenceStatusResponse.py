@@ -13,13 +13,13 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 
 @dataclass(frozen=True)
-class InferenceStatusReponse(DefaultResponse):
+class InferenceStatusResponse(DefaultResponse):
     stopped: Optional[bool] = False
     mediaFilename: Optional[str] = None
     baseMediaFilename: Optional[str] = None
     maskMediaFilename: Optional[str] = None
 
-InferenceStatusReponseDescription = """A msg describing the current state of \
+InferenceStatusResponseDescription = """A msg describing the current state of \
 inferencing on the original media, whether or not the inferencing has been \
 stopped or finished, and the image path to pass to the cdn for the shifted media, \
 and the base and the mask previews."""

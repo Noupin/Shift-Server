@@ -110,7 +110,7 @@ def validateFileRequest(fileDict: List[FileStorage], fileIndicator="file") -> bo
     return valid
 
 
-def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRequest, dict]:
+def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRequest, str]:
     """
     Vialidates the inference request
 
@@ -119,10 +119,10 @@ def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRe
     """
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
-        return {'msg': "Your inference request had no shiftUUID"}
+        return "Your inference request had no shiftUUID"
 
     if requestData.usePTM is None:
-        return {'msg': "Your inference request had not indication to use the prebuilt model or not"}
+        return "Your inference request had not indication to use the prebuilt model or not"
 
     if requestData.prebuiltShiftModel:
         try:
@@ -134,12 +134,12 @@ def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRe
                       maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                requestData.prebuiltShiftModel))
         except OSError:
-            return {'msg': "That model does not exist"}
+            return "That model does not exist"
     
     return requestData
 
 
-def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, dict]:
+def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, str]:
     """
     Vialidates the basic version of the train request
 
@@ -148,12 +148,12 @@ def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, d
     """
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
-        return {'msg': "Your train request had no shiftUUID"}
+        return "Your train request had no shiftUUID"
 
     if requestData.usePTM is None:
-        return {'msg': "Your train request had not indication to use the prebuilt model or not"}
+        return "Your train request had not indication to use the prebuilt model or not"
 
     if requestData.trainType != "basic" and requestData.trainType != "advanced":
-        return {'msg': "Your train request did not have the correct training type"}
+        return "Your train request did not have the correct training type"
     
     return requestData
