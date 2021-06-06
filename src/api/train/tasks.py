@@ -9,6 +9,7 @@ import os
 import numpy as np
 from typing import List
 from flask import current_app
+from src.utils.MultiImage import MultiImage
 from src.utils.files import generateUniqueFilename
 
 #First Party Imports
@@ -20,7 +21,8 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
-from src.variables.constants import (IMAGE_PATH, OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
+from src.variables.constants import (EXHIBIT_IMAGE_COMPRESSION_QUALITY, IMAGE_PATH,
+                                     OBJECT_CLASSIFIER, HAAR_CASCADE_KWARGS,
                                      LARGE_BATCH_SIZE, PTM_DECODER_REALTIVE_PATH,
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH)
 
@@ -88,6 +90,8 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
     inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
     shiftedImage = shft.shift(shft.maskAE, next(inferencingData), **HAAR_CASCADE_KWARGS, gray=True)
+    shiftedImage.resize(width=1000, keepAR=True)
+    shiftedImage.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
     return [shiftedImage.encode()]
 
@@ -108,17 +112,19 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     maskInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
                                         1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **HAAR_CASCADE_KWARGS, gray=True)
 
-    baseImage = next(baseInferencingData)
-    baseRemake = shft.shift(shft.baseAE, baseImage, **HAAR_CASCADE_KWARGS, gray=True)
+    exhibitArray: List[MultiImage] = []
+    
+    exhibitArray.append(next(baseInferencingData))
+    exhibitArray.append(shft.shift(shft.baseAE, exhibitArray[0].copy(), **HAAR_CASCADE_KWARGS, gray=True))
+    exhibitArray.append(next(maskInferencingData))
+    exhibitArray.append(shft.shift(shft.maskAE, exhibitArray[2].copy(), **HAAR_CASCADE_KWARGS, gray=True))
+    exhibitArray.append(shft.shift(shft.maskAE, exhibitArray[0].copy(), **HAAR_CASCADE_KWARGS, gray=True))
+    
+    for image in exhibitArray:
+        image.resize(width=500, keepAR=True)
+        image.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
-    maskImage = next(maskInferencingData)
-    maskRemake = shft.shift(shft.maskAE, maskImage, **HAAR_CASCADE_KWARGS, gray=True)
-
-    shiftedImage = shft.shift(shft.maskAE, baseImage, **HAAR_CASCADE_KWARGS, gray=True)
-
-    return [baseImage.encode(), baseRemake.encode(),
-            maskImage.encode(), maskRemake.encode(), 
-            shiftedImage.encode()]
+    return [img.encode() for img in exhibitArray]
 
 
 @celery.task(name="train.trainShift")
@@ -179,11 +185,7 @@ def trainShift(requestJSON: dict, userID: str):
             if requestData.trainType == "basic":
                 worker.update(set__exhibitImages=getBasicExhibitImage(shft))
             elif requestData.trainType == "advanced":
-                worker.update(set__exhibitImages=[])
-
-                exhibitImages = getAdvancedExhibitImages(shft)
-                for image in exhibitImages:
-                    worker.update(add_to_set__exhibitImages=image)
+                worker.update(set__exhibitImages=getAdvancedExhibitImages(shft))
                 
             worker.update(set__inferencing=False, set__imagesUpdated=True)
             worker.reload()

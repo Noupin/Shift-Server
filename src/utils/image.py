@@ -454,3 +454,29 @@ def applyMask(baseImage: np.ndarray, maskImage: np.ndarray, mask: np.ndarray, dt
     maskedImage = cv2.add(base, mask, dtype=dtype)
 
     return maskedImage
+
+
+def compressImage(image: Image.Image, quality=65) -> Image.Image:
+    """
+    Compresses the fiven image to preserve fidelity and decrease file size.
+
+    Args:
+        image (PIL.Image.Image): The image to be compressed
+        quality (int, optional): The quality of the compression from 0-100. Defaults to 65.
+
+    Returns:
+        Image.Image: The compressed image.
+    """
+    
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG", optimize=True, quality=quality)
+    buffered.seek(0)
+
+    return Image.open(buffered)
+
+
+def imageFilesize(image: Image.Image) -> int:
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    
+    return buffered.tell()

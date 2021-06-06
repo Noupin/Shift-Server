@@ -4,6 +4,7 @@ Image class to convert between 8 bit uint images for cv processing, \
 32 bit float images for tensorflow, PIL images for ease of use, and \
 8 bit BGR uint images to save using CV.
 """
+from __future__ import annotations
 __author__ = "Noupin"
 
 #Third Party Imports
@@ -13,7 +14,7 @@ from PIL import Image
 from typing import Tuple, Union
 
 #First Party Imports
-from src.utils.image import (PILToCV, CVToPIL, resizeImage,
+from src.utils.image import (PILToCV, CVToPIL, compressImage, imageFilesize, resizeImage,
                              loadImage, saveImage, viewImage,
                              encodeImage, cropImage)
 
@@ -32,6 +33,7 @@ class MultiImage:
         self.CVImage: np.ndarray = None
         self.CVBGRImage: np.ndarray = None
         self.TFImage: np.ndarray = None
+        self.byteSize = 0
         
         self.update(image)
 
@@ -67,6 +69,7 @@ class MultiImage:
             raise TypeError(f"The type {type(image)} is not supported in the MultiImage constructor")
         
         self.TFImage = (self.CVImage/255.).astype(np.float32)
+        self.byteSize = imageFilesize(self.PILImage)
 
 
     def encode(self) -> str:
@@ -135,3 +138,26 @@ class MultiImage:
 
         image = cropImage(self.CVImage, cropArea)
         self.update(image)
+
+
+    def compress(self, quality=65):
+        """
+        Compresses the image based on the quality to lower the image file size.
+        
+        Args:
+            quality (int, optional): The quality to compress the image to. Defualts to 65.
+        """        
+
+        image = compressImage(self.PILImage, quality)
+        self.update(image)
+    
+    
+    def copy(self) -> MultiImage:
+        """
+        The copy of the MultiImage.
+
+        Returns:
+            MultiImage: A copy of the current MultiImage.
+        """
+        
+        return MultiImage(self.CVImage.copy())

@@ -67,7 +67,9 @@ def shiftMedia(requestJSON: dict) -> str:
     if getMediaType(baseMediaFilename) == 'video':
         baseAudio = extractAudio(loadVideo(baseMediaFilename))
         shifted = insertAudio(shifted, baseAudio)
-        saveVideo(shifted, os.path.join(current_app.root_path, VIDEO_PATH, f"{requestData.shiftUUID}{extension}"), fps)
+        saveVideo(video=shifted, fps=fps, deleteOld=True,
+                  path=os.path.join(current_app.root_path,
+                                    VIDEO_PATH, f"{requestData.shiftUUID}{extension}"))
     elif getMediaType(baseMediaFilename) == 'image':
         shifted.save(os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
     

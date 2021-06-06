@@ -112,7 +112,7 @@ def addMiddleware(app: flask.app.Flask, middleware=ProxyFix) -> flask.app.Flask:
     Returns:
         flask.app.Flask: The Flask app with middleware.
     """
-    
+
     app.wsgi_app = middleware(app.wsgi_app)
 
     return app
@@ -152,7 +152,7 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
-    
+
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
     docs.register(Train, blueprint=BLUEPRINT_NAMES.get("train"))
@@ -163,14 +163,14 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Authenticated, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    
+
     docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(UpdatePicture, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
 
     docs.register(Inference, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceStatus, blueprint=BLUEPRINT_NAMES.get("inference"))
-    
+
     docs.register(Image, blueprint=BLUEPRINT_NAMES.get("content"))
     docs.register(ImageDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
     docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"))
@@ -179,11 +179,11 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Category, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
     docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
     docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
-    
+
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
 
     docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, USER_AUTH_SCHEME)
-    
+
     return docs
 
 

@@ -21,7 +21,7 @@ def index() -> Response:
     return mainBP.send_static_file('index.html')
 
 
-@mainBP.app_errorhandler(404)
+@mainBP.errorhandler(404)
 def error404(error) -> Response:
 
     return mainBP.send_static_file('index.html')

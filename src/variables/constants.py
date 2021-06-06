@@ -35,6 +35,8 @@ HUE_ADJUSTMENT = [0, 335/360, 120/360, 215/360] #RGB hue adjustment values
 
 LARGE_BATCH_SIZE = 64
 
+EXHIBIT_IMAGE_COMPRESSION_QUALITY = 50
+
 #Facial Landmark Model & Detector
 FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
 FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
