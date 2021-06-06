@@ -10,6 +10,7 @@ import json
 from flask import current_app
 from werkzeug import Response
 from flask_restful import Resource
+from werkzeug.utils import secure_filename
 from flask_apispec import marshal_with, doc
 from flask.helpers import send_from_directory
 from flask_apispec.views import MethodResource
@@ -26,7 +27,7 @@ operationId="getVideo")
     def get(self, filename: str='default.mp4') -> Response:
 
         return send_from_directory(os.path.join(current_app.root_path, VIDEO_PATH),
-                                  filename=filename,
+                                  filename=secure_filename(filename),
                                   as_attachment=False,
                                   mimetype='video/mp4',
                                   cache_timeout=0)

@@ -8,6 +8,7 @@ __author__ = "Noupin"
 import os
 from flask import current_app
 from flask_restful import Resource
+from werkzeug.utils import secure_filename
 from flask_apispec.views import MethodResource
 from werkzeug.datastructures import FileStorage
 from flask_login import current_user, login_required
@@ -46,7 +47,7 @@ operationId="updatePicture", consumes=['multipart/form-data'], security=SECURITY
             return UpdatePictureResponse(msg="The request had no selected file.")
 
         if requestFile and validateFilename(requestFile.filename) and getMediaType(requestFile.filename) == "image":
-            requestFile.save(os.path.join(current_app.root_path, IMAGE_PATH, filename))
+            requestFile.save(os.path.join(current_app.root_path, IMAGE_PATH, secure_filename(filename)))
         else:
             return UpdatePictureResponse(msg="File not valid.")
 

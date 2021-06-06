@@ -10,6 +10,7 @@ import json
 from flask import current_app
 from werkzeug import Response
 from flask_restful import Resource
+from werkzeug.utils import secure_filename
 from flask_apispec import marshal_with, doc
 from flask.helpers import send_from_directory
 from flask_apispec.views import MethodResource
@@ -27,7 +28,7 @@ operationId="getImageDownload")
         asAttachment = json.loads(download.lower())
 
         return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
-                                  filename=filename,
+                                  filename=secure_filename(filename),
                                   as_attachment=asAttachment,
                                   mimetype="image",
                                   cache_timeout=0)
