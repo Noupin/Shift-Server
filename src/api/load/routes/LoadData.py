@@ -46,7 +46,7 @@ operationId="loadData", consumes=['multipart/form-data'], security=SECURITY_TAG)
         except ValueError:
             return {"msg": "Not all fields for the LoadRequest object were POSTed"}
         except TypeError:
-            return {"msg": "Not all fields for the TrainRequest object were POSTed"}
+            return {"msg": "Not all fields for the LoadRequest object were POSTed"}
 
         if len(requestData) != len(requestFiles):
             return {'msg': "The number of training files and training data types does not match"}

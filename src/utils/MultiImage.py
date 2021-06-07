@@ -112,7 +112,7 @@ class MultiImage:
             path (str): The path to save the image to.
         """
 
-        saveImage(self.CVBGRImage, path) #CV save images in BGR format
+        saveImage(self.PILImage, path)
 
 
     def view(self, **kwargs):

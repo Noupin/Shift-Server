@@ -99,20 +99,20 @@ def loadImageFolder(path: str, maximum=-1) -> Generator[None, np.ndarray, None]:
         yield image
 
 
-def saveImage(image: np.ndarray, path: str) -> None:
+def saveImage(image: Image.Image, path: str) -> None:
     """
     Saves the image to the given path
 
     Args:
-        image (numpy.ndarray): The image to be saved
+        image (PIL.Image.Image): The image to be saved
         path (str): The path to where the file is saved
     """
 
     _, extenstion = os.path.splitext(path)
     if extenstion.find('.') != -1:
-        cv2.imwrite(path, image)
+        image.save(path)
     else:
-        cv2.imwrite(f"{path}.png", image)
+        image.save(f"{path}.png")
         os.rename(f"{path}.png", path)
 
 
