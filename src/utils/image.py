@@ -9,12 +9,13 @@ import io
 import os
 import cv2
 import base64
+import piexif
 import numpy as np
 from PIL import Image
 from colorama import Fore
 import matplotlib.pyplot as plt
 from moviepy import editor as mediaEditor
-from typing import List, Tuple, Generator
+from typing import Any, Dict, List, Tuple, Generator, Union
 
 #First Party Imports
 from src.Exceptions.CVToPIL import CVToPILError
@@ -476,7 +477,47 @@ def compressImage(image: Image.Image, quality=65) -> Image.Image:
 
 
 def imageFilesize(image: Image.Image) -> int:
+    """
+    Gets the filesize of the image in bytes.
+
+    Args:
+        image (PIL.Image.Image): The image to be measured.
+
+    Returns:
+        int: The size of the image in bytes.
+    """    
+
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
     
     return buffered.tell()
+
+
+def editImageMetadata(image: Image.Image, key: Union[str, int],
+                      value: Dict[str, Any]) -> Image.Image:
+    """
+    Edits the metadata of a PIL image.
+
+    Args:
+        image (PIL.Image.Image): The image to edit the metadata of.
+        key (Union[str, int]): The key to add to the metadata.
+        value (Union[str, int]): The value to associate with the key in the metadata.
+
+    Returns:
+        PIL.Image.Image: The edited metadata.
+    """
+    
+    exifDict = image.getexif()
+    
+    if exifDict is None:
+        exifDict = {}
+
+    exifDict[key] = value
+    exifBytes = piexif.dump(exifDict)
+    
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG", exif=exifBytes)
+    buffered.seek(0)
+
+    return Image.open(buffered)
+

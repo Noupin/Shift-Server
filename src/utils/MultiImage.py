@@ -5,16 +5,18 @@ Image class to convert between 8 bit uint images for cv processing, \
 8 bit BGR uint images to save using CV.
 """
 from __future__ import annotations
+
 __author__ = "Noupin"
 
 #Third Party Imports
 import cv2
+import piexif
 import numpy as np
 from PIL import Image
-from typing import Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 #First Party Imports
-from src.utils.image import (PILToCV, CVToPIL, compressImage, imageFilesize, resizeImage,
+from src.utils.image import (PILToCV, CVToPIL, compressImage, editImageMetadata, imageFilesize, resizeImage,
                              loadImage, saveImage, viewImage,
                              encodeImage, cropImage)
 
@@ -161,3 +163,8 @@ class MultiImage:
         """
         
         return MultiImage(self.CVImage.copy())
+
+
+    def setMetadata(self, key: str, value: Dict[int, Any]) -> None:
+        image = editImageMetadata(self.PILImage, key, value)
+        self.update(image)

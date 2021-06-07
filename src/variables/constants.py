@@ -9,6 +9,7 @@ import os
 import cv2
 import dlib
 import yaml
+import piexif
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
@@ -17,6 +18,8 @@ EXTENSION_FILE_TYPES = {'': '', 'png': 'image',
                         'gif': 'image', 'heic': 'image',
                         'mp4': 'video', 'm4a': 'video',
                         'mov': 'video'}
+SHIFT_IMAGE_METADATA_KEY = "0th"
+SHIFT_IMAGE_METADATA_VALUE = {piexif.ImageIFD.ProcessingSoftware: u"Shift"}
 
 PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
