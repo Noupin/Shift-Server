@@ -83,12 +83,17 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[np.
         if action and validFrames % interval == 0:
             returnData = detectObject(action, image=image, **kwargs)
 
-            if isinstance(returnData, list) and isinstance(returnData[0], np.ndarray): #Checks for list of images
-                for image in returnData:
+            if isinstance(returnData, list) and len(returnData) > 0: #Checks for list of images
+                if isinstance(returnData[0], np.ndarray):
+                    for image in returnData:
+                        yield image
+                else:
                     yield image
-            elif isinstance(returnData, np.ndarray) and returnData.ndim == 3: #Checks for numpy array image
+            #Checks for numpy array image
+            elif isinstance(returnData, np.ndarray) and returnData.ndim == 3:
                 yield returnData
-            elif isinstance(returnData, np.ndarray) and returnData.ndim == 2: #Checks for list of rectangles for object detection areas
+            #Checks for list of rectangles for object detection areas
+            elif isinstance(returnData, np.ndarray) and returnData.ndim == 2:
                 yield image
             else:
                 continue

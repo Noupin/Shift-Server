@@ -115,7 +115,7 @@ class Shift:
 
         for image in images:
             objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
-            if isinstance(objects, tuple):
+            if len(objects) < 1:
                 continue
 
             image.crop(getLargestRectangle(objects))
@@ -161,8 +161,9 @@ class Shift:
         return MultiImage(image)
 
     
-    def shiftImages(self, model: tf.keras.Model, images: Generator[MultiImage, None, None], objectClassifier=OBJECT_CLASSIFIER,
-                    imageResizer=resizeImage, asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
+    def shiftImages(self, model: tf.keras.Model, images: Generator[MultiImage, None, None],
+                    objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
+                    asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -184,7 +185,7 @@ class Shift:
         for image in images:
             objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
 
-            if isinstance(objects, tuple):
+            if len(objects) < 1:
                 yield image.CVImage if asNumpy else image
                 continue
             

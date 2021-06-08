@@ -6,18 +6,17 @@ __author__ = "Noupin"
 
 #Third Party Import
 import cv2
-import dlib
 import numpy as np
 import _dlib_pybind11
-from typing import List
 from imutils import face_utils
+from typing import Iterable, List
 
 #First Party Imports
 from src.utils.math import xywhTotrblRectangle
 from src.variables.constants import FACIAL_LANDMARK_DETECTOR
 
 
-def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
+def detectObject(classifier, image: np.ndarray, **kwargs) -> Iterable[int]:
     """
     Returns the attributes from the classifier on the given
     image while passing in the kwargs to the classifier.
@@ -32,18 +31,12 @@ def detectObject(classifier, image: np.ndarray, **kwargs) -> List[int]:
         list of int: The atributes from classifier usually a list of rectangles
                      where the objects are in the image
     """
-
-    try:
-        kwargs["gray"]
-    except KeyError:
-        kwargs["gray"] = False
     
-    if kwargs["gray"]:
+    if kwargs.get("gray"):
         del kwargs["gray"]
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         attributes = classifier(image, **kwargs)
     else:
-        del kwargs["gray"]
         attributes = classifier(image, **kwargs)
     
     return attributes

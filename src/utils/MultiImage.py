@@ -4,6 +4,7 @@ Image class to convert between 8 bit uint images for cv processing, \
 32 bit float images for tensorflow, PIL images for ease of use, and \
 8 bit BGR uint images to save using CV.
 """
+
 from __future__ import annotations
 
 __author__ = "Noupin"

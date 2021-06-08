@@ -10,6 +10,25 @@ import cv2
 import dlib
 import yaml
 import piexif
+import numpy as np
+import mediapipe as mp
+
+
+def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
+    faceDetection = mp.solutions.mediapipe.python.solutions.face_detection.FaceDetection(**kwargs)
+    results = faceDetection.process(img)
+    
+    rects = []
+    
+    if results.detections:
+        for detection in results.detections:
+            bboxC = detection.location_data.relative_bounding_box
+            ih, iw, _ = img.shape
+            bbox = [int(bboxC.xmin*iw), int(bboxC.ymin*ih),
+                    int(bboxC.width*iw), int(bboxC.height*ih)]
+            rects.append(bbox)
+    
+    return rects
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
@@ -30,11 +49,15 @@ ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
 
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
+TEST_OBJECT_CLASSIFIER = googleLightweightFacialDetection
+TEST_OBJECT_CLASSIFIER_KWARGS = {'min_detection_confidence': 0.5}
+
 OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                                        'site-packages', 'cv2',
                                                        'data', 'haarcascade_frontalface_default.xml')
                                           ).detectMultiScale
-HAAR_CASCADE_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
+OBJECT_CLASSIFIER_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
+CV_WAIT_KEY = 1
 
 HUE_ADJUSTMENT = [0, 335/360, 120/360, 215/360] #RGB hue adjustment values
 
