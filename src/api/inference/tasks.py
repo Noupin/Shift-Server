@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import numpy as np
+from mutagen import File
 from flask import current_app
 
 #First Party Imports
@@ -19,7 +20,7 @@ from src.utils.video import (loadVideo, extractAudio, insertAudio,
                              saveVideo)
 from src.variables.constants import (HAAR_CASCADE_KWARGS, SHIFT_IMAGE_METADATA_KEY,
                                      SHIFT_IMAGE_METADATA_VALUE, SHIFT_PATH,
-                                     IMAGE_PATH, VIDEO_PATH)
+                                     IMAGE_PATH, SHIFT_VIDEO_METADATA_KEY, SHIFT_VIDEO_METADATA_VALUE, VIDEO_PATH)
 
 
 @celery.task(name="inference.shift")
@@ -70,6 +71,10 @@ def shiftMedia(requestJSON: dict) -> str:
         saveVideo(video=shifted, fps=fps, deleteOld=True,
                   path=os.path.join(current_app.root_path,
                                     VIDEO_PATH, f"{requestData.shiftUUID}{extension}"))
+        vid = File(os.path.join(current_app.root_path,
+                                VIDEO_PATH, f"{requestData.shiftUUID}{extension}"))
+        vid.tags[SHIFT_VIDEO_METADATA_KEY] = SHIFT_VIDEO_METADATA_VALUE
+        vid.save()
     elif getMediaType(baseMediaFilename) == 'image':
         shifted.setMetadata(key=SHIFT_IMAGE_METADATA_KEY, value=SHIFT_IMAGE_METADATA_VALUE)
         shifted.save(os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))

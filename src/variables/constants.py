@@ -20,6 +20,8 @@ EXTENSION_FILE_TYPES = {'': '', 'png': 'image',
                         'mov': 'video'}
 SHIFT_IMAGE_METADATA_KEY = "0th"
 SHIFT_IMAGE_METADATA_VALUE = {piexif.ImageIFD.ProcessingSoftware: u"Shift"}
+SHIFT_VIDEO_METADATA_KEY = "\xa9cmt"
+SHIFT_VIDEO_METADATA_VALUE = "Shift"
 
 PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
