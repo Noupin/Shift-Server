@@ -19,7 +19,7 @@ from flask_apispec import marshal_with, use_kwargs, doc
 from src.api.train.tasks import trainShift
 from src.variables.constants import (SHIFT_PATH,
                                      SECURITY_TAG)
-from src.utils.validators import validateBaseTrainRequest
+from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.Request.TrainRequest import (TrainRequest,
@@ -43,6 +43,9 @@ takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
         if isinstance(requestError, str):
             return TrainResponse(msg=requestError)
         del requestError
+        
+        if not validateShiftTitle(requestData.shiftTitle):
+            return TrainResponse(msg="That is not a valid Shift title.") 
 
         requestData = DataModelAdapter(requestData)
 

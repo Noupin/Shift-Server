@@ -14,7 +14,7 @@ from flask_apispec import marshal_with, use_kwargs, doc
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
-from src.utils.validators import validateEmail, validatePassword
+from src.utils.validators import validateEmail, validatePassword, validateUsername
 from src.DataModels.Request.RegisterRequest import (RegisterRequest,
                                                     RegisterRequestDescription)
 from src.DataModels.Response.RegisterResponse import (RegisterResponse,
@@ -30,22 +30,24 @@ class Register(MethodResource, Resource):
     @doc(description="""The regitration for the user.""", tags=["Authenticate"], operationId="register")
     def post(self, requestData: RegisterRequest) -> dict:
         if current_user.is_authenticated:
-            return {'msg': "You're already logged in"}
+            return RegisterResponse(msg="You're already logged in.")
         
         if not request.is_json:
-            return {'msg': "Your login had no JSON payload"}
+            return RegisterResponse(msg="Your login had no JSON payload")
 
         if User.objects(username=requestData.username).first():
-            return {'msg': "A user with that username already exists"}
+            return RegisterResponse(msg="A user with that username already exists.")
+        if not validateUsername(requestData.username):
+            return RegisterResponse(msg="That is not a valid username.")
         if User.objects(email=requestData.email).first():
-            return {'msg': "A user with that email already exists"}
+            return RegisterResponse(msg="A user with that email already exists.")
 
         emailValid, emailMsg = validateEmail(requestData.email)
         if not emailValid:
-            return {'msg': emailMsg}
+            return RegisterResponse(msg=emailMsg)
         passwordValid, passwordMsg = validatePassword(requestData.password)
         if not passwordValid:
-            return {'msg': passwordMsg}
+            return RegisterResponse(msg=passwordMsg)
 
         hashedPassword = bcrypt.generate_password_hash(requestData.password)
 
@@ -54,4 +56,4 @@ class Register(MethodResource, Resource):
 
         login_user(user, remember=True)
         
-        return {"msg": "You have been registered succesfully"}
+        return RegisterResponse(msg="You have been registered succesfully.")

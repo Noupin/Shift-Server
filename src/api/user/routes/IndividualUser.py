@@ -17,7 +17,7 @@ from flask_apispec import marshal_with, doc, use_kwargs
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
-from src.utils.validators import validateEmail, validatePassword, validateFilename
+from src.utils.validators import validateEmail, validatePassword, validateFilename, validateUsername
 from src.variables.constants import IMAGE_PATH, SECURITY_TAG, USER_EDITABLE_USER_FIELDS
 from src.DataModels.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
                                                                IndividualUserPatchRequestDescription)
@@ -107,6 +107,10 @@ is not you.""")
             elif field == "username":
                 if User.objects(username=value).first():
                     return IndividualUserPatchResponse(msg="A user with that username already exists")
+                
+                if not validateUsername(value):
+                    return IndividualUserPatchResponse(msg="That is not a valid username.")
+                
                 queries[f"set__{field}"] = value
 
             elif field == "email":

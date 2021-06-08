@@ -157,3 +157,31 @@ def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, s
         return "Your train request did not have the correct training type"
     
     return requestData
+
+
+def validateUsername(username: str) -> bool:
+    """
+    Determines the validity of the username.
+
+    Args:
+        username (str): The username to determine the validity of.
+
+    Returns:
+        bool: Whether the username is valid or not.
+    """
+    
+    return len(username) > 0
+
+
+def validateShiftTitle(title: str) -> bool:
+    """
+    Determines the validity of the shift title.
+
+    Args:
+        title (str): The title to determine the validity of.
+
+    Returns:
+        bool: Whether the title is valid or not.
+    """
+    
+    return len(title) > 0

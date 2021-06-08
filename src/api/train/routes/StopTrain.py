@@ -13,12 +13,12 @@ from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Imports
 from src.variables.constants import SECURITY_TAG
-from src.utils.validators import validateBaseTrainRequest
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.DataModels.Request.TrainRequest import (TrainRequest,
                                                  TrainRequestDescription)
+from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.Response.StopTrainResponse import (StopTrainResponse,
                                                        StopTrainResponseDescription)
 
@@ -37,6 +37,9 @@ trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
         if isinstance(requestError, str):
             return StopTrainResponse(msg=requestError)
         del requestError
+        
+        if not validateShiftTitle(requestData.shiftTitle):
+            return StopTrainResponse(msg="That is not a valid Shift title.") 
 
         requestData = DataModelAdapter(requestData)
 
