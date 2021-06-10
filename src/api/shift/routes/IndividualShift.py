@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import shutil
+from src.utils.validators import validateShiftTitle
 from uuid import UUID
 from typing import Union
 from flask import current_app
@@ -120,6 +121,9 @@ delete a shift which you did not create.""")
         for field, value in requestBody.data.items():
             if field not in USER_EDITABLE_SHIFT_FIELDS:
                 return IndividualShiftPatchResponse(msg="You are not allowed to change this field.")
+
+            if field == "title" and not validateShiftTitle(value):
+                return IndividualShiftPatchResponse(msg="That is not a valid Shift title.")
 
             else:
                 queries[f"set__{field}"] = value
