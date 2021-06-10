@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Individual Shift Put Request Data Model for the Shift API
+The Individual Shift Patch Request Data Model for the Shift API
 """
 __author__ = "Noupin"
 

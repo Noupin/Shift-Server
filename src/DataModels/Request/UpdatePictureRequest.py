@@ -5,7 +5,7 @@ The Update Picture Request Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from marshmallow.schema import Schema
+from marshmallow import Schema
 
 #First Party Imports
 from src.DataModels.Marshmallow.FileField import FileField
