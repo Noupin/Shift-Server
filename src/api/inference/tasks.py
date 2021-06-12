@@ -12,7 +12,7 @@ from flask import current_app
 
 #First Party Imports
 from src.run import celery
-from src.AI.shift import Shift
+from src.AI.Shift import Shift
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.Request.InferenceRequest import InferenceRequest

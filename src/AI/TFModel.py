@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301, R0903
 """
-Base tensorflow model
+Base TensorFlow model for TFModel
 """
 __author__ = "Noupin"
 

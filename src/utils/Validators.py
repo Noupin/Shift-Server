@@ -9,7 +9,7 @@ import re
 import os
 import tensorflow as tf
 from flask import current_app
-from src.AI.shift import Shift
+from src.AI.Shift import Shift
 from typing import List, Tuple, Union
 from werkzeug.datastructures import FileStorage
 from src.DataModels.Request.TrainRequest import TrainRequest

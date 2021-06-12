@@ -14,7 +14,7 @@ from src.utils.files import generateUniqueFilename
 
 #First Party Imports
 from src.run import celery
-from src.AI.shift import Shift
+from src.AI.Shift import Shift
 from src.utils.image import viewImage
 from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.TrainWorker import TrainWorker

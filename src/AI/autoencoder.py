@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The custom decoder model for Shift
+The custom Autoencoder model for TFModel
 """
 __author__ = "Noupin"
 
@@ -9,13 +9,13 @@ import tensorflow as tf
 
 #First Party Imports
 from src.AI.TFModel import TFModel
-from src.AI.encoder import Encoder
-from src.AI.decoder import Decoder
+from src.AI.Encoder import Encoder
+from src.AI.Decoder import Decoder
 
 
-class AutoEncoder(TFModel):
+class Autoencoder(TFModel):
     """
-    An AutoEncoder TensorFlow model for Vardia projects.
+    An Autoencoder TensorFlow model for Vardia projects.
 
     Args:
         inputShape (tuple, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
@@ -27,9 +27,9 @@ class AutoEncoder(TFModel):
     """
 
     def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder(),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="AutoEncoder",
+                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="Autoencoder",
                        modelPath=""):
-        super(AutoEncoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
+        super(Autoencoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
                                           outputLayer=decoder,
                                           optimizer=optimizer, loss=loss,
                                           name=name, modelPath=modelPath)

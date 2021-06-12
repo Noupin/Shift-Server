@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301, R0903
 """
-The custom encoder class for Shift
+The custom Encoder model for TFModel
 """
 __author__ = "Noupin"
 
@@ -31,7 +31,7 @@ class Encoder(TFModel):
                        outputDimension=512, outputName="LatentOutput", outputActivation=tf.nn.relu,
                        name="Encoder", modelPath=""):
         super(Encoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
-                                      outputLayer=tf.keras.layers.Dense(outputDimension, activation=tf.nn.relu, name=outputName),
+                                      outputLayer=tf.keras.layers.Dense(outputDimension, activation=outputActivation, name=outputName),
                                       name=name, modelPath=modelPath)
      
         self.encodingLayers = 0

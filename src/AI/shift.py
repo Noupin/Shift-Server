@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301, R0902
 """
-The master file for the Shift application
+The Shift AI for the Shift application
 """
 __author__ = "Noupin"
 
@@ -15,10 +15,10 @@ from moviepy import editor as mediaEditor
 
 #First Party Imports
 from src.AI.TFModel import TFModel
-from src.AI.encoder import Encoder
-from src.AI.decoder import Decoder
+from src.AI.Encoder import Encoder
+from src.AI.Decoder import Decoder
 from src.utils.video import videoToImages
-from src.AI.autoencoder import AutoEncoder
+from src.AI.Autoencoder import Autoencoder
 from src.utils.memory import chunkIterable
 from src.utils.MultiImage import MultiImage
 from src.utils.math import getLargestRectangle, flattenList
@@ -36,7 +36,7 @@ from src.variables.constants import (OBJECT_CLASSIFIER, SHIFT_PATH,
 
 class Shift:
     """
-    Two custom built AutoEncoder TensorFlow models for Shifting objects within an image.
+    Two custom built Autoencoder TensorFlow models for Shifting objects within an image.
 
     Args:
         id_ (str): A unique identifier for the shift model. Defaults to generateUniqueFilename().
@@ -76,10 +76,10 @@ class Shift:
         self.addCodingLayers(self.codingLayers)
 
         #Will shift objects from mask to base if predicting on mask images
-        self.baseAE: TFModel = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
+        self.baseAE: TFModel = Autoencoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
                                            optimizer=optimizer, loss=loss, name="Base")
         #Will shift objects from base to mask if predicting on base images
-        self.maskAE: TFModel = AutoEncoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
+        self.maskAE: TFModel = Autoencoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
                                            optimizer=optimizer, loss=loss, name="Mask")
 
 
@@ -262,7 +262,7 @@ class Shift:
 
     def load(self, encoderPath: str=None, basePath: str = None, maskPath: str=None, absPath=False, **kwargs) -> None:
         """
-        Loads the encoder and the base and mask decoder then creates the autoencoders to be trained.
+        Loads the encoder and the base and mask decoder then creates the Autoencoders to be trained.
 
         Args:
             encoderPath (str, optional): The path to the encoder to be loaded. Defaults to None.
@@ -279,7 +279,7 @@ class Shift:
                 self.baseDecoder.load(os.path.join(basePath, f"baseDecoder", f"baseDecoder"), **kwargs)
 
             if not encoderPath:
-                self.baseAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
                                                    decoder=self.baseDecoder, optimizer=self.optimizer,
                                                    loss=self.loss, name="Base")
 
@@ -290,7 +290,7 @@ class Shift:
                 self.maskDecoder.load(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"), **kwargs)
 
             if not encoderPath:
-                self.maskAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+                self.maskAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
                                                    decoder=self.maskDecoder, optimizer=self.optimizer,
                                                    loss=self.loss, name="Mask")
         
@@ -300,10 +300,10 @@ class Shift:
             else:
                 self.encoder.load(os.path.join(encoderPath, f"encoder", f"encoder"), **kwargs)
 
-            self.baseAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+            self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
                                                decoder=self.baseDecoder, optimizer=self.optimizer,
                                                loss=self.loss, name="Base")
-            self.maskAE: TFModel = AutoEncoder(inputShape=self.imageShape, encoder=self.encoder,
+            self.maskAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
                                                decoder=self.maskDecoder, optimizer=self.optimizer,
                                                loss=self.loss, name="Mask")
 

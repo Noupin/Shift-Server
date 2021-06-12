@@ -10,7 +10,7 @@ from typing import List
 import moviepy.editor as mediaEditor
 
 #First Party Imports
-from src.AI.shift import Shift
+from src.AI.Shift import Shift
 from src.utils.video import loadVideo, videoToImages
 from src.utils.MultiImage import MultiImage
 from src.utils.detection import detectObject
