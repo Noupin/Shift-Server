@@ -14,13 +14,16 @@ class IncompatibleTFLayerError(Exception):
     Exception raised for errors of incompatible tensorflow layer combination.
     """
 
-    def __init__(self, prevLayer: tf.keras.layers.Layer, nextLayer: tf.keras.layers.Layer, message="Layers are incompatible and cannot be combined."):
+    def __init__(self, prevLayer: tf.keras.layers.Layer, nextLayer: tf.keras.layers.Layer, originalError: Exception, message="Layers are incompatible and cannot be combined."):
         self.prevLayer = prevLayer
         self.nextLayer = nextLayer
         self.message = message
+        self.originalError = originalError
 
         super().__init__(self.message)
     
 
     def __str__(self) -> str:
-        return Fore.RED + f"\nPrevious Layer: {self.prevLayer}\nNext Layer: {self.nextLayer}\nIncompatibilityError -> {self.message}" + Fore.RESET
+        return Fore.RED + f"\nPrevious Layer: {self.prevLayer}\nNext Layer: \
+{self.nextLayer}\nIncompatibilityError -> {self.message}\n\nOriginal \
+Error: {self.originalError}" + Fore.RESET

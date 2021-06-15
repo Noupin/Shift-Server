@@ -33,7 +33,7 @@ class Decoder(TFModel):
                        latentReshape=(128, 128, 24),
                        outputDimension=3, outputName="OutputImage", outputActivation=tf.nn.relu,
                        name="Decoder", modelPath=""):
-        super(Decoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
+        super(Decoder, self).__init__(inputShape=inputShape, inputName=inputName,
                                       outputLayer=tf.keras.layers.Conv2DTranspose(filters=outputDimension, kernel_size=3, strides=1,
                                                                          padding="same", activation=outputActivation, name=outputName),
                                       name=name, modelPath=modelPath)

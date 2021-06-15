@@ -30,7 +30,7 @@ class Encoder(TFModel):
     def __init__(self, inputShape=(None, None, 3), inputName="InputImage",
                        outputDimension=512, outputName="LatentOutput", outputActivation=tf.nn.relu,
                        name="Encoder", modelPath=""):
-        super(Encoder, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
+        super(Encoder, self).__init__(inputShape=inputShape, inputName=inputName,
                                       outputLayer=tf.keras.layers.Dense(outputDimension, activation=outputActivation, name=outputName),
                                       name=name, modelPath=modelPath)
      

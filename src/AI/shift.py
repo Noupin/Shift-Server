@@ -123,7 +123,7 @@ class Shift:
 
             for hue in HUE_ADJUSTMENT:
                 huedImage = tf.image.adjust_hue(image.TFImage, hue)
-                yield tf.image.adjust_hue(image.TFImage, hue)
+                yield np.array(tf.image.adjust_hue(image.TFImage, hue))
                 
                 for flipCode in flipCodes:
                     yield flipImage(huedImage, flipCode)

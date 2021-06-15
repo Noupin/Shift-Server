@@ -11,12 +11,11 @@ import tensorflow as tf
 from IPython import display
 
 #First Party Imports
-from src.AI.TFModel import TFModel
 from src.AI.Encoder import Encoder
 from src.AI.Decoder import Decoder
 
 
-class VAE(TFModel):
+class VAE(tf.keras.Model):
     """
     A Variational Autoencoder TensorFlow model for Vardia projects.
 
@@ -29,35 +28,41 @@ class VAE(TFModel):
         loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
     """
 
-    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder(),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="Autoencoder",
-                       modelPath=""):
-        super(VAE, self).__init__(inputLayer=tf.keras.Input(shape=inputShape, name=inputName),
-                                          outputLayer=decoder,
-                                          optimizer=optimizer, loss=loss,
-                                          name=name, modelPath=modelPath)
+    def __init__(self, inputShape=(256, 256, 3), latentDim=512,
+                       optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam()):
+        super(VAE, self).__init__()
 
-        self.inputLayer = tf.keras.Input(shape=inputShape, name=inputName)
-        self.encoder: Encoder = encoder
-        self.decoder: Decoder = decoder
-        
-        self.addLayer(self.encoder)
+        self.optimizer = optimizer
+
+        self.encoder: Encoder = Encoder(inputShape=inputShape, outputDimension=latentDim)
+        self.decoder: Decoder = Decoder(inputShape=(latentDim,))
+
+
+    def call(self, inputTensor):
+        mean, logvar = self.encode(inputTensor)
+        z = self.reparameterize(mean, logvar)
+        output = self.sample(z)
+
+        return output.numpy()
 
 
     @tf.function
     def sample(self, eps=None):
         if eps is None:
-            eps = tf.random.normal(shape=(100, self.latent_dim))
+            eps = tf.random.normal(shape=(100, self.decoder.inputShape[0]))
+
         return self.decode(eps, apply_sigmoid=True)
 
 
     def encode(self, x):
         mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
+
         return mean, logvar
 
 
     def reparameterize(self, mean, logvar):
         eps = tf.random.normal(shape=mean.shape)
+
         return eps * tf.exp(logvar * .5) + mean
 
 
@@ -66,6 +71,7 @@ class VAE(TFModel):
 
         if apply_sigmoid:
             probs = tf.sigmoid(logits)
+
             return probs
 
         return logits
@@ -93,7 +99,7 @@ class VAE(TFModel):
 
 
     @tf.function
-    def train_step(self, x, optimizer):
+    def train_step(self, x):
         """
         Executes one training step and returns the loss.
 
@@ -102,29 +108,29 @@ class VAE(TFModel):
         """
 
         with tf.GradientTape() as tape:
-            loss = self.compute_loss(self, x)
+            loss = self.compute_loss(x)
 
         gradients = tape.gradient(loss, self.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         
         return loss
-    
-    
-    @tf.function
-    def train(self, epochs, train_dataset, test_dataset=None):
+
+
+    def train(self, train_dataset, test_dataset=None, epochs=1):
+        loss = tf.constant(np.array([0]).astype(np.float32))
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             for train_x in train_dataset:
-                loss = self.train_step(train_x, self.optimizer)
+                loss = self.train_step(train_x)
             end_time = time.time()
 
             if test_dataset:
                 loss = tf.keras.metrics.Mean()
                 for test_x in test_dataset:
-                    loss(self.compute_loss(self, test_x))
+                    loss(self.compute_loss(test_x))
                 elbo = -loss.result()
                 display.clear_output(wait=False)
                 print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
                         .format(epoch, elbo, end_time - start_time))
             else:
-                print(f"Epoch: {epoch}, Loss: {tf.reduce_mean(tf.abs(loss))}, Time: {end_time-start_time}")
+                print(f"Epoch: {epoch}, Loss: {loss}, Time: {end_time-start_time}")

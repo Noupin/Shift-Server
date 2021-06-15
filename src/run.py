@@ -1,5 +1,6 @@
 #pylint: disable=C0103, C0301, R0903, E1101
 #celery -A src.run:celery worker --pool=solo --loglevel=info
+#flask run --host=0.0.0.0 --port="PORT"
 
 #turn RabbitMQ off then on, then remove celery collection from
 #MongoDB & "celery amqp queue.delete queue1" finally, "celery purge"

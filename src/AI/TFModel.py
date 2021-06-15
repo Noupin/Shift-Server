@@ -34,22 +34,23 @@ class TFModel(tf.keras.Model):
         name (str, optional): The name of the model. Defaults to "TFModel".
     """
 
-    def __init__(self, inputLayer=tf.keras.Input(shape=(128, 128, 3), name="Input"),
-                       outputLayer=tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output"),
-                       activation=tf.nn.relu, optimizer=tf.optimizers.Adam(),
-                       loss=tf.losses.mean_squared_logarithmic_error, name="TFModel",
-                       modelPath="modelPath"):
+    def __init__(self, inputShape: Tuple[int]=(128, 128, 3), inputName: str="Input",
+                       outputLayer: tf.keras.layers.Layer=tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output"),
+                       activation=tf.nn.relu, optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam(),
+                       loss=tf.losses.mean_squared_logarithmic_error, name: str="TFModel",
+                       modelPath: str="modelPath"):
 
         allowTFMemoryGrowth()
         super(TFModel, self).__init__()
 
         self.loss = loss
         self.optimizer = optimizer
+        self.inputShape = inputShape
 
         self.modelLayers: Union[List[tf.keras.layers.Layer], Tuple[tf.keras.layers.Layer]] = []
         self.modelName = name
 
-        self.modelLayers.append(inputLayer)
+        self.modelLayers.append(tf.keras.Input(inputShape, name=inputName))
         self.modelLayers.append(outputLayer)
 
         self.model: tf.keras.Model = None
@@ -77,8 +78,8 @@ class TFModel(tf.keras.Model):
         for modelLayer in range(1, len(self.modelLayers)):
             try:
                 connectedLayers.append(self.modelLayers[modelLayer](connectedLayers[modelLayer-1]))
-            except ValueError:
-                raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer])
+            except ValueError as error:
+                raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer], originalError=str(error))
 
         return connectedLayers[-1]
 
@@ -190,7 +191,7 @@ class TFModel(tf.keras.Model):
 
                     loss_value = self.trainStep(xBatchTrain, yBatchTrain)
                     reducedLoss = tf.reduce_mean(tf.abs(loss_value))
-                    print(f"Loss for batch {step+1}: {tf.reduce_mean(tf.abs(loss_value))}, Time: {time.time()-batchStart}")
+                    print(f"Loss for batch {step+1}: {reducedLoss}, Time: {time.time()-batchStart}")
 
                     step += 1
 
