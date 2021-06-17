@@ -18,7 +18,7 @@ from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 class TFModel(tf.keras.Model):
     """
-    A Base TensorFlow model for Vardia projects.
+    A Base TensorFlow model for Feryv projects.
 
     Args:
         inputLayer (tf.keras.layers.Layer, optional): The input layer of the model. Defaults to

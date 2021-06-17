@@ -17,7 +17,7 @@ from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
 class Decoder(TFModel):
     """
-    A Base Decoder TensorFlow model for Vardia projects.
+    A Base Decoder TensorFlow model for Feryv projects.
 
     Args:
         inputShape (tuple of int, optional): The latent space input shape for the decoder model. Defaults to (512,).

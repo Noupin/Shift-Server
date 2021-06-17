@@ -8,7 +8,6 @@ __author__ = "Noupin"
 import time
 import numpy as np
 import tensorflow as tf
-from IPython import display
 
 #First Party Imports
 from src.AI.Encoder import Encoder
@@ -17,7 +16,7 @@ from src.AI.Decoder import Decoder
 
 class VAE(tf.keras.Model):
     """
-    A Variational Autoencoder TensorFlow model for Vardia projects.
+    A Variational Autoencoder TensorFlow model for Feryv projects.
 
     Args:
         inputShape (tuple, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
@@ -29,13 +28,20 @@ class VAE(tf.keras.Model):
     """
 
     def __init__(self, inputShape=(256, 256, 3), latentDim=512,
-                       optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam()):
+                 encoder: Encoder=None, decoder: Decoder=None,
+                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam()):
         super(VAE, self).__init__()
 
         self.optimizer = optimizer
+        self.latentDim = latentDim
 
         self.encoder: Encoder = Encoder(inputShape=inputShape, outputDimension=latentDim)
+        if encoder:
+            self.encoder: Encoder = encoder
+
         self.decoder: Decoder = Decoder(inputShape=(latentDim,))
+        if decoder:
+            self.decoder: Decoder = decoder
 
 
     def call(self, inputTensor):
@@ -129,7 +135,6 @@ class VAE(tf.keras.Model):
                 for test_x in test_dataset:
                     loss(self.compute_loss(test_x))
                 elbo = -loss.result()
-                display.clear_output(wait=False)
                 print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
                         .format(epoch, elbo, end_time - start_time))
             else:

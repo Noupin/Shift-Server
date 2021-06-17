@@ -15,7 +15,7 @@ from src.AI.Decoder import Decoder
 
 class Autoencoder(TFModel):
     """
-    An Autoencoder TensorFlow model for Vardia projects.
+    An Autoencoder TensorFlow model for Feryv projects.
 
     Args:
         inputShape (tuple, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
