@@ -5,6 +5,7 @@ The custom Variational Autoencoder model for TFModel
 __author__ = "Noupin"
 
 #Third Party Imports
+from src.AI.TFModel import TFModel
 import time
 import numpy as np
 import tensorflow as tf
@@ -52,10 +53,23 @@ class VAE(tf.keras.Model):
         return output.numpy()
 
 
+    def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
+        """
+        Compiles self.model.
+
+        Args:
+            optimizer (tf.optimizers.Optimizer, optional): The optimizer to apply to self.model. Defaults to None.
+            loss (function, optional): The loss to apply to self.model. Defaults to None.
+        """
+        
+        self.encoder.compileModel(optimizer=optimizer, loss=loss)
+        self.decoder.compileModel(optimizer=optimizer, loss=loss)
+
+
     @tf.function
     def sample(self, eps=None):
         if eps is None:
-            eps = tf.random.normal(shape=(100, self.decoder.inputShape[0]))
+            eps = tf.random.normal(shape=(100, self.latentDim))
 
         return self.decode(eps, apply_sigmoid=True)
 
@@ -96,6 +110,7 @@ class VAE(tf.keras.Model):
         mean, logvar = self.encode(x)
         z = self.reparameterize(mean, logvar)
         x_logit = self.decode(z)
+
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
         logpz = self.log_normal_pdf(z, 0., 0.)
@@ -113,13 +128,16 @@ class VAE(tf.keras.Model):
         update the model's parameters.
         """
 
-        with tf.GradientTape() as tape:
+        with tf.GradientTape() as encoderTape, tf.GradientTape() as decoderTape:
             loss = self.compute_loss(x)
 
-        gradients = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        encoderGradients = encoderTape.gradient(loss, self.encoder.trainable_variables)
+        decoderGradients = decoderTape.gradient(loss, self.decoder.trainable_variables)
+
+        self.encoder.optimizer.apply_gradients(zip(encoderGradients, self.encoder.trainable_variables))
+        self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
         
-        return loss
+        return loss/100000.
 
 
     def train(self, train_dataset, test_dataset=None, epochs=1):

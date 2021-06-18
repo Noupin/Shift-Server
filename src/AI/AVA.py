@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import time
-import numpy as np
 import tensorflow as tf
 
 #First Party Imports
@@ -40,6 +39,20 @@ class AVA(VAE):
         self.discriminator: Discriminator = Discriminator(inputShape=inputShape)
         if discriminator:
             self.discriminator: Discriminator = discriminator
+    
+    
+    def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
+        """
+        Compiles self.model.
+
+        Args:
+            optimizer (tf.optimizers.Optimizer, optional): The optimizer to apply to self.model. Defaults to None.
+            loss (function, optional): The loss to apply to self.model. Defaults to None.
+        """
+        
+        super(AVA, self).compileModel(optimizer=optimizer, loss=loss)
+
+        self.discriminator.compileModel(optimizer=optimizer, loss=loss)
 
 
     def discriminator_loss(self, real_output, fake_output):
@@ -58,9 +71,11 @@ class AVA(VAE):
     # This annotation causes the function to be "compiled".
     @tf.function
     def train_step(self, images):
-        super(AVA, self).train_step(images)
+        #Train VAE
+        VAELoss = super(AVA, self).train_step(images)
 
         with tf.GradientTape() as decoderTape, tf.GradientTape() as discriminatorTape:
+            #Get generated image from VAE
             mean, logvar = self.encode(images)
             z = self.reparameterize(mean, logvar)
             generated_images = self.sample(z)
@@ -69,20 +84,22 @@ class AVA(VAE):
             fake_output = self.discriminator(generated_images, training=True)
 
             decoderLoss = self.decoder_loss(fake_output)
-            disc_loss = self.discriminator_loss(real_output, fake_output)
+            discriminatorLoss = self.discriminator_loss(real_output, fake_output)
 
         decoderGradients = decoderTape.gradient(decoderLoss, self.decoder.trainable_variables)
-        discriminatorGradients = discriminatorTape.gradient(disc_loss, self.discriminator.trainable_variables)
+        discriminatorGradients = discriminatorTape.gradient(discriminatorLoss, self.discriminator.trainable_variables)
 
         self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
         self.discriminator.optimizer.apply_gradients(zip(discriminatorGradients, self.discriminator.trainable_variables))
 
+        return VAELoss, decoderLoss, discriminatorLoss
 
     def train(self, train_dataset, epochs):
         for epoch in range(epochs):
             start = time.time()
 
             for image_batch in train_dataset:
-                self.train_step(image_batch)
+                VAELoss, decoderLoss, discriminatorLoss = self.train_step(image_batch)
 
-            print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
+            print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
+Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-start:.5} sec")

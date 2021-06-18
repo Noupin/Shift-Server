@@ -15,7 +15,7 @@ import mediapipe as mp
 
 
 def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
-    faceDetection = mp.solutions.mediapipe.python.solutions.face_detection.FaceDetection(**kwargs)
+    faceDetection = mp.solutions.face_detection.FaceDetection(**kwargs)
     results = faceDetection.process(img)
     
     rects = []
@@ -59,7 +59,7 @@ OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
 OBJECT_CLASSIFIER_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
 CV_WAIT_KEY = 1
 
-HUE_ADJUSTMENT = [0, 335/360, 120/360, 215/360] #RGB hue adjustment values
+HUE_ADJUSTMENT = [0, 320/360, 120/360, 215/360] #RGB hue adjustment values
 
 LARGE_BATCH_SIZE = 64
 

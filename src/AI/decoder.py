@@ -35,7 +35,7 @@ class Decoder(TFModel):
                        name="Decoder", modelPath=""):
         super(Decoder, self).__init__(inputShape=inputShape, inputName=inputName,
                                       outputLayer=tf.keras.layers.Conv2DTranspose(filters=outputDimension, kernel_size=3, strides=1,
-                                                                         padding="same", activation=outputActivation, name=outputName),
+                                                                                  padding="same", name=outputName),
                                       name=name, modelPath=modelPath)
      
         self.decodingLayers = 0

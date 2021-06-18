@@ -10,6 +10,8 @@ import numpy as np
 import tensorflow as tf
 from typing import List, Tuple, Union, Generator
 
+from tensorflow.python.ops.numpy_ops.np_arrays import ndarray
+
 #First Party Imports
 from src.utils.memory import allowTFMemoryGrowth
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
@@ -56,24 +58,24 @@ class TFModel(tf.keras.Model):
         self.model: tf.keras.Model = None
 
 
-    def call(self, layer: tf.keras.layers.Layer) -> tf.keras.layers.Layer:
+    def call(self, tensor: tf.Tensor) -> tf.Tensor:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
 
         Args:
-            layer (tensorflow.python.framework.ops.Tensor): The starting layer of the model
+            tensor (tf.Tensor): The input to the model.
 
         Raises:
             IncompatibleTFLayerError: One or more of the layers in self.modelLayers are incompatible
 
         Returns:
-            tensorflow.python.framework.ops.Tensor: The last layer in the connected model
+            tf.Tensor: The last layer in the connected model
         """
         
         if not isinstance(self.modelLayers, tuple):
             self.modelLayers = tuple(self.modelLayers)
 
-        connectedLayers = [layer]
+        connectedLayers = [tensor]
 
         for modelLayer in range(1, len(self.modelLayers)):
             try:
@@ -82,6 +84,24 @@ class TFModel(tf.keras.Model):
                 raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer], originalError=str(error))
 
         return connectedLayers[-1]
+
+
+    def inference(self, tensor: tf.Tensor, asNumpy=True) -> Union[tf.Tensor, np.ndarray]:
+        """
+        The method TensorFlow uses when calling the class as a tf.keras.Model
+
+        Args:
+            tensor (tf.Tensor): The the tensor to inference with.
+            asNumpy
+
+        Returns:
+            tf.Tensor or np.ndarray: The inferenced output.
+        """
+
+        if asNumpy:
+            return self.call(tensor).numpy()
+        else:
+            return self.call(tensor)
 
 
     @tf.function
