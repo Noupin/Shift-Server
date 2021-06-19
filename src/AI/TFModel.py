@@ -10,10 +10,9 @@ import numpy as np
 import tensorflow as tf
 from typing import List, Tuple, Union, Generator
 
-from tensorflow.python.ops.numpy_ops.np_arrays import ndarray
-
 #First Party Imports
 from src.utils.memory import allowTFMemoryGrowth
+from src.Exceptions.IncompatibleShapes import IncompatibleShapeError
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
 from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
@@ -55,10 +54,8 @@ class TFModel(tf.keras.Model):
         self.modelLayers.append(tf.keras.Input(inputShape, name=inputName))
         self.modelLayers.append(outputLayer)
 
-        self.model: tf.keras.Model = None
 
-
-    def call(self, tensor: tf.Tensor) -> tf.Tensor:
+    def call(self, tensor: Union[tf.Tensor, np.ndarray]) -> tf.Tensor:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
 
@@ -81,6 +78,8 @@ class TFModel(tf.keras.Model):
             try:
                 connectedLayers.append(self.modelLayers[modelLayer](connectedLayers[modelLayer-1]))
             except ValueError as error:
+                if modelLayer == 1:
+                    raise ValueError(f"{str(error)}\nThe tensor being passed in to the model and the input layer of the model have incompatible shapes.")
                 raise IncompatibleTFLayerError(connectedLayers[modelLayer-1], self.modelLayers[modelLayer], originalError=str(error))
 
         return connectedLayers[-1]
@@ -247,32 +246,53 @@ class TFModel(tf.keras.Model):
             raise LayerIndexOutOfRangeError(index, len(self.modelLayers))
 
         self.modelLayers.insert(index, layer)
-
-
-    def load(self, path: str, compile=True, readyToPredict=False, imageShape=(128, 128, 3)) -> None:
+    
+    
+    def saveModel(self, path: str):
         """
-        Load the encoder given a filepath and a filename to load from.
+        Saves the given model to the path.
+
+        Args:
+            path (str): The path to save the model to.
+        """
+
+        #self.save_weights(path)
+        self.save(path)
+
+
+    def loadModel(self, path: str, compile=True, hasInputLayer=False, inputShape=None) -> None:
+        """
+        Load the model given a filepath and a filename to load from.
 
         Args:
             path (str): Filepath to a tensorflow model to be loaded.
             compile (bool, optional): Whether or not to compile the newly \
                 loaded model. Defaults to True.
-            readyToPredict (bool, optional): Whether or not to train on blank \
-                data to make sure the model is ready to be predicted with. Defaults to False.
-            imageShape (tuple of int): The shape of the image to prepare the model to predict.
+            hasInputLayer (bool, optional): Whether the model to be loaded has \
+                an InputLayer. Defaults to False.
+            inputShape (tuple of int, optional): The input shape of the model.
         """
         
         if not isinstance(self.modelLayers, tuple):
             self.modelLayers = tuple(self.modelLayers)
+        
+        if inputShape:
+            self.inputShape = inputShape
 
-        self.load_weights(path).expect_partial()
+        testTensor = np.zeros(self.inputShape, dtype=np.float32).reshape(1, *self.inputShape)
+
+        loadedModel: tf.keras.Model = tf.keras.models.load_model(path)
+
+        if not hasInputLayer:
+            self.modelLayers = [tf.keras.Input(self.inputShape)]
+            self.modelLayers += loadedModel.layers
+            self.modelLayers = tuple(self.modelLayers)
+
+        self.call(testTensor)
+        self.set_weights(loadedModel.get_weights())
         
         if compile:
             self.compileModel()
-        
-        if readyToPredict:
-            blankImage = np.array(np.zeros(imageShape))
-            #self.test_on_batch(blankImage, blankImage) #May need to be train_on_batch
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:

@@ -5,7 +5,7 @@ The custom Variational Autoencoder model for TFModel
 __author__ = "Noupin"
 
 #Third Party Imports
-from src.AI.TFModel import TFModel
+import os
 import time
 import numpy as np
 import tensorflow as tf
@@ -43,6 +43,7 @@ class VAE(tf.keras.Model):
         self.decoder: Decoder = Decoder(inputShape=(latentDim,))
         if decoder:
             self.decoder: Decoder = decoder
+            self.latentDim = self.decoder.inputShape[0]
 
 
     def call(self, inputTensor):
@@ -64,6 +65,53 @@ class VAE(tf.keras.Model):
         
         self.encoder.compileModel(optimizer=optimizer, loss=loss)
         self.decoder.compileModel(optimizer=optimizer, loss=loss)
+    
+    
+    def saveModel(self, path: str, **kwargs) -> None:
+        """
+        Saves the weights of the models to be loaded in to path.
+
+        Args:
+            path (str): The path to save the weights to.
+            kwargs: The keyword arguments to pass to tf.Model.save_weights.
+        """
+        
+        self.encoder.saveModel(os.path.join(path, "encoder"))
+        self.decoder.saveModel(os.path.join(path, "decoder"))
+
+        '''saveFormat = 'tf'
+        if kwargs.get("save_format"):
+            saveFormat = kwargs.get("save_format")
+            kwargs.pop("save_format")
+
+        self.encoder.save_weights(os.path.join(path, f"encoder", f"encoder"),
+                                  save_format=saveFormat, **kwargs)
+        self.decoder.save_weights(os.path.join(path, f"decoder", f"decoder"),
+                                  save_format=saveFormat, **kwargs)'''
+    
+    
+    def loadModel(self, path: str, absPath=False, **kwargs):
+        """
+        Loads the encoder and decoder to be used again.
+
+        Args:
+            path (str): The path to load the models from
+            absPath (bool, optional): Whether the path is absolute or not. Defaults to False.
+            kwargs: The keyword arguments to pass to TFModel.load.
+        """
+        
+        self.encoder.loadModel(os.path.join(path, "encoder"))
+        self.decoder.loadModel(os.path.join(path, "decoder"),
+                               inputShape=(int(self.latentDim/2),))
+        
+        '''if absPath:
+            self.encoder.loadModel(path, compile=False)
+            self.decoder.loadModel(path, compile=False)
+        else:
+            self.encoder.loadModel(os.path.join(path, f"encoder", f"encoder"),
+                              compile=False, **kwargs)
+            self.decoder.loadModel(os.path.join(path, f"decoder", f"decoder"),
+                              compile=False, **kwargs)'''
 
 
     @tf.function

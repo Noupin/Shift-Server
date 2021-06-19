@@ -5,6 +5,7 @@ The custom Adversarial Variational Autoencoder model for TFModel
 __author__ = "Noupin"
 
 #Third Party Imports
+import os
 import time
 import tensorflow as tf
 
@@ -53,6 +54,49 @@ class AVA(VAE):
         super(AVA, self).compileModel(optimizer=optimizer, loss=loss)
 
         self.discriminator.compileModel(optimizer=optimizer, loss=loss)
+    
+    
+    def saveModel(self, path: str, **kwargs):
+        """
+        Saves the weights of the models to be loaded in to path.
+
+        Args:
+            path (str): The path to save the weights to.
+            kwargs: The keyword arguments to pass to tf.Model.save_weights.
+        """
+
+        super(AVA, self).saveModel(path, **kwargs)
+        
+        self.discriminator.saveModel(os.path.join(path, "discriminator"))
+
+        '''saveFormat = 'tf'
+        if kwargs.get("save_format"):
+            saveFormat = kwargs.get("save_format")
+            kwargs.pop("save_format")
+
+        self.discriminator.save_weights(os.path.join(path, f"discriminator", f"discriminator"),
+                                        save_format=saveFormat, **kwargs)'''
+    
+    
+    def loadModel(self, path: str, absPath=False, **kwargs):
+        """
+        Loads the encoder, decoder, and discriminator to be used again.
+
+        Args:
+            path (str): The path to load the models from
+            absPath (bool, optional): Whether the path is absolute or not. Defaults to False.
+            kwargs: The keyword arguments to pass to TFModel.load.
+        """
+        
+        super(AVA, self).loadModel(path, absPath, **kwargs)
+        
+        self.discriminator.loadModel(os.path.join(path, "discriminator"))
+        
+        '''if absPath:
+            self.discriminator.loadModel(path, compile=False)
+        else:
+            self.discriminator.loadModel(os.path.join(path, f"discriminator", f"discriminator"),
+                                         compile=False, **kwargs)'''
 
 
     def discriminator_loss(self, real_output, fake_output):

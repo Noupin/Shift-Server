@@ -114,16 +114,26 @@ class Shift:
         """
 
         for image in images:
-            objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
+            if isinstance(image, MultiImage):
+                objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
+            else:
+                objects = detectObject(objectClassifier, image=image, **kwargs)
+
             if len(objects) < 1:
                 continue
-
-            image.crop(getLargestRectangle(objects))
-            image.resize(self.imageShape[0], self.imageShape[1])
+            
+            if isinstance(image, MultiImage):
+                image.crop(getLargestRectangle(objects))
+                image.resize(self.imageShape[0], self.imageShape[1])
+            else:
+                image = cropImage(image, getLargestRectangle(objects))
+                image = resizeImage(image, (self.imageShape[0], self.imageShape[1]))
 
             for hue in HUE_ADJUSTMENT:
-                huedImage = tf.image.adjust_hue(image.TFImage, hue)
-                yield np.array(tf.image.adjust_hue(image.TFImage, hue))
+                tfImage = image.TFImage if isinstance(image, MultiImage) else (image/255.).astype(np.float32)
+                huedImage = tf.image.adjust_hue(tfImage, hue)
+
+                yield np.array(tf.image.adjust_hue(tfImage, hue))
                 
                 for flipCode in flipCodes:
                     yield flipImage(huedImage, flipCode)
@@ -274,9 +284,9 @@ class Shift:
 
         if basePath:
             if absPath:
-                self.baseDecoder.load(basePath, **kwargs)
+                self.baseDecoder.loadModel(basePath, **kwargs)
             else:
-                self.baseDecoder.load(os.path.join(basePath, f"baseDecoder", f"baseDecoder"), **kwargs)
+                self.baseDecoder.loadModel(os.path.join(basePath, f"baseDecoder", f"baseDecoder"), **kwargs)
 
             if not encoderPath:
                 self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
@@ -285,9 +295,9 @@ class Shift:
 
         if maskPath:
             if absPath:
-                self.maskDecoder.load(maskPath, **kwargs)
+                self.maskDecoder.loadModel(maskPath, **kwargs)
             else:
-                self.maskDecoder.load(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"), **kwargs)
+                self.maskDecoder.loadModel(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"), **kwargs)
 
             if not encoderPath:
                 self.maskAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
@@ -296,9 +306,9 @@ class Shift:
         
         if encoderPath:
             if absPath:
-                self.encoder.load(encoderPath, **kwargs)
+                self.encoder.loadModel(encoderPath, **kwargs)
             else:
-                self.encoder.load(os.path.join(encoderPath, f"encoder", f"encoder"), **kwargs)
+                self.encoder.loadModel(os.path.join(encoderPath, f"encoder", f"encoder"), **kwargs)
 
             self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
                                                decoder=self.baseDecoder, optimizer=self.optimizer,
@@ -365,7 +375,7 @@ class Shift:
         saveFormat = 'tf'
         if kwargs.get("save_format"):
             saveFormat = kwargs.get("save_format")
-            kwargs.pop("save_item")
+            kwargs.pop("save_format")
 
         if encoderPath:
             self.encoder.save_weights(os.path.join(encoderPath, f"encoder", f"encoder"),
