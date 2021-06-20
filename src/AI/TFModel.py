@@ -248,19 +248,19 @@ class TFModel(tf.keras.Model):
         self.modelLayers.insert(index, layer)
     
     
-    def saveModel(self, path: str):
+    def saveModel(self, path: str, **kwargs):
         """
         Saves the given model to the path.
 
         Args:
             path (str): The path to save the model to.
+            kwargs: The key word arguments to pass into the tf.keras.Model.save function.
         """
 
-        #self.save_weights(path)
-        self.save(path)
+        self.save(path, **kwargs)
 
 
-    def loadModel(self, path: str, compile=True, hasInputLayer=False, inputShape=None) -> None:
+    def loadModel(self, path: str, compile=True, hasInputLayer=False, inputShape=None, **kwargs) -> None:
         """
         Load the model given a filepath and a filename to load from.
 
@@ -271,6 +271,7 @@ class TFModel(tf.keras.Model):
             hasInputLayer (bool, optional): Whether the model to be loaded has \
                 an InputLayer. Defaults to False.
             inputShape (tuple of int, optional): The input shape of the model.
+            kwargs: The keyword arguments to pass to the tf.keras.models.load_model function.
         """
         
         if not isinstance(self.modelLayers, tuple):
@@ -281,7 +282,7 @@ class TFModel(tf.keras.Model):
 
         testTensor = np.zeros(self.inputShape, dtype=np.float32).reshape(1, *self.inputShape)
 
-        loadedModel: tf.keras.Model = tf.keras.models.load_model(path)
+        loadedModel: tf.keras.Model = tf.keras.models.load_model(path, **kwargs)
 
         if not hasInputLayer:
             self.modelLayers = [tf.keras.Input(self.inputShape)]

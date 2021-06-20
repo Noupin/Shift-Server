@@ -73,24 +73,14 @@ class VAE(tf.keras.Model):
 
         Args:
             path (str): The path to save the weights to.
-            kwargs: The keyword arguments to pass to tf.Model.save_weights.
+            kwargs: The keyword arguments to pass to TFModel.saveModel.
         """
         
-        self.encoder.saveModel(os.path.join(path, "encoder"))
-        self.decoder.saveModel(os.path.join(path, "decoder"))
-
-        '''saveFormat = 'tf'
-        if kwargs.get("save_format"):
-            saveFormat = kwargs.get("save_format")
-            kwargs.pop("save_format")
-
-        self.encoder.save_weights(os.path.join(path, f"encoder", f"encoder"),
-                                  save_format=saveFormat, **kwargs)
-        self.decoder.save_weights(os.path.join(path, f"decoder", f"decoder"),
-                                  save_format=saveFormat, **kwargs)'''
+        self.encoder.saveModel(os.path.join(path, "encoder"), **kwargs)
+        self.decoder.saveModel(os.path.join(path, "decoder"), **kwargs)
     
     
-    def loadModel(self, path: str, absPath=False, **kwargs):
+    def loadModel(self, path: str, **kwargs):
         """
         Loads the encoder and decoder to be used again.
 
@@ -100,18 +90,9 @@ class VAE(tf.keras.Model):
             kwargs: The keyword arguments to pass to TFModel.load.
         """
         
-        self.encoder.loadModel(os.path.join(path, "encoder"))
+        self.encoder.loadModel(os.path.join(path, "encoder"), **kwargs)
         self.decoder.loadModel(os.path.join(path, "decoder"),
-                               inputShape=(int(self.latentDim/2),))
-        
-        '''if absPath:
-            self.encoder.loadModel(path, compile=False)
-            self.decoder.loadModel(path, compile=False)
-        else:
-            self.encoder.loadModel(os.path.join(path, f"encoder", f"encoder"),
-                              compile=False, **kwargs)
-            self.decoder.loadModel(os.path.join(path, f"decoder", f"decoder"),
-                              compile=False, **kwargs)'''
+                               inputShape=(int(self.latentDim/2),), **kwargs)
 
 
     @tf.function

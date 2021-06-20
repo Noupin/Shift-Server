@@ -69,16 +69,8 @@ class AVA(VAE):
         
         self.discriminator.saveModel(os.path.join(path, "discriminator"))
 
-        '''saveFormat = 'tf'
-        if kwargs.get("save_format"):
-            saveFormat = kwargs.get("save_format")
-            kwargs.pop("save_format")
 
-        self.discriminator.save_weights(os.path.join(path, f"discriminator", f"discriminator"),
-                                        save_format=saveFormat, **kwargs)'''
-    
-    
-    def loadModel(self, path: str, absPath=False, **kwargs):
+    def loadModel(self, path: str, **kwargs):
         """
         Loads the encoder, decoder, and discriminator to be used again.
 
@@ -88,15 +80,9 @@ class AVA(VAE):
             kwargs: The keyword arguments to pass to TFModel.load.
         """
         
-        super(AVA, self).loadModel(path, absPath, **kwargs)
+        super(AVA, self).loadModel(path, **kwargs)
         
-        self.discriminator.loadModel(os.path.join(path, "discriminator"))
-        
-        '''if absPath:
-            self.discriminator.loadModel(path, compile=False)
-        else:
-            self.discriminator.loadModel(os.path.join(path, f"discriminator", f"discriminator"),
-                                         compile=False, **kwargs)'''
+        self.discriminator.loadModel(os.path.join(path, "discriminator"), **kwargs)
 
 
     def discriminator_loss(self, real_output, fake_output):
