@@ -25,8 +25,8 @@ class AVA(VAE):
         inputShape (tuple, optional): The resolution and color channels for the input image. Defaults to (256, 256, 3).
         inputName (str, optional): The name of the input layer. Defaults to "InputImage".
         encoder (AI.encoder.Encoder, optional): The encoder. Defaults to None.
-        decoder (AI.encoder.Decoder, optional): The decoder. Defaults to None.
-        discriminator (AI.encoder.Dsicriminator, optional): The discriminator. Defaults to None.
+        decoder (AI.decoder.Decoder, optional): The decoder. Defaults to None.
+        discriminator (AI.discriminator.Dsicriminator, optional): The discriminator. Defaults to None.
         optimizer (tf.optimizers.Optimizer, optional): The optimizer to use when compiling the model. Defaults to tf.optimizers.Adam().
         loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
     """
@@ -76,8 +76,7 @@ class AVA(VAE):
         Loads the encoder, decoder, and discriminator to be used again.
 
         Args:
-            path (str): The path to load the models from
-            absPath (bool, optional): Whether the path is absolute or not. Defaults to False.
+            path (str): The path to load the models from.
             kwargs: The keyword arguments to pass to TFModel.load.
         """
         

@@ -8,7 +8,7 @@ __author__ = "Noupin"
 import time
 import numpy as np
 import tensorflow as tf
-from typing import List, Tuple, Union, Iterator, Generator
+from typing import List, Tuple, Union
 
 #First Party Imports
 from src.utils.memory import allowTFMemoryGrowth
@@ -211,7 +211,7 @@ class TFModel(tf.keras.Model):
         self.save(path, **kwargs)
 
 
-    def loadModel(self, path: str, compile=True, hasInputLayer=False, inputShape=None, **kwargs) -> None:
+    def loadModel(self, path: str, compile=True, hasInputLayer=False, inputShape: Tuple[int, ...]=None, **kwargs) -> None:
         """
         Load the model given a filepath and a filename to load from.
 

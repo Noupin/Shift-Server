@@ -7,7 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import numpy as np
-from typing import List
+from typing import List, Tuple
 from flask import current_app
 from src.utils.MultiImage import MultiImage
 from src.utils.files import generateUniqueFilename
@@ -15,7 +15,7 @@ from src.utils.files import generateUniqueFilename
 #First Party Imports
 from src.run import celery
 from src.AI.Shift import Shift
-from src.utils.image import viewImage
+from src.utils.dataset import datasetFrom
 from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.Request.TrainRequest import TrainRequest
@@ -24,6 +24,7 @@ from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (EXHIBIT_IMAGE_COMPRESSION_QUALITY, IMAGE_PATH,
                                      OBJECT_CLASSIFIER, OBJECT_CLASSIFIER_KWARGS,
                                      LARGE_BATCH_SIZE, PTM_DECODER_REALTIVE_PATH,
+                                     PTM_DISCRIMINATOR_REALTIVE_PATH,
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH)
 
 
@@ -59,20 +60,27 @@ def loadPTM(requestData: TrainRequest, shiftAI: Shift):
     if requestData.prebuiltShiftModel:
         shiftAI.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                               requestData.prebuiltShiftModel),
-                     basePath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                           requestData.prebuiltShiftModel))
+                     baseDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                  requestData.prebuiltShiftModel))
 
         if requestData.usePTM:
-            shiftAI.load(maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                               PTM_DECODER_REALTIVE_PATH), absPath=True)
+            shiftAI.load(maskDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                      PTM_DECODER_REALTIVE_PATH),
+                         maskDiscriminatorPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                            PTM_DISCRIMINATOR_REALTIVE_PATH),
+                         absPath=True)
 
     elif requestData.usePTM:
         shiftAI.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                               PTM_ENCODER_REALTIVE_PATH),
-                     basePath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                           PTM_DECODER_REALTIVE_PATH),
-                     maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                           PTM_DECODER_REALTIVE_PATH),
+                     baseDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                  PTM_DECODER_REALTIVE_PATH),
+                     baseDiscriminatorPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                        PTM_DISCRIMINATOR_REALTIVE_PATH),
+                     maskDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                  PTM_DECODER_REALTIVE_PATH),
+                     maskDiscriminatorPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                        PTM_DISCRIMINATOR_REALTIVE_PATH),
                      absPath=True)
 
 
@@ -89,7 +97,7 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
 
     inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
-    shiftedImage = shft.shift(shft.maskAE, next(inferencingData), **OBJECT_CLASSIFIER_KWARGS)
+    shiftedImage = shft.shift(shft.maskAVA, next(inferencingData), **OBJECT_CLASSIFIER_KWARGS)
     shiftedImage.resize(width=1000, keepAR=True)
     shiftedImage.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
@@ -115,16 +123,46 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     exhibitArray: List[MultiImage] = []
     
     exhibitArray.append(next(baseInferencingData))
-    exhibitArray.append(shft.shift(shft.baseAE, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
+    exhibitArray.append(shft.shift(shft.baseAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
     exhibitArray.append(next(maskInferencingData))
-    exhibitArray.append(shft.shift(shft.maskAE, exhibitArray[2].copy(), **OBJECT_CLASSIFIER_KWARGS))
-    exhibitArray.append(shft.shift(shft.maskAE, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
+    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[2].copy(), **OBJECT_CLASSIFIER_KWARGS))
+    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
     
     for image in exhibitArray:
         image.resize(width=500, keepAR=True)
         image.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
     return [img.encode() for img in exhibitArray]
+
+
+def saveBaseAndMaskImages(shft: Shift) -> Tuple[str, str]:
+    """
+    Uses the Shift object to save a base and mask image to the filesystem.
+
+    Args:
+        shft (Shift): The shift models and variables
+    
+    Returns:
+        Tuple[str, str]: The base and mask filename.
+    """
+
+    _, basePreviewUUID = generateUniqueFilename()
+    baseFilename = f"{basePreviewUUID}.png"
+    baseImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
+                                       1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+    basePreviewImage = next(baseImageGenerator)
+    basePreviewImage.resize(512, keepAR=True)
+    basePreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, baseFilename))
+
+    _, maskPreviewUUID = generateUniqueFilename()
+    maskFilename = f"{maskPreviewUUID}.png"
+    maskImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
+                                       1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+    maskPreviewImage = next(maskImageGenerator)
+    maskPreviewImage.resize(512, keepAR=True)
+    maskPreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, maskFilename))
+    
+    return baseFilename, maskFilename
 
 
 @celery.task(name="train.trainShift")
@@ -145,6 +183,10 @@ def trainShift(requestJSON: dict, userID: str):
 
     shft = Shift(id_=requestData.shiftUUID)
     loadPTM(requestData, shft)
+    
+    #Subprocess cannot complete task "FileNotFoundError: [WinError 2] The system cannot find the file specified"
+    amountForBuffer = LARGE_BATCH_SIZE#getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
+    batchSize=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE]
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
         originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
@@ -153,30 +195,24 @@ def trainShift(requestJSON: dict, userID: str):
         baseImageArray = list(shft.formatTrainingData(originalImageList, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
         baseImageArray += list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
 
-        baseTrainingData = np.array(baseImageArray)
+        baseDataset = datasetFrom(baseImageArray, bufferSize=len(baseImageArray), batchSize=batchSize)
 
 
         if requestData.prebuiltShiftModel:
             maskImages = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, requestData.prebuiltShiftModel, "tmp", "mask"))
-            maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)))
+            maskImageArray = list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
         else:
             maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
-            maskTrainingData = np.array(list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)))
-
-    shft.compile()
-
-    #Subprocess cannot complete task "FileNotFoundError: [WinError 2] The system cannot find the file specified"
-    amountForBuffer = LARGE_BATCH_SIZE#getAmountForBuffer(np.ones(shft.imageShape), sum(getGPUMemory()))
+            maskImageArray = list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
+        maskDataset = datasetFrom(maskImageArray, bufferSize=len(maskImageArray), batchSize=batchSize)
 
     training = worker.training
     while training:
         while not worker.inferencing and training:
-            if not baseTrainingData is None and baseTrainingData.any():
-                shft.baseAE.fit(x=baseTrainingData, y=baseTrainingData, epochs=1,
-                                batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
-            if not maskTrainingData is None and maskTrainingData.any():
-                shft.maskAE.fit(x=maskTrainingData, y=maskTrainingData, epochs=1,
-                                batch_size=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE])
+            if baseDataset:
+                shft.baseAVA.train(baseDataset, epochs=1)
+            if maskDataset:
+                shft.maskAVA.train(maskDataset, epochs=1)
             
             worker.reload()
             training = worker.training
@@ -192,21 +228,7 @@ def trainShift(requestJSON: dict, userID: str):
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)
     
-    _, basePreviewUUID = generateUniqueFilename()
-    baseFilename = f"{basePreviewUUID}.png"
-    baseImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
-                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
-    basePreviewImage = next(baseImageGenerator)
-    basePreviewImage.resize(512, keepAR=True)
-    basePreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, baseFilename))
-
-    _, maskPreviewUUID = generateUniqueFilename()
-    maskFilename = f"{maskPreviewUUID}.png"
-    maskImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
-                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
-    maskPreviewImage = next(maskImageGenerator)
-    maskPreviewImage.resize(512, keepAR=True)
-    maskPreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, maskFilename))
+    baseFilename, maskFilename = saveBaseAndMaskImages(shft)
 
     saveShiftToDatabase(uuid=shft.id_, author=author, title=requestData.shiftTitle, path=shiftFilePath,
                         baseImageFilename=baseFilename, maskImageFilename=maskFilename)

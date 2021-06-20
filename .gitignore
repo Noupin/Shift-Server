@@ -1,13 +1,21 @@
+#VSCode Files
 /.vscode
-**/static
-/shift-env
-/keys
-codeTest.*
+
+#Caches
 **/__pycache__
-ServerData.py
-.env
-openh264-1.8.0-win64.dll
-/videos
-shape_predictor_68_face_landmarks.dat
-killCelery.py
 **/.pytest_cache
+
+#Libraries
+/shift-env
+openh264-1.8.0-win64.dll
+shape_predictor_68_face_landmarks.dat
+
+#Private Files
+/keys
+.env
+
+#File Storage
+**/static
+
+#Debug Files
+codeTest.*

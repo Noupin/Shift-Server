@@ -61,8 +61,7 @@ def test_LoadModel():
 
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
 
 def test_Compile():
@@ -109,8 +108,7 @@ def test_TFTrainingLoadedModel():
     
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
@@ -131,7 +129,7 @@ def test_PredictUntrainedModel():
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
-    predicted = shft.predict(shft.baseAE, image.TFImage)
+    predicted = shft.inference(shft.baseAE, image.TFImage)
     
     assert predicted.CVImage.shape == shft.imageShape
 
@@ -164,7 +162,7 @@ def test_PredictTFTrainedModel():
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
-    predicted = shft.predict(shft.baseAE, image.TFImage)
+    predicted = shft.inference(shft.baseAE, image.TFImage)
     
     assert predicted.CVImage.shape == shft.imageShape
 
@@ -174,8 +172,7 @@ def test_PredictLoadedModel():
 
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
@@ -184,7 +181,7 @@ def test_PredictLoadedModel():
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
-    predicted = shft.predict(shft.baseAE, image.TFImage)
+    predicted = shft.inference(shft.baseAE, image.TFImage)
     
     assert predicted.CVImage.shape == shft.imageShape
 
@@ -204,8 +201,7 @@ def test_PredictTFTrainedLoadedModel():
     
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
@@ -222,7 +218,7 @@ def test_PredictTFTrainedLoadedModel():
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
-    predicted = shft.predict(shft.baseAE, image.TFImage)
+    predicted = shft.inference(shft.baseAE, image.TFImage)
     
     assert predicted.CVImage.shape == shft.imageShape
     
@@ -272,8 +268,7 @@ def test_ShiftImageLoadedModel():
 
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
@@ -298,8 +293,7 @@ def test_ShiftImageTFTrainedLoadedModel():
     
     shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder",
-              absPath=True)
+              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))

@@ -9,6 +9,7 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
+from typing import Union
 
 #First Party Imports
 from src.AI.Encoder import Encoder
@@ -46,12 +47,31 @@ class VAE(tf.keras.Model):
             self.latentDim = self.decoder.inputShape[0]
 
 
-    def call(self, inputTensor):
+    def call(self, inputTensor: tf.Tensor) -> tf.Tensor:
         mean, logvar = self.encode(inputTensor)
         z = self.reparameterize(mean, logvar)
         output = self.sample(z)
 
-        return output.numpy()
+        return output
+    
+    
+    def inference(self, tensor: tf.Tensor, asNumpy=True, **kwargs) -> Union[tf.Tensor, np.ndarray]:
+        """
+        The method TensorFlow uses when calling the class as a tf.keras.Model
+
+        Args:
+            tensor (tf.Tensor): The the tensor to inference with.
+            asNumpy (bool, optional): Whether or not to return as a numpy array. Defaults to True.
+            kwargs: The keyword arguments to pass to the self.call function.
+
+        Returns:
+            tf.Tensor or np.ndarray: The inferenced output.
+        """
+
+        if asNumpy:
+            return self.call(tensor, **kwargs).numpy()
+        else:
+            return self.call(tensor, **kwargs)
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
@@ -85,8 +105,7 @@ class VAE(tf.keras.Model):
         Loads the encoder and decoder to be used again.
 
         Args:
-            path (str): The path to load the models from
-            absPath (bool, optional): Whether the path is absolute or not. Defaults to False.
+            path (str): The path to load the models from.
             kwargs: The keyword arguments to pass to TFModel.load.
         """
         

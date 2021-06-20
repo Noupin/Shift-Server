@@ -128,11 +128,11 @@ def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRe
         try:
             shft = Shift()
             shft.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                  requestData.prebuiltShiftModel),
-                      basePath=os.path.join(current_app.root_path, SHIFT_PATH,
-                               requestData.prebuiltShiftModel),
-                      maskPath=os.path.join(current_app.root_path, SHIFT_PATH,
-                               requestData.prebuiltShiftModel))
+                                               requestData.prebuiltShiftModel),
+                      baseDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                   requestData.prebuiltShiftModel),
+                      maskDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                                   requestData.prebuiltShiftModel))
         except OSError:
             return "That model does not exist"
     

@@ -11,6 +11,7 @@ from flask import current_app
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_login import login_required, current_user
+import mongoengine
 from src.DataModels.Marshmallow.User import UserSchema
 from flask_apispec import marshal_with, doc, use_kwargs
 
@@ -135,6 +136,9 @@ not the same type as the value you submitted"), 500
         except TypeError:
             return IndividualUserPatchResponse(msg=f"The field you are changing is \
 not the same type as the value you submitted"), 500
+        except mongoengine.errors.OperationError:
+            return IndividualUserPatchResponse(msg=f"There was no data sent to update \
+this would remove data."), 500
 
         return IndividualUserPatchResponse(msg=f"The fields \
 {[field for field, _ in requestBody.data.items()]} for the User: {user.username} have been modified.")

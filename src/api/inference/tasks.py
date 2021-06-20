@@ -45,14 +45,14 @@ def shiftMedia(requestJSON: dict) -> str:
     if requestData.prebuiltShiftModel:
         shft.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                            requestData.prebuiltShiftModel),
-                  basePath=os.path.join(current_app.root_path, SHIFT_PATH,
-                                        requestData.prebuiltShiftModel),
-                  maskPath=shiftFilePath, readyToPredict=True, imageShape=shft.imageShape)
+                  baseDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
+                                               requestData.prebuiltShiftModel),
+                  maskDecoderPath=shiftFilePath)
 
     else:
-        shft.load(encoderPath=shiftFilePath, basePath=shiftFilePath,
-                  maskPath=shiftFilePath, readyToPredict=True,
-                  imageShape=shft.imageShape)
+        shft.load(encoderPath=shiftFilePath,
+                  baseDecoderPath=shiftFilePath,
+                  maskDecoderPath=shiftFilePath)
 
     mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.shiftUUID)
     baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", os.listdir(os.path.join(shiftFilePath, "tmp", "original"))[0])
@@ -63,7 +63,7 @@ def shiftMedia(requestJSON: dict) -> str:
         fps = loadVideo(baseMediaFilename).fps
 
     inferencingData = list(shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), 1, firstMedia=True))
-    shifted = shft.shift(shft.maskAE, inferencingData, fps, **OBJECT_CLASSIFIER_KWARGS)
+    shifted = shft.shift(shft.maskAVA, inferencingData, fps, **OBJECT_CLASSIFIER_KWARGS)
 
     if getMediaType(baseMediaFilename) == 'video':
         baseAudio = extractAudio(loadVideo(baseMediaFilename))

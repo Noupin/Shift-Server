@@ -6,21 +6,21 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import moviepy
 import numpy as np
 import tensorflow as tf
 from flask import current_app
-from typing import List, Union, Iterator
 from moviepy import editor as mediaEditor
+from typing import Generator, List, Union, Iterator
 
 #First Party Imports
+from src.AI.AVA import AVA
 from src.AI.TFModel import TFModel
 from src.AI.Encoder import Encoder
 from src.AI.Decoder import Decoder
 from src.utils.video import videoToImages
-from src.AI.Autoencoder import Autoencoder
 from src.utils.memory import chunkIterable
 from src.utils.MultiImage import MultiImage
+from src.AI.Discriminator import Discriminator
 from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.detection import detectObject, getFacialLandmarks
@@ -49,10 +49,10 @@ class Shift:
         codingLayers (int, optional): The number of coding layers to add to the encoder and decoders. Defaults to 1.
     """
 
-    def __init__(self, id_=generateUniqueFilename()[1],
-                       imageShape=(256, 256, 3), latentSpaceDimension=512, latentReshape=(128, 128, 3),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
-                       convolutionFilters=24, codingLayers=-1):
+    def __init__(self, id_=generateUniqueFilename()[1], imageShape=(256, 256, 3),
+                 latentSpaceDimension=512, discriminatorLayers=1,
+                 optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
+                 convolutionFilters=24, codingLayers=-1):
         self.id_ = id_
         self.imageShape = imageShape
         self.latentSpaceDimension = latentSpaceDimension
@@ -68,19 +68,27 @@ class Shift:
         latentReshapeY = int(imageShape[1]/(2**(self.codingLayers+1)))
 
 
-        self.encoder: TFModel = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
+        self.encoder: Encoder = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
 
-        self.baseDecoder: TFModel = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
-        self.maskDecoder: TFModel = Decoder(inputShape=(latentSpaceDimension,), latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.baseDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
+                                            latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.baseDiscriminator: Discriminator = Discriminator(self.imageShape)
+
+        self.maskDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
+                                            latentReshape=(latentReshapeX, latentReshapeY, 24))
+        self.maskDiscriminator: Discriminator = Discriminator(self.imageShape)
 
         self.addCodingLayers(self.codingLayers)
+        self.addDiscriminatorLayers(discriminatorLayers)
 
         #Will shift objects from mask to base if predicting on mask images
-        self.baseAE: TFModel = Autoencoder(inputShape=imageShape, encoder=self.encoder, decoder=self.baseDecoder,
-                                           optimizer=optimizer, loss=loss, name="Base")
+        self.baseAVA: AVA = AVA(inputShape=imageShape, latentDim=self.latentSpaceDimension,
+                                encoder=self.encoder, decoder=self.baseDecoder,
+                                discriminator=self.baseDiscriminator, optimizer=self.optimizer)
         #Will shift objects from base to mask if predicting on base images
-        self.maskAE: TFModel = Autoencoder(inputShape=imageShape, encoder=self.encoder, decoder=self.maskDecoder,
-                                           optimizer=optimizer, loss=loss, name="Mask")
+        self.maskAVA: AVA = AVA(inputShape=imageShape, latentDim=self.latentSpaceDimension,
+                                encoder=self.encoder, decoder=self.maskDecoder,
+                                discriminator=self.maskDiscriminator, optimizer=self.optimizer)
 
 
     def getMaxCodingLayers(self) -> None:
@@ -97,7 +105,7 @@ class Shift:
 
 
     def formatTrainingData(self, images: Iterator[MultiImage], objectClassifier=OBJECT_CLASSIFIER,
-                           flipCodes=["y"], **kwargs) -> Iterator[np.ndarray]:
+                           flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
         images from MultiImage to np.ndarray or MultiImage.CVImage.
@@ -151,21 +159,36 @@ class Shift:
             self.encoder.addEncodingLayer(filters=self.convolutionFilters)
             self.baseDecoder.addDecodingLayer(filters=self.convolutionFilters)
             self.maskDecoder.addDecodingLayer(filters=self.convolutionFilters)
-    
 
-    def predict(self, model: TFModel, image: np.ndarray) -> MultiImage:
+
+    def addDiscriminatorLayers(self, count: int) -> None:
         """
-        Uses model to predict on image
+        Adds count discriminator layers to the discriminator.
+
+        Args:
+            count (int): The number of discriminator layers to add
+        """
+
+        for _ in range(count):
+            self.baseDiscriminator.addDiscriminatorLayer(filters=self.convolutionFilters)
+            self.maskDiscriminator.addDiscriminatorLayer(filters=self.convolutionFilters)
+
+
+    def inference(self, model: TFModel, image: np.ndarray) -> MultiImage:
+        """
+        Uses model to inference on image
 
         Args:
             model (TFModel): The model to be used for inferencing
             image (numpy.ndarray): The image to be inferenced on
 
         Returns:
-            numpy.ndarray: The predicted image
+            numpy.ndarray: The inference image
         """
 
-        image = model.predict(image.reshape(1, self.imageShape[0], self.imageShape[1], self.imageShape[2]))
+        image: List[np.ndarray] = model.inference(image.reshape(1, self.imageShape[0],
+                                                                   self.imageShape[1],
+                                                                   self.imageShape[2]))
         image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
         
         return MultiImage(image)
@@ -173,7 +196,7 @@ class Shift:
     
     def shiftImages(self, model: tf.keras.Model, images: Iterator[MultiImage],
                     objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
-                    asNumpy=False, **kwargs) -> Iterator[MultiImage]:
+                    asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -205,7 +228,7 @@ class Shift:
 
             replaceImage = MultiImage(image.CVImage)
             replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
-            replaceImage = self.predict(model, replaceImage.TFImage)
+            replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
 
             landmarks = getFacialLandmarks(image.CVImage, replaceArea)
@@ -263,65 +286,88 @@ class Shift:
         Compiles all the models to be trained.
         """
 
-        self.encoder.compileModel()
-        self.baseDecoder.compileModel()
-        self.maskDecoder.compileModel()
-        self.baseAE.compileModel()
-        self.maskAE.compileModel()
+        self.baseAVA.compileModel()
+        self.maskAVA.compileModel()
     
 
-    def load(self, encoderPath: str=None, basePath: str = None, maskPath: str=None, absPath=False, **kwargs) -> None:
+    def load(self, encoderPath: str=None, baseDecoderPath: str = None,
+             baseDiscriminatorPath: str = None, maskDecoderPath: str=None,
+             maskDiscriminatorPath: str = None, absPath=False, **kwargs) -> None:
         """
         Loads the encoder and the base and mask decoder then creates the Autoencoders to be trained.
 
         Args:
             encoderPath (str, optional): The path to the encoder to be loaded. Defaults to None.
-            basePath (str, optional): The path to the base decoder to be loaded. Defaults to None.
-            maskPath (str, optional): The path to the mask decoder to be loaded. Defaults to None.
-            absPath (bool, optional): Whteher or not the absolute path is given. Defaults to False.
+            baseDecoderPath (str, optional): The path to the base decoder to be loaded. Defaults to None.
+            baseDiscriminatorPath (str, optional): The path to the base discriminator to be loaded. Defaults to None.
+            maskDecoderPath (str, optional): The path to the mask decoder to be loaded. Defaults to None.
+            maskDiscriminatorPath (str, optional): The path to the mask discriminator to be loaded. Defaults to None.
+            absPath (bool, optional): Whteher or not the absolute paths are given. Defaults to False.
             kwargs: Additional kwargs to be passed to the Shift.load() function.
         """
 
-        if basePath:
+        if baseDecoderPath:
             if absPath:
-                self.baseDecoder.loadModel(basePath, **kwargs)
+                self.baseDecoder.loadModel(baseDecoderPath,
+                                           inputShape=(int(self.latentSpaceDimension/2),),
+                                           **kwargs)
+                self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
             else:
-                self.baseDecoder.loadModel(os.path.join(basePath, f"baseDecoder", f"baseDecoder"), **kwargs)
+                self.baseDecoder.loadModel(os.path.join(baseDecoderPath, "baseDecoder"),
+                                        inputShape=(int(self.latentSpaceDimension/2),),
+                                        **kwargs)
+                if baseDiscriminatorPath:
+                    self.baseDiscriminator.loadModel(os.path.join(baseDiscriminatorPath,
+                                                                "baseDiscriminator"),
+                                                    **kwargs)
+                else:
+                    self.baseDiscriminator.loadModel(os.path.join(baseDecoderPath,
+                                                                "baseDiscriminator"),
+                                                    **kwargs)
+                
 
             if not encoderPath:
-                self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
-                                                   decoder=self.baseDecoder, optimizer=self.optimizer,
-                                                   loss=self.loss, name="Base")
+                self.baseAVA: AVA = AVA(inputShape=self.imageShape, encoder=self.encoder,
+                                        decoder=self.baseDecoder, optimizer=self.optimizer,
+                                        discriminator=self.baseDiscriminator)
 
-        if maskPath:
+        if maskDecoderPath:
             if absPath:
-                self.maskDecoder.loadModel(maskPath, **kwargs)
+                self.maskDecoder.loadModel(maskDecoderPath,
+                                           inputShape=(int(self.latentSpaceDimension/2),),
+                                           **kwargs)
+                self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
             else:
-                self.maskDecoder.loadModel(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"), **kwargs)
+                self.maskDecoder.loadModel(os.path.join(maskDecoderPath, "maskDecoder"),
+                                        inputShape=(int(self.latentSpaceDimension/2),),
+                                        **kwargs)
+                if maskDiscriminatorPath:
+                    self.maskDiscriminator.loadModel(os.path.join(maskDiscriminatorPath,
+                                                                "maskDiscriminator"),
+                                                    **kwargs)
+                else:
+                    self.maskDiscriminator.loadModel(os.path.join(maskDecoderPath,
+                                                                "maskDiscriminator"),
+                                                    **kwargs)
 
             if not encoderPath:
-                self.maskAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
-                                                   decoder=self.maskDecoder, optimizer=self.optimizer,
-                                                   loss=self.loss, name="Mask")
-        
+                self.maskAVA: AVA = AVA(inputShape=self.imageShape, encoder=self.encoder,
+                                        decoder=self.maskDecoder, optimizer=self.optimizer,
+                                        discriminator=self.maskDiscriminator)
+
         if encoderPath:
-            if absPath:
-                self.encoder.loadModel(encoderPath, **kwargs)
-            else:
-                self.encoder.loadModel(os.path.join(encoderPath, f"encoder", f"encoder"), **kwargs)
+            self.encoder.loadModel(os.path.join(encoderPath, "encoder"), **kwargs)
 
-            self.baseAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
-                                               decoder=self.baseDecoder, optimizer=self.optimizer,
-                                               loss=self.loss, name="Base")
-            self.maskAE: TFModel = Autoencoder(inputShape=self.imageShape, encoder=self.encoder,
-                                               decoder=self.maskDecoder, optimizer=self.optimizer,
-                                               loss=self.loss, name="Mask")
-
-        self.compile()
+            self.baseAVA: AVA = AVA(inputShape=self.imageShape, encoder=self.encoder,
+                                    decoder=self.baseDecoder, optimizer=self.optimizer,
+                                    discriminator=self.baseDiscriminator)
+            self.maskAVA: AVA = AVA(inputShape=self.imageShape, encoder=self.encoder,
+                                    decoder=self.maskDecoder, optimizer=self.optimizer,
+                                    discriminator=self.maskDiscriminator)
 
 
     def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False,
-                 firstImage=False, **kwargs) -> Iterator[MultiImage]:
+                 firstImage=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -369,20 +415,15 @@ class Shift:
             encoderPath (str, optional): The path to save self.encoder to. Defaults to None.
             basePath (str, optional): The path to save self.baseDecoder to. Defaults to None.
             maskPath (str, optional): The path to save self.maskDecoder to. Defaults to None.
-            kwargs: The kwargs to be passed to save_weights
+            kwargs: The kwargs to be passed to TFModel.saveModel.
         """
-        
-        saveFormat = 'tf'
-        if kwargs.get("save_format"):
-            saveFormat = kwargs.get("save_format")
-            kwargs.pop("save_format")
 
         if encoderPath:
-            self.encoder.save_weights(os.path.join(encoderPath, f"encoder", f"encoder"),
-                                      save_format=saveFormat, **kwargs)
+            self.encoder.saveModel(os.path.join(encoderPath, f"encoder"), **kwargs)
+
         if basePath:
-            self.baseDecoder.save_weights(os.path.join(basePath, f"baseDecoder", f"baseDecoder"),
-                                          save_format=saveFormat, **kwargs)
+            self.baseDecoder.saveModel(os.path.join(basePath, f"baseDecoder"), **kwargs)
+            self.baseDiscriminator.saveModel(os.path.join(basePath, f"baseDiscriminator"), **kwargs)
         if maskPath:
-            self.maskDecoder.save_weights(os.path.join(maskPath, f"maskDecoder", f"maskDecoder"),
-                                          save_format=saveFormat, **kwargs)
+            self.maskDecoder.saveModel(os.path.join(maskPath, f"maskDecoder"), **kwargs)
+            self.maskDiscriminator.saveModel(os.path.join(maskPath, f"maskDiscriminator"), **kwargs)

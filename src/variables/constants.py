@@ -73,8 +73,9 @@ FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
 IMAGE_PATH = os.path.join("static", "image")
 VIDEO_PATH = os.path.join("static", "video")
 SHIFT_PATH = os.path.join("static", "shift")
-PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "Encoder", "Encoder")
-PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "Decoder", "Decoder")
+PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
+PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
+PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
 
 BLUEPRINT_NAMES = {
     'inference': 'inference',

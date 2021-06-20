@@ -79,7 +79,7 @@ def loadImage(path: str) -> np.ndarray:
     return image
 
 
-def loadImageFolder(path: str, maximum=-1) -> Generator[None, np.ndarray, None]:
+def loadImageFolder(path: str, maximum=-1) -> Generator[np.ndarray, None, None]:
     """
     Loads in a folder of images.
 
