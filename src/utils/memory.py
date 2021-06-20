@@ -5,7 +5,6 @@ The utility functions related to detection
 __author__ = "Noupin"
 
 #Third Party Import
-import os
 import sys
 import subprocess
 import tensorflow as tf
@@ -25,8 +24,8 @@ def allowTFMemoryGrowth() -> None:
     try:
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
-    except RuntimeError as e:
-        print(e)
+    except RuntimeError as error:
+        print(error)
 
 
 def getGPUMemory() -> List[int]:

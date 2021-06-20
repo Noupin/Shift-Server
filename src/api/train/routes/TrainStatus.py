@@ -49,7 +49,7 @@ operationId="trainStatus", security=SECURITY_TAG)
 
         try:
             worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
-        except Exception as e:
+        except Exception:
             return TrainStatusResponse(msg="That training worker does not exist")
 
         job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
@@ -85,7 +85,7 @@ operationId="trainStatus", security=SECURITY_TAG)
 
             return TrainStatusResponse(msg=f"The status is {status}")
 
-        except AttributeError as e:
+        except AttributeError:
             return TrainStatusResponse(msg="There are currently no jobs with the given ID")
         except mongoengine.DoesNotExist:
             return TrainStatusResponse(msg="The worker you are trying to get the status of has been deleted")

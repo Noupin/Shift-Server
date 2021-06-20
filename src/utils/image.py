@@ -52,8 +52,8 @@ def CVToPIL(image: np.ndarray) -> Image.Image:
     if isinstance(image, Image.Image):
         try:
             raise CVToPILError(image)
-        except CVToPILError as e:
-            print(e)
+        except CVToPILError as error:
+            print(Fore.RED + error + Fore.RESET)
             print(Fore.GREEN + "Conversion skipped." + Fore.RESET)
             return image
 

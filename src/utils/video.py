@@ -76,7 +76,7 @@ def videoToImages(path: str, interval=1, action=None, **kwargs) -> Generator[np.
 
         try:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        except cv2.error as e:
+        except cv2.error:
             print("Frame unable to be converted to an image.")
             continue
 

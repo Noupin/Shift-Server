@@ -63,8 +63,8 @@ def validateEmail(email: str) -> Tuple[bool, str]:
     try:
         validate_email(email)
         return True, email
-    except EmailNotValidError as e:
-        return False, str(e)
+    except EmailNotValidError as error:
+        return False, str(error)
 
 
 def validateFilename(filename: str) -> bool:

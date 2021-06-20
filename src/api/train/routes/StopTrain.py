@@ -45,7 +45,7 @@ trained.""", tags=["Train"], operationId="stopTrain", security=SECURITY_TAG)
 
         try:
             worker: TrainWorker = TrainWorker.objects.get(shiftUUID=requestData.getModel().shiftUUID)
-        except Exception as e:
+        except Exception:
             return StopTrainResponse(msg="That training worker does not exist")
         worker.update(set__training=False, set__imagesUpdated=False)
 

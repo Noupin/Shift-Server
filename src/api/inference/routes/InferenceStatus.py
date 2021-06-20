@@ -46,7 +46,7 @@ operationId="inferenceStatus", security=SECURITY_TAG)
         try:
             worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestModel.getModel().shiftUUID)
             mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestModel.getModel().shiftUUID)
-        except Exception as e:
+        except Exception:
             return {"msg": "That inference worker does not exist", 'stopped': True}
 
         job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
