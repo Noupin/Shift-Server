@@ -356,7 +356,10 @@ class Shift:
                                         discriminator=self.maskDiscriminator)
 
         if encoderPath:
-            self.encoder.loadModel(os.path.join(encoderPath, "encoder"), **kwargs)
+            if absPath:
+                self.encoder.loadModel(encoderPath, **kwargs)
+            else:
+                self.encoder.loadModel(os.path.join(encoderPath, "encoder"), **kwargs)
 
             self.baseAVA: AVA = AVA(inputShape=self.imageShape, encoder=self.encoder,
                                     decoder=self.baseDecoder, optimizer=self.optimizer,
