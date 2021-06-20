@@ -27,10 +27,10 @@ class Discriminator(TFModel):
 
     def __init__(self, inputShape=(256, 256, 3), inputName="InputImage",
                  outputName="RealOrFake", outputActivation=tf.nn.relu,
-                 name="Discriminator", modelPath=""):
+                 name="Discriminator"):
         super(Discriminator, self).__init__(inputShape=inputShape, inputName=inputName,
                                       outputLayer=tf.keras.layers.Dense(1, activation=outputActivation, name=outputName),
-                                      name=name, modelPath=modelPath)
+                                      name=name)
         
         self.addLayer(tf.keras.layers.Flatten(), -1)
         self.addDiscriminatorLayer()

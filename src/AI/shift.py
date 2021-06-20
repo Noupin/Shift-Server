@@ -10,7 +10,7 @@ import moviepy
 import numpy as np
 import tensorflow as tf
 from flask import current_app
-from typing import List, Union, Generator
+from typing import List, Union, Iterator
 from moviepy import editor as mediaEditor
 
 #First Party Imports
@@ -96,8 +96,8 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: Union[Generator[MultiImage, None, None], List[MultiImage]], objectClassifier=OBJECT_CLASSIFIER,
-                           flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
+    def formatTrainingData(self, images: Iterator[MultiImage], objectClassifier=OBJECT_CLASSIFIER,
+                           flipCodes=["y"], **kwargs) -> Iterator[np.ndarray]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
         images from MultiImage to np.ndarray or MultiImage.CVImage.
@@ -171,9 +171,9 @@ class Shift:
         return MultiImage(image)
 
     
-    def shiftImages(self, model: tf.keras.Model, images: Generator[MultiImage, None, None],
+    def shiftImages(self, model: tf.keras.Model, images: Iterator[MultiImage],
                     objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
-                    asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
+                    asNumpy=False, **kwargs) -> Iterator[MultiImage]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -219,7 +219,7 @@ class Shift:
             yield shiftedImage if asNumpy else MultiImage(shiftedImage)
     
 
-    def shift(self, model: tf.keras.Model, media: Union[Generator[MultiImage, None, None], List[MultiImage], MultiImage],
+    def shift(self, model: tf.keras.Model, media: Union[Iterator[MultiImage], MultiImage],
               fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
               **kwargs)-> Union[mediaEditor.VideoFileClip, MultiImage]:
         """
@@ -321,7 +321,7 @@ class Shift:
 
 
     def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False,
-                 firstImage=False, **kwargs) -> Generator[MultiImage, None, None]:
+                 firstImage=False, **kwargs) -> Iterator[MultiImage]:
         """
         Loads the images and videos for either the mask or base model
 

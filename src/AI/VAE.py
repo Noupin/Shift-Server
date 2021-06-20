@@ -109,7 +109,7 @@ class VAE(tf.keras.Model):
         return mean, logvar
 
 
-    def reparameterize(self, mean, logvar):
+    def reparameterize(self, mean, logvar) -> float:
         eps = tf.random.normal(shape=mean.shape)
 
         return eps * tf.exp(logvar * .5) + mean
@@ -127,7 +127,7 @@ class VAE(tf.keras.Model):
 
 
     @staticmethod
-    def log_normal_pdf(sample, mean, logvar, raxis=1):
+    def log_normal_pdf(sample, mean, logvar, raxis=1) -> float:
         log2pi = tf.math.log(2. * np.pi)
 
         return tf.reduce_sum(
@@ -135,7 +135,7 @@ class VAE(tf.keras.Model):
             axis=raxis)
 
 
-    def compute_loss(self, x):
+    def compute_loss(self, x) -> float:
         mean, logvar = self.encode(x)
         z = self.reparameterize(mean, logvar)
         x_logit = self.decode(z)
@@ -149,7 +149,7 @@ class VAE(tf.keras.Model):
 
 
     @tf.function
-    def train_step(self, x):
+    def train_step(self, x) -> float:
         """
         Executes one training step and returns the loss.
 
@@ -166,20 +166,21 @@ class VAE(tf.keras.Model):
         self.encoder.optimizer.apply_gradients(zip(encoderGradients, self.encoder.trainable_variables))
         self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
         
-        return loss/100000.
+        return loss / 100000.
 
 
-    def train(self, train_dataset, test_dataset=None, epochs=1):
+    def train(self, trainDataset: tf.data.Dataset, testDataset: tf.data.Dataset=None, epochs=1) -> None:
         loss = tf.constant(np.array([0]).astype(np.float32))
+
         for epoch in range(1, epochs + 1):
             start_time = time.time()
-            for train_x in train_dataset:
+            for train_x in trainDataset:
                 loss = self.train_step(train_x)
             end_time = time.time()
 
-            if test_dataset:
+            if testDataset:
                 loss = tf.keras.metrics.Mean()
-                for test_x in test_dataset:
+                for test_x in testDataset:
                     loss(self.compute_loss(test_x))
                 elbo = -loss.result()
                 print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'

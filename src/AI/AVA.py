@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import time
+from typing import Tuple
 import tensorflow as tf
 
 #First Party Imports
@@ -95,12 +96,10 @@ class AVA(VAE):
 
     def decoder_loss(self, fake_output):
         return self.cross_entropy(tf.ones_like(fake_output), fake_output)
-    
-    
-    # Notice the use of `tf.function`
-    # This annotation causes the function to be "compiled".
+
+
     @tf.function
-    def train_step(self, images):
+    def train_step(self, images) -> Tuple[float, float, float]:
         #Train VAE
         VAELoss = super(AVA, self).train_step(images)
 
@@ -124,11 +123,12 @@ class AVA(VAE):
 
         return VAELoss, decoderLoss, discriminatorLoss
 
-    def train(self, train_dataset, epochs):
+
+    def train(self, trainDataset: tf.data.Dataset, epochs=1) -> None:
         for epoch in range(epochs):
             start = time.time()
 
-            for image_batch in train_dataset:
+            for image_batch in trainDataset:
                 VAELoss, decoderLoss, discriminatorLoss = self.train_step(image_batch)
 
             print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \

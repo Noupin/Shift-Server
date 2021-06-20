@@ -8,11 +8,10 @@ __author__ = "Noupin"
 import time
 import numpy as np
 import tensorflow as tf
-from typing import List, Tuple, Union, Generator
+from typing import List, Tuple, Union, Iterator, Generator
 
 #First Party Imports
 from src.utils.memory import allowTFMemoryGrowth
-from src.Exceptions.IncompatibleShapes import IncompatibleShapeError
 from src.Exceptions.IncompatibleTFLayers import IncompatibleTFLayerError
 from src.Exceptions.LayerIndexOutOfRange import LayerIndexOutOfRangeError
 
@@ -37,9 +36,8 @@ class TFModel(tf.keras.Model):
 
     def __init__(self, inputShape: Tuple[int]=(128, 128, 3), inputName: str="Input",
                        outputLayer: tf.keras.layers.Layer=tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output"),
-                       activation=tf.nn.relu, optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam(),
-                       loss=tf.losses.mean_squared_logarithmic_error, name: str="TFModel",
-                       modelPath: str="modelPath"):
+                       optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam(),
+                       loss=tf.losses.mean_squared_logarithmic_error, name: str="TFModel"):
 
         allowTFMemoryGrowth()
         super(TFModel, self).__init__()
@@ -140,14 +138,11 @@ class TFModel(tf.keras.Model):
         val_logits = self(x, training=False)
 
 
-    def train(self, xTrainData: Union[List[np.ndarray], Generator[np.ndarray, None, None]],
-                    yTrainData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
-                    xTestData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
-                    yTestData: Union[List[np.ndarray], Generator[np.ndarray, None, None]]=None,
-                    epochs: int=1, batch_size: int=1) -> None:
-
+    def train(self, xTrainData: tf.data.Dataset, yTrainData: tf.data.Dataset=None,
+                    xTestData: tf.data.Dataset=None, yTestData: tf.data.Dataset=None,
+                    epochs: int=1) -> None:
         """
-        Trains the model given traingin data. This an an alternative to the .fit() with more customizability.
+        Trains the model given training data. This an an alternative to the .fit() with more customizability.
 
         Args:
             xTrainData (list of np.ndarray or Generator of np.ndarray): The inputs for training the model.
@@ -155,79 +150,35 @@ class TFModel(tf.keras.Model):
             xTestData (list of np.ndarray or Generator of np.ndarray, optional): The inputs for testing or validating the model. Defaults to None.
             yTestData (list of np.ndarray or Generator of np.ndarray, optional): The expected outputs for testing or validating the model. Defaults to None.
             epochs (int, optional): The amount of iterations to train. Defaults to 1.
-            batch_size (int, optional): Then size to batch the data into. Defaults to 1.
         """
 
-        #self.fit(xTrainData, xTrainData, batch_size=batch_size, epochs=epochs)
 
-        isGenerator = False
-
-        if isinstance(xTrainData, Generator) and isinstance(yTrainData, Generator):
-            trainDataset = ((x, y) for (x, y) in zip(xTrainData, yTrainData))
-            isGenerator = True
-        elif isinstance(xTrainData, Generator):
-            trainDataset = ((x, y) for (x, y) in zip(xTrainData, xTrainData))
-            isGenerator = True
-        elif np.array(yTrainData).any():
-            trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, yTrainData))
+        if yTrainData:
+            trainDataset = tf.data.Dataset.zip((xTrainData, yTrainData))
         else:
-            trainDataset = tf.data.Dataset.from_tensor_slices((xTrainData, xTrainData))
-
-        if not isGenerator:
-            trainDataset = trainDataset.batch(batch_size)
+            trainDataset = tf.data.Dataset.zip((xTrainData, xTrainData))
         
-        if np.array(xTestData).any() and np.array(yTestData).any():
-            testDataset = tf.data.Dataset.from_tensor_slices(xTestData, yTestData)
-        elif np.array(xTestData).any():
-            testDataset = tf.data.Dataset.from_tensor_slices(xTestData, xTestData)
-        else:
-            testDataset = tf.data.Dataset.from_tensor_slices([])
-        testDataset.batch(batch_size)
+        testDataset = None
+        if xTestData and yTestData:
+            testDataset = tf.data.Dataset.zip((xTestData, yTestData))
+        elif xTestData:
+            testDataset = tf.data.Dataset.zip((xTestData, xTestData))
 
 
-        for _ in range(epochs):
+        for epoch in range(epochs):
             epochStart = time.time()
             reducedLoss = 0
-            #Iterate over batches of dataset
-            if isGenerator:
-                currentData = 1
-                step = 0
-                while currentData:
-                    batchStart = time.time()
-                    xBatchTrain = []
-                    yBatchTrain = []
-                    for image in range(batch_size):
-                        currentData = next(trainDataset, None)
-                        if not currentData:
-                            break
 
-                        xData, yData = currentData
-                        xBatchTrain.append(xData)
-                        yBatchTrain.append(yData)
-                    
-                    xBatchTrain = np.array(xBatchTrain)
-                    yBatchTrain = np.array(yBatchTrain)
+            for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
+                loss_value = self.trainStep(xBatchTrain, yBatchTrain)
+                reducedLoss = tf.reduce_mean(tf.abs(loss_value))
+                print(f"Loss for batch {step+1}: {reducedLoss}")
 
-                    loss_value = self.trainStep(xBatchTrain, yBatchTrain)
-                    reducedLoss = tf.reduce_mean(tf.abs(loss_value))
-                    print(f"Loss for batch {step+1}: {reducedLoss}, Time: {time.time()-batchStart}")
+            if testDataset:
+                for xBatchTest, yBatchTest in testDataset:
+                    self.testStep(xBatchTest, yBatchTest)
 
-                    step += 1
-
-            else:
-                for step, (xBatchTrain, yBatchTrain) in enumerate(trainDataset):
-                    loss_value = self.trainStep(xBatchTrain, yBatchTrain)
-                    reducedLoss = tf.reduce_mean(tf.abs(loss_value))
-                    print(f"Loss for batch {step+1}: {reducedLoss}")
-            
-            for xBatchTest, yBatchTest in testDataset:
-               self.testStep(xBatchTest, yBatchTest)
-
-            
-            print(f"Loss: {reducedLoss}, Time: {time.time()-epochStart}")
-        
-        #Clear dataset to perserve RAM
-        trainDataset = tf.data.Dataset.from_tensor_slices([])
+            print(f"Epoch: {epoch},  Loss: {reducedLoss}, in {time.time()-epochStart} sec")
 
 
     def addLayer(self, layer: tf.keras.layers.Layer, index=-1) -> None:
