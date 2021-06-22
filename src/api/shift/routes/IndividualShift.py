@@ -82,15 +82,17 @@ delete a shift which you did not create.""")
 
         try:
             shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(shift.uuid)))
-            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.baseMediaFilename))
-            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.maskMediaFilename))
+            if shift.baseMediaFilename.find("default") == -1:
+                os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.baseMediaFilename))
+            if shift.maskMediaFilename.find("default") == -1:
+                os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.maskMediaFilename))
         except FileNotFoundError:
             pass
 
         try:
-            if getMediaType(shift.mediaFilename) == "image":
+            if getMediaType(shift.mediaFilename) == "image" and shift.mediaFilename.find("default") == -1:
                 os.remove(os.path.join(current_app.root_path, IMAGE_PATH, shift.mediaFilename))
-            elif getMediaType(shift.mediaFilename) == "video":
+            elif getMediaType(shift.mediaFilename) == "video" and shift.mediaFilename.find("default") == -1:
                 os.remove(os.path.join(current_app.root_path, VIDEO_PATH, shift.mediaFilename))
         except FileNotFoundError:
             pass

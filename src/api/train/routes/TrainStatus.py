@@ -62,9 +62,10 @@ operationId="trainStatus", security=SECURITY_TAG)
                 worker.reload()
 
                 imagesUpdated = worker.imagesUpdated
-                while not imagesUpdated:
+                while not imagesUpdated and status == "PENDING":
                     worker.reload()
                     imagesUpdated = worker.imagesUpdated
+                    status = job.status
 
                 if len(worker.exhibitImages) > 0 and worker.imagesUpdated:
                     worker.update(set__imagesUpdated=False)

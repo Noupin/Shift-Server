@@ -8,7 +8,6 @@ __author__ = "Noupin"
 import flask
 from flask import Flask
 from celery import Celery
-from flask_cors import CORS
 from flask_mail import Mail
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -24,7 +23,6 @@ from src.variables.constants import (BLUEPRINT_NAMES,
                                      SECURITY_SCHEME_NAME)
 
 
-cors = CORS()
 mail = Mail()
 bcrypt = Bcrypt()
 db = MongoEngine()
@@ -54,7 +52,6 @@ Defaults to Config.
     db.init_app(app)
     mail.init_app(app)
     docs.init_app(app)
-    cors.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
 
@@ -131,8 +128,10 @@ def enableCORS(app: flask.app.Flask):
 
     @app.after_request
     def after_request(response):
+        print("CORS Enabled")
         header = response.headers
         header['Access-Control-Allow-Credentials'] = 'true'
+
         return response
 
 
