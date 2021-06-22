@@ -31,17 +31,17 @@ class VAE(tf.keras.Model):
 
     def __init__(self, inputShape=(256, 256, 3), latentDim=512,
                  encoder: Encoder=None, decoder: Decoder=None,
-                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam()):
+                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam):
         super(VAE, self).__init__()
 
-        self.optimizer = optimizer
         self.latentDim = latentDim
 
-        self.encoder: Encoder = Encoder(inputShape=inputShape, outputDimension=latentDim)
+        self.encoder: Encoder = Encoder(inputShape=inputShape, outputDimension=latentDim,
+                                        optimizer=optimizer)
         if encoder:
             self.encoder: Encoder = encoder
 
-        self.decoder: Decoder = Decoder(inputShape=(latentDim,))
+        self.decoder: Decoder = Decoder(inputShape=(latentDim,), optimizer=optimizer)
         if decoder:
             self.decoder: Decoder = decoder
             self.latentDim = self.decoder.inputShape[0]
@@ -115,15 +115,15 @@ class VAE(tf.keras.Model):
 
 
     @tf.function
-    def sample(self, eps=None):
+    def sample(self, eps=None, training=False):
         if eps is None:
             eps = tf.random.normal(shape=(100, self.latentDim))
 
-        return self.decode(eps, apply_sigmoid=True)
+        return self.decode(eps, apply_sigmoid=True, training=training)
 
 
-    def encode(self, x):
-        mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
+    def encode(self, x, training=False):
+        mean, logvar = tf.split(self.encoder(x, training=training), num_or_size_splits=2, axis=1)
 
         return mean, logvar
 
@@ -134,8 +134,8 @@ class VAE(tf.keras.Model):
         return eps * tf.exp(logvar * .5) + mean
 
 
-    def decode(self, z, apply_sigmoid=False):
-        logits = self.decoder(z)
+    def decode(self, z, apply_sigmoid=False, training=False):
+        logits = self.decoder(z, training=training)
 
         if apply_sigmoid:
             probs = tf.sigmoid(logits)

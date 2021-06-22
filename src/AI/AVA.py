@@ -33,12 +33,16 @@ class AVA(VAE):
 
     def __init__(self, inputShape=(256, 256, 3), latentDim=512, encoder: Encoder=None,
                  decoder: Decoder=None, discriminator: Discriminator=None,
-                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam()):
-        super(AVA, self).__init__(inputShape, latentDim, encoder, decoder, optimizer)
+                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam,
+                 discriminatorSteps: int=3):
+        super(AVA, self).__init__(inputShape=inputShape, latentDim=latentDim,
+                                  encoder=encoder, decoder=decoder, optimizer=optimizer)
         
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        self.discriminatorSteps = discriminatorSteps
             
-        self.discriminator: Discriminator = Discriminator(inputShape=inputShape)
+        self.discriminator: Discriminator = Discriminator(inputShape=inputShape,
+                                                          optimizer=optimizer)
         if discriminator:
             self.discriminator: Discriminator = discriminator
     
@@ -85,16 +89,18 @@ class AVA(VAE):
         self.discriminator.loadModel(os.path.join(path, "discriminator"), **kwargs)
 
 
-    def discriminator_loss(self, real_output, fake_output):
+    def discriminatorLoss(self, real_output, fake_output):
         real_loss = self.cross_entropy(tf.ones_like(real_output), real_output)
         fake_loss = self.cross_entropy(tf.zeros_like(fake_output), fake_output)
-        total_loss = real_loss + fake_loss
+        total_loss = real_loss + fake_loss #Default
+        #total_loss = tf.reduce_mean(real_output) - tf.reduce_mean(fake_output) #Wass
 
         return total_loss
 
 
-    def decoder_loss(self, fake_output):
-        return self.cross_entropy(tf.ones_like(fake_output), fake_output)
+    def decoderLoss(self, fake_output):
+        return self.cross_entropy(tf.ones_like(fake_output), fake_output) #Default
+        #return -tf.reduce_mean(fake_output) #Wass
 
 
     @tf.function
@@ -106,13 +112,14 @@ class AVA(VAE):
             #Get generated image from VAE
             mean, logvar = self.encode(images)
             z = self.reparameterize(mean, logvar)
-            generated_images = self.sample(z)
+            generatedImages: tf.Tensor = self.sample(z)
+            batchSize = generatedImages.shape[0]
 
-            real_output = self.discriminator(images, training=True)
-            fake_output = self.discriminator(generated_images, training=True)
+            realOutput = self.discriminator(images, training=True)
+            fakeOutput = self.discriminator(generatedImages, training=True)
 
-            decoderLoss = self.decoder_loss(fake_output)
-            discriminatorLoss = self.discriminator_loss(real_output, fake_output)
+            decoderLoss = self.decoderLoss(fakeOutput)
+            discriminatorLoss = self.discriminatorLoss(realOutput, fakeOutput)
 
         decoderGradients = decoderTape.gradient(decoderLoss, self.decoder.trainable_variables)
         discriminatorGradients = discriminatorTape.gradient(discriminatorLoss, self.discriminator.trainable_variables)
@@ -127,8 +134,11 @@ class AVA(VAE):
         for epoch in range(epochs):
             start = time.time()
 
-            for image_batch in trainDataset:
+            for batch, image_batch in enumerate(trainDataset):
+                batchStart = time.time()
                 VAELoss, decoderLoss, discriminatorLoss = self.train_step(image_batch)
+                #print (f"Batch {batch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
+#Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-batchStart:.5} sec")
 
             print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
 Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-start:.5} sec")

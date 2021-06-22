@@ -36,14 +36,14 @@ class TFModel(tf.keras.Model):
 
     def __init__(self, inputShape: Tuple[int]=(128, 128, 3), inputName: str="Input",
                        outputLayer: tf.keras.layers.Layer=tf.keras.layers.Dense(10, activation=tf.nn.relu, name="Output"),
-                       optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam(),
+                       optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam,
                        loss=tf.losses.mean_squared_logarithmic_error, name: str="TFModel"):
 
         allowTFMemoryGrowth()
         super(TFModel, self).__init__()
 
         self.loss = loss
-        self.optimizer = optimizer
+        self.optimizer = optimizer()
         self.inputShape = inputShape
 
         self.modelLayers: Union[List[tf.keras.layers.Layer], Tuple[tf.keras.layers.Layer]] = []

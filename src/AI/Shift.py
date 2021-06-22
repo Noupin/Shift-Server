@@ -51,7 +51,7 @@ class Shift:
 
     def __init__(self, id_=generateUniqueFilename()[1], imageShape=(256, 256, 3),
                  latentSpaceDimension=512, discriminatorLayers=1,
-                 optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_absolute_error,
+                 optimizer=tf.optimizers.Adam, loss=tf.losses.mean_absolute_error,
                  convolutionFilters=24, codingLayers=-1):
         self.id_ = id_
         self.imageShape = imageShape
@@ -68,15 +68,21 @@ class Shift:
         latentReshapeY = int(imageShape[1]/(2**(self.codingLayers+1)))
 
 
-        self.encoder: Encoder = Encoder(inputShape=self.imageShape, outputDimension=latentSpaceDimension)
+        self.encoder: Encoder = Encoder(inputShape=self.imageShape,
+                                        outputDimension=latentSpaceDimension,
+                                        optimizer=optimizer)
 
         self.baseDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
-                                            latentReshape=(latentReshapeX, latentReshapeY, 24))
-        self.baseDiscriminator: Discriminator = Discriminator(self.imageShape)
+                                            latentReshape=(latentReshapeX, latentReshapeY, 24),
+                                            optimizer=optimizer)
+        self.baseDiscriminator: Discriminator = Discriminator(self.imageShape,
+                                                              optimizer=optimizer)
 
         self.maskDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
-                                            latentReshape=(latentReshapeX, latentReshapeY, 24))
-        self.maskDiscriminator: Discriminator = Discriminator(self.imageShape)
+                                            latentReshape=(latentReshapeX, latentReshapeY, 24),
+                                            optimizer=optimizer)
+        self.maskDiscriminator: Discriminator = Discriminator(self.imageShape,
+                                                              optimizer=optimizer)
 
         self.addCodingLayers(self.codingLayers)
         self.addDiscriminatorLayers(discriminatorLayers)

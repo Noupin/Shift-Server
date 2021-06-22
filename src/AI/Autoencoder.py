@@ -26,8 +26,10 @@ class Autoencoder(TFModel):
         loss (function, optional): The loss function to use when compiling the model. Defaults to tf.losses.mean_absolute_error.
     """
 
-    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage", encoder=Encoder(), decoder=Decoder(),
-                       optimizer=tf.optimizers.Adam(), loss=tf.losses.mean_squared_logarithmic_error, name="Autoencoder",):
+    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage",
+                 encoder: Encoder=Encoder(), decoder: Decoder=Decoder(),
+                 loss=tf.losses.mean_squared_logarithmic_error, name="Autoencoder",
+                 optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam):
         super(Autoencoder, self).__init__(inputShape=inputShape, inputName=inputName,
                                           outputLayer=decoder,
                                           optimizer=optimizer, loss=loss,
