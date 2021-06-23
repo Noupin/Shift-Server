@@ -75,13 +75,13 @@ class Shift:
         self.baseDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
                                             latentReshape=(latentReshapeX, latentReshapeY, 24),
                                             optimizer=optimizer)
-        self.baseDiscriminator: Discriminator = Discriminator(self.imageShape,
+        self.baseDiscriminator: Discriminator = Discriminator(inputShape=self.imageShape,
                                                               optimizer=optimizer)
 
         self.maskDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
                                             latentReshape=(latentReshapeX, latentReshapeY, 24),
                                             optimizer=optimizer)
-        self.maskDiscriminator: Discriminator = Discriminator(self.imageShape,
+        self.maskDiscriminator: Discriminator = Discriminator(inputShape=self.imageShape,
                                                               optimizer=optimizer)
 
         self.addCodingLayers(self.codingLayers)

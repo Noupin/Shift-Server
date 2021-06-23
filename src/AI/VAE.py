@@ -47,10 +47,10 @@ class VAE(tf.keras.Model):
             self.latentDim = self.decoder.inputShape[0]
 
 
-    def call(self, inputTensor: tf.Tensor) -> tf.Tensor:
-        mean, logvar = self.encode(inputTensor)
-        z = self.reparameterize(mean, logvar)
-        output = self.sample(z)
+    def call(self, tensor: tf.Tensor, **kwargs) -> tf.Tensor:
+        mu, logvar = self.encode(tensor, **kwargs)
+        z = self.reparameterize(mu, logvar)
+        output = self.sample(z, **kwargs)
 
         return output
     
@@ -67,11 +67,15 @@ class VAE(tf.keras.Model):
         Returns:
             tf.Tensor or np.ndarray: The inferenced output.
         """
+        
+        training = False
+        if kwargs.get("training"):
+            kwargs.pop("training")
 
         if asNumpy:
-            return self.call(tensor, **kwargs).numpy()
+            return self.call(tensor, training=training, **kwargs).numpy()
         else:
-            return self.call(tensor, **kwargs)
+            return self.call(tensor, training=training, **kwargs)
 
 
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
@@ -115,23 +119,31 @@ class VAE(tf.keras.Model):
 
 
     @tf.function
-    def sample(self, eps=None, training=False):
+    def nll(y_true, y_pred):
+        """ Negative log likelihood (Bernoulli). """
+        
+        return tf.keras.backend.sum(tf.keras.backend.binary_crossentropy(y_true, y_pred), axis=1)
+
+
+    @tf.function
+    def sample(self, eps=None, training=False, **kwargs):
         if eps is None:
             eps = tf.random.normal(shape=(100, self.latentDim))
 
-        return self.decode(eps, apply_sigmoid=True, training=training)
+        return self.decode(eps, apply_sigmoid=True, training=training, **kwargs)
+
+
+    def reparameterize(self, mu, logvar) -> float:
+        eps = tf.random.normal(shape=mu.shape)
+
+        return eps * tf.exp(logvar * .5) + mu
 
 
     def encode(self, x, training=False):
-        mean, logvar = tf.split(self.encoder(x, training=training), num_or_size_splits=2, axis=1)
+        mu, logvar = tf.split(self.encoder(x, training=training), num_or_size_splits=2, axis=1)
+        #z_sigma = self.reparameterize(mu, logvar)
 
-        return mean, logvar
-
-
-    def reparameterize(self, mean, logvar) -> float:
-        eps = tf.random.normal(shape=mean.shape)
-
-        return eps * tf.exp(logvar * .5) + mean
+        return mu, logvar
 
 
     def decode(self, z, apply_sigmoid=False, training=False):
@@ -146,23 +158,23 @@ class VAE(tf.keras.Model):
 
 
     @staticmethod
-    def log_normal_pdf(sample, mean, logvar, raxis=1) -> float:
+    def log_normal_pdf(sample, mu, logvar, raxis=1) -> float:
         log2pi = tf.math.log(2. * np.pi)
 
         return tf.reduce_sum(
-            -.5 * ((sample - mean) ** 2. * tf.exp(-logvar) + logvar + log2pi),
+            -.5 * ((sample - mu) ** 2. * tf.exp(-logvar) + logvar + log2pi),
             axis=raxis)
 
 
     def compute_loss(self, x) -> float:
-        mean, logvar = self.encode(x)
-        z = self.reparameterize(mean, logvar)
+        mu, logvar = self.encode(x)
+        z = self.reparameterize(mu, logvar)
         x_logit = self.decode(z)
 
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
         logpz = self.log_normal_pdf(z, 0., 0.)
-        logqz_x = self.log_normal_pdf(z, mean, logvar)
+        logqz_x = self.log_normal_pdf(z, mu, logvar)
 
         return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 

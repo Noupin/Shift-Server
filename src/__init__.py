@@ -78,14 +78,14 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.load.blueprint import loadBP
     from src.api.user.blueprint import userBP
     from src.api.shift.blueprint import shiftBP
-    from src.api.train.blueprint import trainBP
+    #from src.api.train.blueprint import trainBP
     from src.api.content.blueprint import contentBP
     from src.api.inference.blueprint import inferenceBP
     from src.api.authenticate.blueprint import authenticateBP
     from src.api.CategoryShifts.blueprint import categoryShiftBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
-    app.register_blueprint(trainBP, url_prefix="/api")
+    #app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift')
@@ -143,7 +143,7 @@ def generateSwagger() -> FlaskApiSpec:
 
     from src.api.load.blueprint import LoadData
     from src.api.shift.blueprint import IndividualShift
-    from src.api.train.blueprint import Train, TrainStatus, StopTrain
+    #from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
     from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts
     from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
@@ -152,9 +152,9 @@ def generateSwagger() -> FlaskApiSpec:
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
-    docs.register(Train, blueprint=BLUEPRINT_NAMES.get("train"))
+    '''docs.register(Train, blueprint=BLUEPRINT_NAMES.get("train"))
     docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
-    docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))
+    docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))'''
 
     docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Authenticated, blueprint=BLUEPRINT_NAMES.get("authenticate"))

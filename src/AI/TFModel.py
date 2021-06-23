@@ -83,22 +83,23 @@ class TFModel(tf.keras.Model):
         return connectedLayers[-1]
 
 
-    def inference(self, tensor: tf.Tensor, asNumpy=True) -> Union[tf.Tensor, np.ndarray]:
+    def inference(self, tensor: tf.Tensor, asNumpy=True, **kwargs) -> Union[tf.Tensor, np.ndarray]:
         """
         The method TensorFlow uses when calling the class as a tf.keras.Model
 
         Args:
             tensor (tf.Tensor): The the tensor to inference with.
-            asNumpy
+            asNumpy (bool): Whether the output is to be retunred as a numpy array. Defualts to True.
+            kwargs: The keyword arguments to pass into TFModel.call.
 
         Returns:
             tf.Tensor or np.ndarray: The inferenced output.
         """
 
         if asNumpy:
-            return self.call(tensor).numpy()
+            return self.call(tensor, **kwargs).numpy()
         else:
-            return self.call(tensor)
+            return self.call(tensor, **kwargs)
 
 
     @tf.function
