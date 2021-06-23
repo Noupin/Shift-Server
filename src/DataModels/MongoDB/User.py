@@ -21,6 +21,7 @@ class User(db.Document, UserMixin):
     dateCreated = StringField(default=utcnow_string)
     verified = BooleanField(default=False)
     admin = BooleanField(default=False)
+    canTrain = BooleanField(default=False)
 
 
     @staticmethod

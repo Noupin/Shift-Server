@@ -5,7 +5,6 @@ The custom Decoder model for TFModel
 __author__ = "Noupin"
 
 #Third Party Imports
-import os
 import tensorflow as tf
 from colorama import Fore
 

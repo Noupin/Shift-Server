@@ -45,7 +45,10 @@ takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
         del requestError
         
         if not validateShiftTitle(requestData.shiftTitle):
-            return TrainResponse(msg="That is not a valid Shift title.") 
+            return TrainResponse(msg="That is not a valid Shift title.")
+        
+        if not current_user.canTrain:
+            return TrainResponse(msg="You do not have access to train a Shift.")
 
         requestData = DataModelAdapter(requestData)
 
