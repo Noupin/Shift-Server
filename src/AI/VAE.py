@@ -119,13 +119,6 @@ class VAE(tf.keras.Model):
 
 
     @tf.function
-    def nll(y_true, y_pred):
-        """ Negative log likelihood (Bernoulli). """
-        
-        return tf.keras.backend.sum(tf.keras.backend.binary_crossentropy(y_true, y_pred), axis=1)
-
-
-    @tf.function
     def sample(self, eps=None, training=False, **kwargs):
         if eps is None:
             eps = tf.random.normal(shape=(100, self.latentDim))
@@ -133,15 +126,15 @@ class VAE(tf.keras.Model):
         return self.decode(eps, apply_sigmoid=True, training=training, **kwargs)
 
 
-    def reparameterize(self, mu, logvar) -> float:
-        eps = tf.random.normal(shape=mu.shape)
+    @staticmethod
+    def reparameterize(mu, logvar) -> float:
+        eps = tf.random.normal(shape=(mu.shape))
 
-        return eps * tf.exp(logvar * .5) + mu
+        return (eps * tf.exp(logvar * .5)) + mu
 
 
     def encode(self, x, training=False):
         mu, logvar = tf.split(self.encoder(x, training=training), num_or_size_splits=2, axis=1)
-        #z_sigma = self.reparameterize(mu, logvar)
 
         return mu, logvar
 

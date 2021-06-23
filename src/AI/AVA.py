@@ -91,12 +91,17 @@ class AVA(VAE):
 
 
     def decoderLoss(self, generatedDiscOutput):
-        return -tf.reduce_mean(generatedDiscOutput)
+        generatedLoss = self.loss(tf.ones_like(generatedDiscOutput), generatedDiscOutput)
+
+        return -tf.reduce_mean(generatedLoss)
         #return self.loss(tf.ones_like(generatedDiscOutput), generatedDiscOutput)
 
 
     def discriminatorLoss(self, realDiscOutput, generatedDiscOutput):
-        return tf.reduce_mean(realDiscOutput) - tf.reduce_mean(generatedDiscOutput)
+        realLoss = self.loss(tf.ones_like(realDiscOutput), realDiscOutput)
+        generatedLoss = self.loss(tf.zeros_like(generatedDiscOutput), generatedDiscOutput)
+
+        return tf.reduce_mean(realLoss) - tf.reduce_mean(generatedLoss)
         '''real_loss = self.loss(tf.ones_like(realDiscOutput), realDiscOutput)
         fake_loss = self.loss(tf.zeros_like(generatedDiscOutput), generatedDiscOutput)
         total_loss = real_loss + fake_loss
@@ -153,8 +158,8 @@ class AVA(VAE):
             for batch, image_batch in enumerate(trainDataset):
                 batchStart = time.time()
                 VAELoss, decoderLoss, discriminatorLoss = self.train_step(image_batch)
-                #print (f"Batch {batch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
-#Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-batchStart:.5} sec")
+                print (f"Batch {batch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
+Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-batchStart:.5} sec")
 
             print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
 Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-start:.5} sec")
