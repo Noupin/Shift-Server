@@ -317,7 +317,8 @@ class Shift:
                 self.baseDecoder.loadModel(baseDecoderPath,
                                            inputShape=(int(self.latentSpaceDimension/2),),
                                            **kwargs)
-                self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
+                if baseDiscriminatorPath:
+                    self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
             else:
                 self.baseDecoder.loadModel(os.path.join(baseDecoderPath, "baseDecoder"),
                                         inputShape=(int(self.latentSpaceDimension/2),),
@@ -342,7 +343,8 @@ class Shift:
                 self.maskDecoder.loadModel(maskDecoderPath,
                                            inputShape=(int(self.latentSpaceDimension/2),),
                                            **kwargs)
-                self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
+                if maskDiscriminatorPath:
+                    self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
             else:
                 self.maskDecoder.loadModel(os.path.join(maskDecoderPath, "maskDecoder"),
                                         inputShape=(int(self.latentSpaceDimension/2),),

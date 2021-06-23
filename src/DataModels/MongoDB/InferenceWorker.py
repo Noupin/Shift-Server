@@ -21,11 +21,14 @@ class InferenceWorker(db.Document):
         shiftUUID (UUID, required): The UUID of the shift this worker is associated with.
         workerID (str): The id of the celery worker this MongoDB worker is associated with.
         timeStarted (datetime.datetime): The time the worker was created.
+        mediaFilename (str): The filename for the shifted media.
     """
 
     shiftUUID = UUIDField(required=True)
     workerID = StringField(required=True, default="", unique=True)
     timeStarted = DateTimeField(required=True, default=datetime.utcnow)
+    mediaFilename = StringField(required=True, default="")
+    baseMediaFilename = StringField(required=True, default="")
 
 
     def __repr__(self) -> str:

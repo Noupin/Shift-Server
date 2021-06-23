@@ -45,9 +45,14 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
         try:
             worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestModel.getModel().shiftUUID)
-            mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestModel.getModel().shiftUUID)
         except Exception:
             return {"msg": "That inference worker does not exist", 'stopped': True}
+        
+        try:
+            mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestModel.getModel().shiftUUID)
+        except Exception:
+            if requestModel.getModel().prebuiltShiftModel != "PTM":
+                return {"msg": "A shift does not exist for the given UUID", 'stopped': False}
 
         job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
 
@@ -56,10 +61,15 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
             if status == "SUCCESS":
                 worker.delete()
-                return InferenceStatusResponse(msg="Shifting completed", stopped=True,
-                                              mediaFilename=mongoShift.mediaFilename,
-                                              baseMediaFilename=mongoShift.baseMediaFilename,
-                                              maskMediaFilename=mongoShift.maskMediaFilename)
+                if requestModel.getModel().prebuiltShiftModel != "PTM":
+                    return InferenceStatusResponse(msg="Shifting completed", stopped=True,
+                                                  mediaFilename=mongoShift.mediaFilename,
+                                                  baseMediaFilename=mongoShift.baseMediaFilename,
+                                                  maskMediaFilename=mongoShift.maskMediaFilename)
+                else:
+                    return InferenceStatusResponse(msg="Shifting completed", stopped=True,
+                                                   mediaFilename=worker.mediaFilename,
+                                                   baseMediaFilename=worker.baseMediaFilename)
 
             elif status == "FAILURE":
                 worker.delete()

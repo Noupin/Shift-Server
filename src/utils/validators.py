@@ -7,7 +7,6 @@ __author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
 #Third Party Imports
 import re
 import os
-import tensorflow as tf
 from flask import current_app
 from src.AI.Shift import Shift
 from typing import List, Tuple, Union
@@ -120,11 +119,14 @@ def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRe
 
     if requestData.shiftUUID is None or requestData.shiftUUID is "":
         return "Your inference request had no shiftUUID"
+    
+    if requestData.shiftUUID == "PTM":
+        return "The UUID cannot be PTM"
 
     if requestData.usePTM is None:
         return "Your inference request had not indication to use the prebuilt model or not"
 
-    if requestData.prebuiltShiftModel:
+    if requestData.prebuiltShiftModel and requestData.prebuiltShiftModel != "PTM":
         try:
             shft = Shift()
             shft.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
@@ -147,8 +149,11 @@ def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, s
         Union[TrainRequest, dict]: The train request data or the error to send
     """
 
-    if requestData.shiftUUID is None or requestData.shiftUUID is "":
+    if requestData.shiftUUID is None or requestData.shiftUUID == "":
         return "Your train request had no shiftUUID"
+    
+    if requestData.shiftUUID == "PTM":
+        return "The UUID cannot be PTM"
 
     if requestData.usePTM is None:
         return "Your train request had not indication to use the prebuilt model or not"

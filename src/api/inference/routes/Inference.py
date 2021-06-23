@@ -38,6 +38,7 @@ operationId="inference", security=SECURITY_TAG)
     def post(self, requestData: InferenceRequest) -> dict:
         requestError = validateInferenceRequest(requestData)
         if isinstance(requestError, str):
+            print(requestError)
             return InferenceResponse(msg=requestError)
 
         requestModel = DataModelAdapter(requestData)
