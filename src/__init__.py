@@ -75,7 +75,6 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
         app = initApp(appName, configClass)
 
 
-    from src.main.routes import mainBP
     from src.api.load.blueprint import loadBP
     from src.api.user.blueprint import userBP
     from src.api.shift.blueprint import shiftBP
@@ -85,7 +84,6 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.authenticate.blueprint import authenticateBP
     from src.api.CategoryShifts.blueprint import categoryShiftBP
 
-    app.register_blueprint(mainBP)
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")

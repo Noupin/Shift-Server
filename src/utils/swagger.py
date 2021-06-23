@@ -11,7 +11,8 @@ from apispec import APISpec
 
 
 def swaggerToYAML(spec: APISpec, filename="shift.yaml",
-                  path=os.path.join(os.getcwd(), os.pardir, "Shift Webapp", "OpenAPI")) -> None:
+                  path=os.path.join(os.getcwd(), os.pardir,
+                                    "Shift Webapp", "Client", "OpenAPI")) -> None:
     """
     Generates the YAML for the api from the swagger documetation and saves to filename.
 
@@ -27,7 +28,8 @@ def swaggerToYAML(spec: APISpec, filename="shift.yaml",
 
 
 def swaggerToJSON(spec: APISpec, filename="shift.json",
-                  path=os.path.join(os.getcwd(), os.pardir, "Shift Webapp", "OpenAPI")) -> None:
+                  path=os.path.join(os.getcwd(), os.pardir,
+                                    "Shift Webapp", "Client", "OpenAPI")) -> None:
     """
     Generates the JSON for the api from the swagger documetation and saves to filename.
 

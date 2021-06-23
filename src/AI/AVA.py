@@ -34,12 +34,13 @@ class AVA(VAE):
     def __init__(self, inputShape=(256, 256, 3), latentDim=512, encoder: Encoder=None,
                  decoder: Decoder=None, discriminator: Discriminator=None,
                  optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam,
-                 discriminatorSteps: int=3):
+                 discriminatorSteps: int=5, gpWeight: float=10.0):
         super(AVA, self).__init__(inputShape=inputShape, latentDim=latentDim,
                                   encoder=encoder, decoder=decoder, optimizer=optimizer)
         
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
         self.discriminatorSteps = discriminatorSteps
+        self.gpWeight = gpWeight
             
         self.discriminator: Discriminator = Discriminator(inputShape=inputShape,
                                                           optimizer=optimizer)
@@ -103,29 +104,76 @@ class AVA(VAE):
         #return -tf.reduce_mean(fake_output) #Wass
 
 
+    def gradient_penalty(self, batch_size, real_images, fake_images):
+        """
+        Calculates the gradient penalty.
+
+        This loss is calculated on an interpolated image
+        and added to the discriminator loss.
+        """
+
+        # Get the interpolated image
+        alpha = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
+        diff = fake_images - real_images
+        interpolated = real_images + alpha * diff
+
+        with tf.GradientTape() as gp_tape:
+            gp_tape.watch(interpolated)
+            # 1. Get the discriminator output for this interpolated image.
+            pred = self.discriminator(interpolated, training=True)
+
+        # 2. Calculate the gradients w.r.t to this interpolated image.
+        grads = gp_tape.gradient(pred, [interpolated])[0]
+        # 3. Calculate the norm of the gradients.
+        norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
+        gp = tf.reduce_mean((norm - 1.0) ** 2)
+
+        return gp
+
+
     @tf.function
     def train_step(self, images) -> Tuple[float, float, float]:
         #Train VAE
         VAELoss = super(AVA, self).train_step(images)
 
-        with tf.GradientTape() as decoderTape, tf.GradientTape() as discriminatorTape:
+        for _ in range(self.discriminatorSteps):
+            with tf.GradientTape() as discriminatorTape:
+                #Get generated image from VAE
+                mean, logvar = self.encode(images)
+                z = self.reparameterize(mean, logvar)
+                generatedImages: tf.Tensor = self.sample(z)
+                batchSize = generatedImages.shape[0]
+
+                realOutput = self.discriminator(images, training=True)
+                fakeOutput = self.discriminator(generatedImages, training=True)
+
+                # Calculate the discriminator loss using the fake and real image logits
+                discriminatorLoss = self.discriminatorLoss(realOutput, fakeOutput)
+                # Calculate the gradient penalty
+                #gp = self.gradient_penalty(batchSize, realOutput, fakeOutput)
+                # Add the gradient penalty to the original discriminator loss
+                #discriminatorLoss = discriminatorLoss + gp * self.gpWeight
+
+            discriminatorGradients = discriminatorTape.gradient(discriminatorLoss,
+                                                                self.discriminator.trainable_variables)
+            self.discriminator.optimizer.apply_gradients(
+                zip(discriminatorGradients, self.discriminator.trainable_variables)
+            )
+        
+        
+        with tf.GradientTape() as decoderTape:
             #Get generated image from VAE
             mean, logvar = self.encode(images)
             z = self.reparameterize(mean, logvar)
             generatedImages: tf.Tensor = self.sample(z)
-            batchSize = generatedImages.shape[0]
-
-            realOutput = self.discriminator(images, training=True)
+            
             fakeOutput = self.discriminator(generatedImages, training=True)
-
             decoderLoss = self.decoderLoss(fakeOutput)
-            discriminatorLoss = self.discriminatorLoss(realOutput, fakeOutput)
 
         decoderGradients = decoderTape.gradient(decoderLoss, self.decoder.trainable_variables)
-        discriminatorGradients = discriminatorTape.gradient(discriminatorLoss, self.discriminator.trainable_variables)
-
-        self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
-        self.discriminator.optimizer.apply_gradients(zip(discriminatorGradients, self.discriminator.trainable_variables))
+        self.decoder.optimizer.apply_gradients(
+            zip(decoderGradients, self.decoder.trainable_variables)
+        )
 
         return VAELoss, decoderLoss, discriminatorLoss
 
