@@ -36,18 +36,23 @@ class Register(MethodResource, Resource):
             return RegisterResponse(msg="Your login had no JSON payload")
 
         if User.objects(username=requestData.username).first():
-            return RegisterResponse(msg="A user with that username already exists.")
+            return RegisterResponse(msg="Registration Unsuccesful.",
+                                    usernameMessage="A user with that username already exists.")
         if not validateUsername(requestData.username):
-            return RegisterResponse(msg="That is not a valid username.")
+            return RegisterResponse(msg="Registration Unsuccesful.",
+                                    usernameMessage="That is not a valid username.")
         if User.objects(email=requestData.email).first():
-            return RegisterResponse(msg="A user with that email already exists.")
+            return RegisterResponse(msg="Registration Unsuccesful.",
+                                    emailMessage="A user with that email already exists.")
 
         emailValid, emailMsg = validateEmail(requestData.email)
         if not emailValid:
-            return RegisterResponse(msg=emailMsg)
+            return RegisterResponse(msg="Registration Unsuccesful.",
+                                    emailMessage=emailMsg)
         passwordValid, passwordMsg = validatePassword(requestData.password)
         if not passwordValid:
-            return RegisterResponse(msg=passwordMsg)
+            return RegisterResponse(msg="Registration Unsuccessful.",
+                                    passwordMessage=passwordMsg)
 
         hashedPassword = bcrypt.generate_password_hash(requestData.password)
 

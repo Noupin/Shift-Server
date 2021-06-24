@@ -13,6 +13,10 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class RegisterResponse(DefaultResponse):
-    pass
+    usernameMessage: str = ""
+    emailMessage: str = ""
+    passwordMessage: str = ""
 
-RegisterResponseDescription = """The status of the register attempt."""
+RegisterResponseDescription = """The status of the register attempt, a specific \
+message for the username, a specific message for the email, and a specific message \
+for the password."""

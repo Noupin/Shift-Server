@@ -146,10 +146,10 @@ class TFModel(tf.keras.Model):
         Trains the model given training data. This an an alternative to the .fit() with more customizability.
 
         Args:
-            xTrainData (list of np.ndarray or Generator of np.ndarray): The inputs for training the model.
-            yTrainData (list of np.ndarray or Generator of np.ndarray, optional): The expected outputs for training the model. Defaults to None.
-            xTestData (list of np.ndarray or Generator of np.ndarray, optional): The inputs for testing or validating the model. Defaults to None.
-            yTestData (list of np.ndarray or Generator of np.ndarray, optional): The expected outputs for testing or validating the model. Defaults to None.
+            xTrainData (tf.data.Dataset): The inputs for training the model.
+            yTrainData (tf.data.Dataset, optional): The expected outputs for training the model. Defaults to None.
+            xTestData (tf.data.Dataset, optional): The inputs for testing or validating the model. Defaults to None.
+            yTestData (tf.data.Dataset, optional): The expected outputs for testing or validating the model. Defaults to None.
             epochs (int, optional): The amount of iterations to train. Defaults to 1.
         """
 

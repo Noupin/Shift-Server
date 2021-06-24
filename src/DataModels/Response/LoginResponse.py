@@ -13,6 +13,8 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class LoginResponse(DefaultResponse):
-    pass
+    usernameMessage: str = ""
+    passwordMessage: str = ""
 
-LoginResponseDescription = """The status of the login attempt."""
+LoginResponseDescription = """The status of the login attempt, a specific \
+message for the username and a specific message for the password."""
