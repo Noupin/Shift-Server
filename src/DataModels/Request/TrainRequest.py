@@ -14,7 +14,6 @@ class TrainRequest:
     shiftTitle: str = "New Shift"
     usePTM: bool = False
     prebuiltShiftModel: str = ""
-    statusInterval: int = 10
     trainType: str = "basic"
 
 TrainRequestDescription = """The uuid of the shift model being inferenced with, \
