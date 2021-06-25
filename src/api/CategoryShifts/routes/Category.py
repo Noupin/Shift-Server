@@ -23,15 +23,15 @@ class Category(MethodResource, Resource):
                   description=ShiftCategoryResponseDescription)
     @doc(description="""The shifts for the queried category to display on the \
 home page.""", tags=["Shift Category"], operationId="Category")
-    def get(self, category: str) -> dict:
-        category: ShiftCategory = ShiftCategory.objects(category=category).first()
+    def get(self, categoryName: str) -> dict:
+        category: ShiftCategory = ShiftCategory.objects(name=categoryName).first()
         categoryShifts = []
 
         if not category:
             return ShiftCategoryResponse().load(dict(shifts=categoryShifts))
 
-        for uuid in category.shifts():
-            shift = Shift.objects(uuid=uuid).first()
+        for shift in category.shifts:
+            shift = Shift.objects(uuid=shift.uuid).first()
             categoryShifts.append(ShiftSchema().dump(shift))
 
         return ShiftCategoryResponse().load(dict(shifts=categoryShifts))

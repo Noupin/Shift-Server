@@ -16,7 +16,9 @@ shape_predictor_68_face_landmarks.dat
 
 #File Storage
 **/static
+/Backup
 
 #Debug Files
 codeTest.*
 /PTM
+/AVA
