@@ -18,7 +18,7 @@ from src.DataModels.Response.CategoriesResponse import (CategoriesResponse,
 
 class Categories(MethodResource, Resource):
 
-    @marshal_with(CategoriesResponse.Schema(),
+    @marshal_with(CategoriesResponse,
                   description=categoriesResponseDescription)
     @doc(description="""The shifts for the queried category to display on the \
 home page.""", tags=["Category"], operationId="Categories")
@@ -31,4 +31,4 @@ home page.""", tags=["Category"], operationId="Categories")
                 break
             categoryNames.append(category.name)
 
-        return CategoriesResponse(categories=categoryNames)
+        return CategoriesResponse().dump(dict(categories=categoryNames))

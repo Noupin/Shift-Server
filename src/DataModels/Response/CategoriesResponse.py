@@ -5,17 +5,11 @@ The Categories Response Data Model for the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from typing import List
-from dataclasses import field
-from marshmallow_dataclass import dataclass
-
-#First Party Imports
-from src.DataModels.Response.DefaultResponse import DefaultResponse
+from marshmallow import fields, Schema
 
 
-@dataclass(frozen=True)
-class CategoriesResponse(DefaultResponse):
-    categories: List[str]=field(default_factory=lambda: [])
+class CategoriesResponse(Schema):
+    categories = fields.List(fields.String(), required=True)
 
 categoriesResponseDescription = """The category names for the requested \
 amount of categories."""
