@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Login Response Data Model for the Shift API
+The Default Response Data Model for the Shift API
 """
 __author__ = "Noupin"
 

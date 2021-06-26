@@ -9,7 +9,6 @@ from marshmallow import fields, Schema
 
 #First Party Imports
 from src.DataModels.Marshmallow.User import UserSchema
-from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 
 class IndividualUserGetResponse(Schema):

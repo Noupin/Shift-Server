@@ -83,7 +83,7 @@ BLUEPRINT_NAMES = {
     'load': 'load',
     'content': 'content',
     'user': 'user',
-    'categoryShifts': 'categoryShifts',
+    'category': 'category',
     'shift': 'shift',
     'authenticate': 'authenticate'
 }
@@ -91,6 +91,7 @@ BLUEPRINT_NAMES = {
 #Shift Category Limits
 ANMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
+PAGINATION_AMOUNT = 30
 
 #OpenAPI
 USER_AUTH_SCHEME = {"type": "apiKey", "in": "header", "name": "session"}

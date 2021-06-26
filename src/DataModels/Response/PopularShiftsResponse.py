@@ -10,7 +10,6 @@ from marshmallow import Schema, fields
 #First Party Imports
 from src.variables.constants import AMOUNT_OF_POPULAR
 from src.DataModels.Marshmallow.Shift import ShiftSchema
-from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 
 class PopularShiftsResponse(Schema):

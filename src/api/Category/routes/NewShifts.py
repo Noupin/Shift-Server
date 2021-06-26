@@ -21,7 +21,7 @@ class NewShifts(MethodResource, Resource):
 
     @marshal_with(NewShiftsResponse,
                   description=NewShiftsResponseDescription)
-    @doc(description="""The new shifts to display on the home page.""", tags=["Shift Category"],
+    @doc(description="""The new shifts to display on the home page.""", tags=["Category"],
 operationId="new")
     def get(self) -> dict:
         newShifts = Shift.objects().limit(10)

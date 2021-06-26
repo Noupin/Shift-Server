@@ -80,9 +80,9 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.shift.blueprint import shiftBP
     from src.api.train.blueprint import trainBP
     from src.api.content.blueprint import contentBP
+    from src.api.Category.blueprint import categoryBP
     from src.api.inference.blueprint import inferenceBP
     from src.api.authenticate.blueprint import authenticateBP
-    from src.api.CategoryShifts.blueprint import categoryShiftBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
@@ -90,8 +90,8 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift')
     app.register_blueprint(contentBP, url_prefix='/api/content')
+    app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
     app.register_blueprint(authenticateBP, url_prefix='/api/authenticate')
-    app.register_blueprint(categoryShiftBP, url_prefix="/api/shift/category")
 
     return app
 
@@ -146,9 +146,9 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
     from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts
-    from src.api.CategoryShifts.blueprint import Category, NewShifts, PopularShifts
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
+    from src.api.Category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
@@ -169,13 +169,14 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(InferenceStatus, blueprint=BLUEPRINT_NAMES.get("inference"))
 
     docs.register(Image, blueprint=BLUEPRINT_NAMES.get("content"))
-    docs.register(ImageDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
     docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"))
+    docs.register(ImageDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
     docs.register(VideoDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="videoBool")
 
-    docs.register(Category, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
-    docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
-    docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("categoryShifts"))
+    docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("category"))
+    docs.register(Categories, blueprint=BLUEPRINT_NAMES.get("category"))
+    docs.register(PopularShifts, blueprint=BLUEPRINT_NAMES.get("category"))
+    docs.register(ShiftCategory, blueprint=BLUEPRINT_NAMES.get("category"))
 
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
 

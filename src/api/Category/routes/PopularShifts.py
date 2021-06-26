@@ -21,7 +21,7 @@ class PopularShifts(MethodResource, Resource):
 
     @marshal_with(PopularShiftsResponse,
                   description=PopularShiftsResponseDescription)
-    @doc(description="""The popular shifts to display on the home page.""", tags=["Shift Category"],
+    @doc(description="""The popular shifts to display on the home page.""", tags=["Category"],
 operationId="popular")
     def get(self) -> dict:
         popularShifts = Shift.objects().order_by('-views').limit(10)

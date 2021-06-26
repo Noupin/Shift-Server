@@ -12,19 +12,19 @@ from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
-from src.DataModels.MongoDB.ShiftCategory import ShiftCategory
+from src.DataModels.MongoDB.ShiftCategory import ShiftCategory as ShiftCategoryModel
 from src.DataModels.Response.ShiftCategoryResponse import (ShiftCategoryResponse,
                                                            ShiftCategoryResponseDescription)
 
 
-class Category(MethodResource, Resource):
+class ShiftCategory(MethodResource, Resource):
 
     @marshal_with(ShiftCategoryResponse,
                   description=ShiftCategoryResponseDescription)
     @doc(description="""The shifts for the queried category to display on the \
-home page.""", tags=["Shift Category"], operationId="Category")
+home page.""", tags=["Category"], operationId="Category")
     def get(self, categoryName: str) -> dict:
-        category: ShiftCategory = ShiftCategory.objects(name=categoryName).first()
+        category: ShiftCategoryModel = ShiftCategoryModel.objects(name=categoryName).first()
         categoryShifts = []
 
         if not category:
