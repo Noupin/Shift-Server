@@ -23,4 +23,4 @@ from src.api.Category.routes.ShiftCategory import ShiftCategory
 categoryAPI.add_resource(NewShifts, "/new")
 categoryAPI.add_resource(PopularShifts, "/popular")
 categoryAPI.add_resource(ShiftCategory, "/<string:categoryName>")
-categoryAPI.add_resource(Categories, "/categories/<int:maximum>")
+categoryAPI.add_resource(Categories, "/categories/<int(signed=True):maximum>")
