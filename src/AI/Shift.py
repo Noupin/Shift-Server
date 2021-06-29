@@ -227,12 +227,13 @@ class Shift:
             if len(objects) < 1:
                 yield image.CVImage if asNumpy else image
                 continue
-            
+
             replaceArea = getLargestRectangle(objects)
             originalCroppedImage = cropImage(image.CVImage, replaceArea)
             replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
 
-            replaceImage = MultiImage(image.CVImage)
+            replaceImage = image.copy()
+            replaceImage = MultiImage(originalCroppedImage)
             replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
             replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)

@@ -94,7 +94,6 @@ class AVA(VAE):
         generatedLoss = self.loss(tf.ones_like(generatedDiscOutput), generatedDiscOutput)
 
         return -tf.reduce_mean(generatedLoss)
-        #return self.loss(tf.ones_like(generatedDiscOutput), generatedDiscOutput)
 
 
     def discriminatorLoss(self, realDiscOutput, generatedDiscOutput):
@@ -102,10 +101,6 @@ class AVA(VAE):
         generatedLoss = self.loss(tf.zeros_like(generatedDiscOutput), generatedDiscOutput)
 
         return tf.reduce_mean(realLoss) - tf.reduce_mean(generatedLoss)
-        '''real_loss = self.loss(tf.ones_like(realDiscOutput), realDiscOutput)
-        fake_loss = self.loss(tf.zeros_like(generatedDiscOutput), generatedDiscOutput)
-        total_loss = real_loss + fake_loss
-        return total_loss'''
 
 
     @tf.function
