@@ -6,14 +6,15 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from datetime import datetime
+from src.config import SHIFT_DB_ALIAS
 from mongoengine import (StringField, DateTimeField,
                          UUIDField)
 
 #First Party Imports
-from src import db
+from src import shiftDB
 
 
-class InferenceWorker(db.Document):
+class InferenceWorker(shiftDB.Document):
     """
     The MongoDB data model for the Inference celery worker.
 
@@ -29,6 +30,10 @@ class InferenceWorker(db.Document):
     timeStarted = DateTimeField(required=True, default=datetime.utcnow)
     mediaFilename = StringField(required=True, default="")
     baseMediaFilename = StringField(required=True, default="")
+    
+    meta = {
+        'db_alias': SHIFT_DB_ALIAS
+    }
 
 
     def __repr__(self) -> str:

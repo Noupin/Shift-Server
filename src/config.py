@@ -17,20 +17,31 @@ from src.utils.ObjectIdConverter import ObjectIdConverter
 from src.variables.constants import SERVER_URL, SERVER_PORT
 
 
-load_dotenv()
+FERYV_DB_ALIAS = 'feryv'
+SHIFT_DB_ALIAS = 'shift'
 
+load_dotenv()
 marshmallowPlugin = MarshmallowPlugin()
 
-class Config(object):
+class Config:
     SECRET_KEY = open('keys/jwt-key').read()
 
     #MongoDB
     MONGO_URI = f"mongodb://{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_PROJECT')}"
-    MONGODB_SETTINGS = {
-        'db': os.environ.get('DB_PROJECT'),
-        'host': os.environ.get('DB_HOST'),
-        'port': int(os.environ.get('DB_PORT'))
-    }
+    MONGODB_SETTINGS = [
+        {
+            'ALIAS': SHIFT_DB_ALIAS,
+            'DB': os.environ.get('DB_PROJECT'),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': int(os.environ.get('DB_PORT'))
+        },
+        {
+            'ALIAS': FERYV_DB_ALIAS,
+            'DB': os.environ.get('FERYV_DB_PROJECT'),
+            'HOST': os.environ.get('FERYV_DB_HOST'),
+            'PORT': int(os.environ.get('FERYV_DB_PORT'))
+        }
+    ]
     OBJECTID = ObjectIdConverter
 
     #Authentication

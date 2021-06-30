@@ -15,10 +15,10 @@ from src.variables.constants import BLUEPRINT_NAMES
 categoryBP = Blueprint(BLUEPRINT_NAMES.get("category"), __name__)
 categoryAPI = Api(categoryBP)
 
-from src.api.Category.routes.NewShifts import NewShifts
-from src.api.Category.routes.Categories import Categories
-from src.api.Category.routes.PopularShifts import PopularShifts
-from src.api.Category.routes.ShiftCategory import ShiftCategory
+from src.api.category.routes.NewShifts import NewShifts
+from src.api.category.routes.Categories import Categories
+from src.api.category.routes.PopularShifts import PopularShifts
+from src.api.category.routes.ShiftCategory import ShiftCategory
 
 categoryAPI.add_resource(NewShifts, "/new")
 categoryAPI.add_resource(PopularShifts, "/popular")

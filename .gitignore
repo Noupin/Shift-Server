@@ -20,5 +20,6 @@ shape_predictor_68_face_landmarks.dat
 
 #Debug Files
 codeTest.*
+PTM.py
 /PTM
 /AVA

@@ -16,4 +16,5 @@ from src.DataModels.Marshmallow.User import UserSchema
 class ShiftSchema(ModelSchema):
     class Meta:
         model = Shift
+
     author = fields.Nested(UserSchema, required=True)

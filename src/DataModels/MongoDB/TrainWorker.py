@@ -6,15 +6,16 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from datetime import datetime
+from src.config import SHIFT_DB_ALIAS
 from mongoengine import (StringField, DateTimeField,
                          UUIDField, BooleanField,
                          ListField)
 
 #First Party Imports
-from src import db
+from src import shiftDB
 
 
-class TrainWorker(db.Document):
+class TrainWorker(shiftDB.Document):
     """
     The MongoDB data model for the Train celery worker.
 
@@ -35,6 +36,10 @@ class TrainWorker(db.Document):
     inferencing = BooleanField(required=True, default=False)
     imagesUpdated = BooleanField(required=True, default=False)
     exhibitImages = ListField(StringField())
+    
+    meta = {
+        'db_alias': SHIFT_DB_ALIAS
+    }
 
 
     def __repr__(self) -> str:

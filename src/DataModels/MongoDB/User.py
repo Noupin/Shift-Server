@@ -6,14 +6,15 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask_login import UserMixin
+from src.config import FERYV_DB_ALIAS
 from mongoengine import StringField, BooleanField
 
 #First Party Imports
-from src import db, login_manager
+from src import shiftDB, login_manager
 from src.utils.converter import utcnow_string
 
 
-class User(db.Document, UserMixin):
+class User(shiftDB.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
@@ -22,6 +23,10 @@ class User(db.Document, UserMixin):
     verified = BooleanField(default=False)
     admin = BooleanField(default=False)
     canTrain = BooleanField(default=False)
+    
+    meta = {
+        'db_alias': FERYV_DB_ALIAS
+    }
 
 
     @staticmethod
