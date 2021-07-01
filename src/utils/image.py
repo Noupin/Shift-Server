@@ -148,10 +148,10 @@ def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False, maxDim: int=N
         elif not maxDim and size[1] is None:
             ratio = size[0] / float(width)
             dimensions = (size[0], int(height * ratio))
-        elif maxDim and height > width and height > maxDim:
+        elif maxDim and height >= width and height > maxDim:
             ratio = maxDim / float(height)
             dimensions = (int(width * ratio), maxDim)
-        elif maxDim and width > height and  width > maxDim:
+        elif maxDim and width >= height and width > maxDim:
             ratio = maxDim / float(width)
             dimensions = (maxDim, int(height * ratio))
         else:
