@@ -50,10 +50,10 @@ Defaults to Config.
     app.config.from_object(configClass)
 
 
-    shiftDB.init_app(app)
     mail.init_app(app)
     docs.init_app(app)
     bcrypt.init_app(app)
+    shiftDB.init_app(app)
     login_manager.init_app(app)
 
     return app

@@ -10,6 +10,7 @@ import os
 import cv2
 import base64
 import piexif
+import werkzeug
 import numpy as np
 from PIL import Image
 from colorama import Fore
@@ -118,17 +119,19 @@ def saveImage(image: Image.Image, path: str) -> None:
 
 
 
-def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False, interpolation=cv2.INTER_AREA) -> np.ndarray:
+def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False, maxDim: int=None,
+                interpolation=cv2.INTER_AREA) -> np.ndarray:
     """
     Given a cv2 image it is resized to the given size
 
     Args:
         image (numpy.ndarray): The image object to be resized
         size (tuple of int): A tuple of the desired x(width) and y(height) dimension
-        keepAR (bool): Whether or not to keep the aspect ratio of the
+        keepAR (bool, optional): Whether or not to keep the aspect ratio of the
                        image. Defaults to False.
-        interpolation (int): The type of image interpolation to downscale the image.
-                          Defaults to cv2.INTER_AREA.
+        maxDim (int, optional): The maximum size of either dimension to resize. Defaults to None.
+        interpolation (int, optional): The type of image interpolation to downscale the image.
+                                       Defaults to cv2.INTER_AREA.
 
     Returns:
         numpy.ndarray: The resized CV image
@@ -138,14 +141,22 @@ def resizeImage(image: np.ndarray, size: Tuple[int], keepAR=False, interpolation
 
     if keepAR:
         height, width = image.shape[:2]
-        if size[0] is None:
+
+        if not maxDim and size[0] is None:
             ratio = size[1] / float(height)
-            dimensions = (int(width * ratio), size[0])
-        elif size[1] is None:
+            dimensions = (int(width * ratio), size[1])
+        elif not maxDim and size[1] is None:
             ratio = size[0] / float(width)
             dimensions = (size[0], int(height * ratio))
+        elif maxDim and height > width and height > maxDim:
+            ratio = maxDim / float(height)
+            dimensions = (int(width * ratio), maxDim)
+        elif maxDim and width > height and  width > maxDim:
+            ratio = maxDim / float(width)
+            dimensions = (maxDim, int(height * ratio))
         else:
-            dimensions = (image.shape[1], image.shape[0])
+            dimensions = (width, height)
+
         resized = cv2.resize(resized, dimensions, interpolation=interpolation)
     else:
         resized = cv2.resize(resized, size, interpolation=interpolation)
@@ -469,8 +480,10 @@ def compressImage(image: Image.Image, quality=65) -> Image.Image:
         Image.Image: The compressed image.
     """
     
+    compressed = image.convert("RGB")
+    
     buffered = io.BytesIO()
-    image.save(buffered, format="JPEG", optimize=True, quality=quality)
+    compressed.save(buffered, format="JPEG", optimize=True, quality=quality)
     buffered.seek(0)
 
     return Image.open(buffered)
@@ -520,4 +533,3 @@ def editImageMetadata(image: Image.Image, key: Union[str, int],
     buffered.seek(0)
 
     return Image.open(buffered)
-

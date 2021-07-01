@@ -98,7 +98,7 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
     inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
                                     1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
     shiftedImage = shft.shift(shft.maskAVA, next(inferencingData), **OBJECT_CLASSIFIER_KWARGS)
-    shiftedImage.resize(width=1000, keepAR=True)
+    shiftedImage.resize(maxDim=1000, keepAR=True)
     shiftedImage.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
     return [shiftedImage.encode()]
@@ -129,7 +129,7 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
     
     for image in exhibitArray:
-        image.resize(width=500, keepAR=True)
+        image.resize(maxDim=500, keepAR=True)
         image.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
     return [img.encode() for img in exhibitArray]

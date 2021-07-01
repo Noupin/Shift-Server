@@ -87,7 +87,8 @@ class MultiImage:
         return encodeImage(self.PILImage)
 
 
-    def resize(self, width: int=None, height: int=None, keepAR: bool=False, resizer=resizeImage, interpolation: int=cv2.INTER_AREA):
+    def resize(self, width: int=None, height: int=None, keepAR: bool=False, maxDim:int =None,
+               resizer=resizeImage, interpolation: int=cv2.INTER_AREA):
         """
         Resizes the image and updates all other forms of the image.
         
@@ -96,6 +97,8 @@ class MultiImage:
             height (int): The desired height of the image. Defaults to None.
             keepAR (bool): Whether or not to preserve the aspect ratio of the \
                            original image. Defaults to False.
+            maxDim (int, optional): The maximum size of either dimension to resize. \
+                                    Defaults to None.
             resizer (func): The function used to resize images. Defaults to \
                             resizeImage.
             interpolation (int): The type of interpolation to resize the image \
@@ -103,7 +106,7 @@ class MultiImage:
         """
 
         image = resizer(image=self.CVImage, size=(width, height),
-                        keepAR=keepAR, interpolation=interpolation)
+                        keepAR=keepAR, maxDim=maxDim, interpolation=interpolation)
         self.update(image)
 
 
