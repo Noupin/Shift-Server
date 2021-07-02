@@ -51,7 +51,7 @@ it does not exist.""")
 is not you.""")
             
         if not bcrypt.check_password_hash(current_user.password, requestBody.currentPassword):
-            return ChangePasswordResponse(currentPasswordMessage="Your current password does not match.")
+            return ChangePasswordResponse(currentPasswordMessage="The password you entered does not match your current password.")
 
         passwordValid, passwordMsg = validatePassword(requestBody.newPassword)
         if not passwordValid:
@@ -69,4 +69,4 @@ not the same type as the value you submitted"), 500
             return ChangePasswordResponse(msg=f"There was no data sent to update \
 this would remove data."), 500
 
-        return ChangePasswordResponse(msg=f"The password for the User: {user.username} have been modified.")
+        return ChangePasswordResponse(msg=f"The password for the User: {user.username} have been modified.", complete=True)

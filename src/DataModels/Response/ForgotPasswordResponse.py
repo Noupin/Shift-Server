@@ -13,8 +13,8 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class ForgotPasswordResponse(DefaultResponse):
-    currentPasswordMessage: str = ""
-    newPasswordMessage: str = ""
+    emailMessage: str = ""
+    complete: bool = False
 
 ForgotPasswordResponseDescription = f"""The status message pertaing to the patch, \
-and the new password message."""
+the new email message, and whether the request was completed."""

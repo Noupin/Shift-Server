@@ -10,6 +10,7 @@ from marshmallow_dataclass import dataclass
 
 @dataclass(frozen=True)
 class ForgotPasswordRequest:
-    newPassword: str
+    email: str
 
-ForgotPasswordRequestDescription = """The new password to update to."""
+ForgotPasswordRequestDescription = """The email of the user to send the reset \
+password token to."""

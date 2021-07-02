@@ -109,3 +109,7 @@ USER_EDITABLE_SHIFT_FIELDS = ["title", "private"]
 COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
 BACKEND_ACCESS_SHIFT_FIELDS = ["views"]
 ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
+
+#Mail
+FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
+EMAIL_SENDER = 'login@feryv.com'

@@ -127,7 +127,6 @@ def enableCORS(app: flask.app.Flask):
 
     @app.after_request
     def after_request(response):
-        print("CORS Enabled")
         header = response.headers
         header['Access-Control-Allow-Credentials'] = 'true'
 
@@ -149,7 +148,7 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
     from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
-    from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts, ChangePassword, ForgotPassword
+    from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts, ChangePassword, ForgotPassword, ResetPassword
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
@@ -163,6 +162,7 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
 
     docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(ResetPassword, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(UpdatePicture, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(ChangePassword, blueprint=BLUEPRINT_NAMES.get("user"))

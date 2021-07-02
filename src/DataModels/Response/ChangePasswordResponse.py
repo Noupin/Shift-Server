@@ -15,6 +15,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 class ChangePasswordResponse(DefaultResponse):
     currentPasswordMessage: str = ""
     newPasswordMessage: str = ""
+    complete: bool = False
 
 ChangePasswordResponseDescription = f"""The status message pertaing to the patch, \
 the current password message, and the new password message."""

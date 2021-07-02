@@ -67,3 +67,10 @@ class Config:
     )
     APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON 
     APISPEC_SWAGGER_UI_URL = '/swagger-ui/'  # URI to access UI of API Doc
+    
+    #Mail
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")

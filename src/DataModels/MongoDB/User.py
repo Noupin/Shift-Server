@@ -2,12 +2,19 @@
 """
 The MongoDB data model for a User
 """
+
+from __future__ import annotations
+
 __author__ = "Noupin"
 
 #Third Party Imports
+from typing import Union
+import itsdangerous
+from flask import current_app
 from flask_login import UserMixin
 from src.config import FERYV_DB_ALIAS
 from mongoengine import StringField, BooleanField
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 #First Party Imports
 from src import shiftDB, login_manager
@@ -28,6 +35,23 @@ class User(shiftDB.Document, UserMixin):
         'db_alias': FERYV_DB_ALIAS
     }
 
+
+    def getResetToken(self, expiresSec=1800):
+        s = Serializer(current_app.config["SECRET_KEY"], expiresSec)
+        
+        return s.dumps({'user-id': str(self.id)}).decode('utf-8')
+
+
+    @staticmethod
+    def verifyResetToken(token) -> Union[User]:
+        s = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            userID = s.loads(token)['user-id']
+        except itsdangerous.SignatureExpired:
+            return None
+        
+        return User.objects(id=userID).first()
+        
 
     @staticmethod
     def is_authenticated() -> bool:
