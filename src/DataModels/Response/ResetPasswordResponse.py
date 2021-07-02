@@ -13,7 +13,7 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class ResetPasswordResponse(DefaultResponse):
-    newPasswordMsg: str = ""
+    newPasswordMessage: str = ""
     complete: bool = False
 
 ResetPasswordResponseDescription = f"""The status message pertaing to the patch, \
