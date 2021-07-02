@@ -5,6 +5,8 @@ Register endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import random
+import bcrypt as pyBcrypt
 from flask import request
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
@@ -54,9 +56,12 @@ class Register(MethodResource, Resource):
             return RegisterResponse(msg="Registration Unsuccessful.",
                                     passwordMessage=passwordMsg)
 
-        hashedPassword = bcrypt.generate_password_hash(requestData.password)
+        passwordSalt = pyBcrypt.gensalt().decode("utf-8")
+        seasonedPassword = f"{requestData.password}{passwordSalt}"
+        hashedPassword = bcrypt.generate_password_hash(seasonedPassword)
 
-        user = User(username=requestData.username, email=requestData.email, password=hashedPassword)
+        user = User(username=requestData.username, email=requestData.email,
+                    password=hashedPassword, passwordSalt=passwordSalt)
         user.save()
 
         login_user(user, remember=True)

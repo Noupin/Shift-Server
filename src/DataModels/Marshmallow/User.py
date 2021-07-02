@@ -14,3 +14,4 @@ from src.DataModels.MongoDB.User import User
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
+        model_skip_values = ('password', 'passwordSalt')

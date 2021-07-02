@@ -17,7 +17,7 @@ from src.DataModels.Request.InferenceRequest import InferenceRequest
 
 #First Party Imports
 from src.variables.constants import (
-    ALLOWED_EXTENSIONS, PASSWORD_LENGTH, ALLOWED_NUMBERS,
+    ALLOWED_EXTENSIONS, MINIMUM_PASSWORD_LENGTH, ALLOWED_NUMBERS,
     ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS, SHIFT_PATH
     )
 
@@ -36,7 +36,7 @@ def validatePassword(password: str) -> Tuple[bool, str]:
     valid = True
     msg = "Success"
 
-    if len(password) < PASSWORD_LENGTH:
+    if len(password) < MINIMUM_PASSWORD_LENGTH:
         valid, msg =  False, "Make sure your password is at lest 8 letters"
     elif not re.search(ALLOWED_NUMBERS, password):
         valid, msg = False, "Make sure your password has a number in it"

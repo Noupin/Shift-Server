@@ -5,8 +5,10 @@ Individual user endpoint for the user part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import random
 import mongoengine
 from typing import Union
+import bcrypt as pyBcrypt
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_login import login_required, current_user
@@ -40,7 +42,7 @@ class ChangePassword(MethodResource, Resource):
     @doc(description="""Updates/modifies users password.""",
          tags=["User"], operationId="changePassword", security=SECURITY_TAG)
     @login_required
-    def patch(self, requestBody: ChangePasswordRequest):
+    def patch(self, requestData: ChangePasswordRequest):
         user = self.userExists(current_user.username)
         if not isinstance(user, User):
             return ChangePasswordResponse(msg="""User was not modified because \
@@ -49,16 +51,19 @@ it does not exist.""")
         if(current_user.id != user.id):
             return ChangePasswordResponse(msg="""You cannot modify a user that \
 is not you.""")
-            
-        if not bcrypt.check_password_hash(current_user.password, requestBody.currentPassword):
+
+        seasonedRequestPassword = f"{requestData.currentPassword}{user.passwordSalt}"
+        if not bcrypt.check_password_hash(current_user.password, seasonedRequestPassword):
             return ChangePasswordResponse(currentPasswordMessage="The password you entered does not match your current password.")
 
-        passwordValid, passwordMsg = validatePassword(requestBody.newPassword)
+        passwordValid, passwordMsg = validatePassword(requestData.newPassword)
         if not passwordValid:
             return ChangePasswordResponse(newPasswordMessage=passwordMsg)
 
         try:
-            user.update(set__password=bcrypt.generate_password_hash(requestBody.newPassword).decode("utf-8"))
+            passwordSalt = pyBcrypt.gensalt().decode("utf-8")
+            seasonedPassword = f"{requestData.newPassword}{passwordSalt}"
+            user.update(set__password=bcrypt.generate_password_hash(seasonedPassword).decode("utf-8"), set__passwordSalt=passwordSalt)
         except ValueError:
             return ChangePasswordResponse(msg=f"The password field is \
 not the same type as the value you submitted"), 500

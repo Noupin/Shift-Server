@@ -5,10 +5,10 @@ Routes for the Shift webapp
 __author__ = "Noupin"
 
 #First Party Imports
-from src import login_manager
+from src import loginManager
 
 
-@login_manager.unauthorized_handler
+@loginManager.unauthorized_handler
 def unauthorized() -> dict:
     """
     The unauthorized endpoint for the Shift app.

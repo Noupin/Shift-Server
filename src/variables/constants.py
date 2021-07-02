@@ -9,6 +9,7 @@ import os
 import cv2
 import dlib
 import yaml
+import string
 import piexif
 import numpy as np
 import mediapipe as mp
@@ -37,15 +38,19 @@ EXTENSION_FILE_TYPES = {'': '', 'png': 'image',
                         'gif': 'image', 'heic': 'image',
                         'mp4': 'video', 'm4a': 'video',
                         'mov': 'video'}
+
+#Metadata
 SHIFT_IMAGE_METADATA_KEY = "0th"
 SHIFT_IMAGE_METADATA_VALUE = {piexif.ImageIFD.ProcessingSoftware: u"Shift"}
 SHIFT_VIDEO_METADATA_KEY = "\xa9cmt"
 SHIFT_VIDEO_METADATA_VALUE = "Shift"
 
-PASSWORD_LENGTH = 6
+#Password
+MINIMUM_PASSWORD_LENGTH = 6
 ALLOWED_NUMBERS = '[0-9]'
 ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
+PEPPER_CHARACTERS = list(string.ascii_uppercase) + list(string.ascii_lowercase)
 
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters

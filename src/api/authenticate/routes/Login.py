@@ -50,10 +50,11 @@ class Login(MethodResource, Resource):
             return LoginResponse(msg="Login Unsuccesful.",
                                  usernameMessage="Username or Email incorrect.")
 
-        if bcrypt.check_password_hash(user.password, requestData.password):
+        seasonedRequestPassword = f"{requestData.password}{user.passwordSalt}"
+        if bcrypt.check_password_hash(user.password, seasonedRequestPassword):
             login_user(user, remember=requestData.remember)
         else:
             return LoginResponse(msg="Login Unsuccesful.",
-                                 passwordMessage="Password incorrect.")
+                                passwordMessage="Password incorrect.")
 
         return LoginResponse(msg="Login success.")

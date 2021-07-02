@@ -17,14 +17,15 @@ from mongoengine import StringField, BooleanField
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 #First Party Imports
-from src import shiftDB, login_manager
+from src import feryvDB, loginManager
 from src.utils.converter import utcnow_string
 
 
-class User(shiftDB.Document, UserMixin):
+class User(feryvDB.Document, UserMixin):
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
+    passwordSalt = StringField(required=True)
     mediaFilename = StringField(required=True, default='default.jpg')
     dateCreated = StringField(default=utcnow_string)
     verified = BooleanField(default=False)
@@ -80,7 +81,7 @@ class User(shiftDB.Document, UserMixin):
         return f"User('{self.username}, {self.email}')"
 
 
-@login_manager.user_loader
+@loginManager.user_loader
 def load_user(userID: str) -> User:
     try:
         return User.objects(id=userID).first()

@@ -28,7 +28,7 @@ bcrypt = Bcrypt()
 docs = FlaskApiSpec()
 shiftDB = MongoEngine()
 feryvDB = MongoEngine()
-login_manager = LoginManager()
+loginManager = LoginManager()
 
 
 def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
@@ -54,7 +54,7 @@ Defaults to Config.
     docs.init_app(app)
     bcrypt.init_app(app)
     shiftDB.init_app(app)
-    login_manager.init_app(app)
+    loginManager.init_app(app)
 
     return app
 
