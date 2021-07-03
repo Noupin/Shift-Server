@@ -15,5 +15,5 @@ from src.DataModels.MongoDB.User import User
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
-        exclude = ("password", "passwordSalt", "id")    
+        exclude = ("password", "passwordSalt")    
 
