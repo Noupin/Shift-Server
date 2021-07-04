@@ -140,9 +140,6 @@ class AVA(VAE):
             self.decoder.optimizer.apply_gradients(
                 zip(decoderGradients, self.decoder.trainable_variables)
             )
-            
-            for weight in self.decoder.trainable_variables:
-                weight.assign(tf.clip_by_value(weight, -self.clipConstant, self.clipConstant))
         
         VAELoss = super(AVA, self).train_step(images)
 

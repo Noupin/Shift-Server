@@ -11,9 +11,9 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import cv2
-import piexif
 import numpy as np
 from PIL import Image
+import tensorflow as tf
 from typing import Any, Dict, Tuple, Union
 
 #First Party Imports
@@ -171,4 +171,16 @@ class MultiImage:
 
     def setMetadata(self, key: str, value: Dict[int, Any]) -> None:
         image = editImageMetadata(self.PILImage, key, value)
+        self.update(image)
+
+
+    def adjustHue(self, adjustment: float) -> None:
+        """
+        Adjusts the hue of the image by adjustment.
+        
+        Args:
+            adjustment (float): The hue adjustment delta.
+        """        
+
+        image = np.array(tf.image.adjust_hue(self.CVImage, adjustment))
         self.update(image)

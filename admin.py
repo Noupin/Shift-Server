@@ -23,4 +23,4 @@ def saveCategory(categoryName: str, queryTitles: List[str]):
     category = ShiftCategory(name=categoryName, shifts=shifts)
     category.save()
 
-#saveCategory("Featured", ["Noup", "AnnaK", "karli"])
+saveCategory("Featured", [])
