@@ -31,7 +31,10 @@ home page.""", tags=["Category"], operationId="Category")
             return ShiftCategoryResponse().load(dict(shifts=categoryShifts))
 
         for shift in category.shifts:
-            shift = Shift.objects(uuid=shift.uuid).first()
-            categoryShifts.append(ShiftSchema().dump(shift))
+            try:
+                shift = Shift.objects(uuid=shift.uuid).first()
+                categoryShifts.append(ShiftSchema().dump(shift))
+            except AttributeError:
+                category.update(pull__shifts=shift)
 
         return ShiftCategoryResponse().load(dict(shifts=categoryShifts))
