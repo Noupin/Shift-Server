@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+from typing import Dict, List
 import yaml
 import datetime
 from apispec import APISpec
@@ -27,8 +28,7 @@ class Config:
     SECRET_KEY = open('keys/jwt-key').read()
 
     #MongoDB
-    MONGO_URI = f"mongodb://{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_PROJECT')}"
-    MONGODB_SETTINGS = [
+    MONGODB_SETTINGS: List[Dict[str, str]] = [
         {
             'ALIAS': SHIFT_DB_ALIAS,
             'DB': os.environ.get('DB_PROJECT'),
