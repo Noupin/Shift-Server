@@ -7,8 +7,9 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import numpy as np
-from typing import List, Tuple
+import tensorflow as tf
 from flask import current_app
+from typing import List, Tuple
 from src.utils.MultiImage import MultiImage
 from src.utils.files import generateUniqueFilename
 
@@ -127,7 +128,7 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     exhibitArray.append(next(maskInferencingData))
     exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[2].copy(), **OBJECT_CLASSIFIER_KWARGS))
     exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
-    
+
     for image in exhibitArray:
         image.resize(maxDim=500, keepAR=True)
         image.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
@@ -189,22 +190,37 @@ def trainShift(requestJSON: dict, userID: str):
     batchSize=(amountForBuffer, LARGE_BATCH_SIZE)[amountForBuffer > LARGE_BATCH_SIZE]
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
-        originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
-        baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
+        def baseGen():
+            originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
+            baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
 
-        baseImageArray = list(shft.formatTrainingData(originalImageList, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
-        baseImageArray += list(shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
+            for img in shft.formatTrainingData(originalImageList, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                yield img
+            
+            for img in shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                yield img
+        baseDataset = datasetFrom(baseGen, batchSize=batchSize,
+                                  output_signature=(
+                                    tf.TensorSpec(shape=shft.imageShape,
+                                                        dtype=tf.float32)
+                                  )
+                                 )
 
-        baseDataset = datasetFrom(baseImageArray, bufferSize=len(baseImageArray), batchSize=batchSize)
-
-
-        if requestData.prebuiltShiftModel:
-            maskImages = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, requestData.prebuiltShiftModel, "tmp", "mask"))
-            maskImageArray = list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
-        else:
-            maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
-            maskImageArray = list(shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS))
-        maskDataset = datasetFrom(maskImageArray, bufferSize=len(maskImageArray), batchSize=batchSize)
+        def maskGen():
+            if requestData.prebuiltShiftModel:
+                maskImages = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, requestData.prebuiltShiftModel, "tmp", "mask"))
+                for img in shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                    yield img
+            else:
+                maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
+                for img in shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                    yield img
+        maskDataset = datasetFrom(maskGen, batchSize=batchSize,
+                                  output_signature=(
+                                    tf.TensorSpec(shape=shft.imageShape,
+                                                        dtype=tf.float32)
+                                  )
+                                 )
 
     training = worker.training
     while training:
@@ -233,4 +249,6 @@ def trainShift(requestJSON: dict, userID: str):
     saveShiftToDatabase(uuid=shft.id_, author=author, title=requestData.shiftTitle, path=shiftFilePath,
                         baseImageFilename=baseFilename, maskImageFilename=maskFilename)
 
+    del baseGen
+    del maskGen
     del shft
