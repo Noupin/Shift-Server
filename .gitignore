@@ -9,6 +9,7 @@
 /shift-env
 openh264-1.8.0-win64.dll
 shape_predictor_68_face_landmarks.dat
+**/mediapipe
 
 #Private Files
 /keys

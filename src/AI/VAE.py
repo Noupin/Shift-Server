@@ -139,6 +139,13 @@ class VAE(tf.keras.Model):
         return mu, logvar
 
 
+    def encodeData(self, x, training=False):
+        mu, logvar = self.encode(x, training)
+        encoded = self.reparameterize(mu, logvar)
+        
+        return encoded
+
+
     def decode(self, z, apply_sigmoid=False, training=False):
         logits = self.decoder(z, training=training)
 

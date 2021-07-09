@@ -13,6 +13,7 @@ class InferenceRequest:
     shiftUUID: str
     usePTM: bool = False
     prebuiltShiftModel: str = ""
+    training: bool = False
 
 InferenceRequestDescription = """The uuid of the shift model being inferenced with, \
 whether or not to use the pre trained model(PTM), \

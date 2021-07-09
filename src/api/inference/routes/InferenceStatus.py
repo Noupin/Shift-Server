@@ -46,13 +46,13 @@ operationId="inferenceStatus", security=SECURITY_TAG)
         try:
             worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestModel.getModel().shiftUUID)
         except Exception:
-            return {"msg": "That inference worker does not exist", 'stopped': True}
+            return InferenceStatusResponse(msg="That inference worker does not exist", stopped=True)
         
         try:
             mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestModel.getModel().shiftUUID)
         except Exception:
-            if requestModel.getModel().prebuiltShiftModel != "PTM":
-                return {"msg": "A shift does not exist for the given UUID", 'stopped': False}
+            if requestModel.getModel().training:
+                return InferenceStatusResponse(msg="A shift does not exist for the given UUID", stopped=True)
 
         job = AsyncResult(id=worker.workerID, backend=celery._get_backend())
 
@@ -61,7 +61,7 @@ operationId="inferenceStatus", security=SECURITY_TAG)
 
             if status == "SUCCESS":
                 worker.delete()
-                if requestModel.getModel().prebuiltShiftModel != "PTM":
+                if requestModel.getModel().training:
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                                   mediaFilename=mongoShift.mediaFilename,
                                                   baseMediaFilename=mongoShift.baseMediaFilename,

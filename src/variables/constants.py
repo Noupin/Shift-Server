@@ -16,20 +16,25 @@ import mediapipe as mp
 
 
 def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
-    faceDetection = mp.solutions.face_detection.FaceDetection(**kwargs)
-    results = faceDetection.process(img)
+    mpFaceDetection = mp.solutions.mediapipe.python.solutions.face_detection
     
-    rects = []
-    
-    if results.detections:
+    with mpFaceDetection.FaceDetection(**kwargs) as faceDetection:
+        results = faceDetection.process(img)
+        
+        rects = []
+        
+        if not results.detections:
+            return rects
+
         for detection in results.detections:
             bboxC = detection.location_data.relative_bounding_box
             ih, iw, _ = img.shape
-            bbox = [int(bboxC.xmin*iw), int(bboxC.ymin*ih),
-                    int(bboxC.width*iw), int(bboxC.height*ih)]
+
+            bbox = [abs(int(bboxC.xmin*iw)), abs(int(bboxC.ymin*ih)),
+                    abs(int(bboxC.width*iw)), abs(int(bboxC.height*ih))]
             rects.append(bbox)
-    
-    return rects
+        
+        return rects
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
@@ -52,10 +57,17 @@ ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
 PEPPER_CHARACTERS = list(string.ascii_uppercase) + list(string.ascii_lowercase)
 
+"""
+Haar Cascade for the 70,001 Flikr Images takes 126 minutes for 61,952 of the 70,001
+images being an 88.5% yield.
+
+Google TFLite model for the 70,001 Flikr Images takes 70 minutes for ___ of the 70,001
+images being an __% yield.
+"""
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
 TEST_OBJECT_CLASSIFIER = googleLightweightFacialDetection
-TEST_OBJECT_CLASSIFIER_KWARGS = {'min_detection_confidence': 0.5}
+TEST_OBJECT_CLASSIFIER_KWARGS = {'min_detection_confidence': 0.7}
 
 OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                                        'site-packages', 'cv2',
@@ -69,6 +81,8 @@ HUE_ADJUSTMENT = [0, 320/360, 120/360, 215/360] #RGB hue adjustment values
 LARGE_BATCH_SIZE = 64
 
 EXHIBIT_IMAGE_COMPRESSION_QUALITY = 50
+
+DEFAULT_FPS = 30
 
 #Facial Landmark Model & Detector
 FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"

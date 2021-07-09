@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import mongoengine
 import numpy as np
 from mutagen import File
 from flask import current_app
@@ -23,7 +24,7 @@ from src.variables.constants import (OBJECT_CLASSIFIER_KWARGS, PTM_DECODER_REALT
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_IMAGE_METADATA_KEY,
                                      SHIFT_IMAGE_METADATA_VALUE, SHIFT_PATH, IMAGE_PATH,
                                      SHIFT_VIDEO_METADATA_KEY, SHIFT_VIDEO_METADATA_VALUE,
-                                     VIDEO_PATH)
+                                     VIDEO_PATH, DEFAULT_FPS)
 
 
 @celery.task(name="inference.shift")
@@ -45,7 +46,7 @@ def shiftMedia(requestJSON: dict) -> str:
     inferencingData = [np.ones(shft.imageShape)]
     shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
 
-    if requestData.prebuiltShiftModel == "PTM":
+    if not requestData.training:
         shft.load(encoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                            PTM_ENCODER_REALTIVE_PATH),
                   baseDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
@@ -66,15 +67,21 @@ def shiftMedia(requestJSON: dict) -> str:
                   baseDecoderPath=shiftFilePath,
                   maskDecoderPath=shiftFilePath)
 
-    if requestData.prebuiltShiftModel != "PTM":
-        mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.shiftUUID)
+    if requestData.training:
+        try:
+            mongoShift: ShiftDataModel = ShiftDataModel.objects.get(uuid=requestData.shiftUUID)
+        except mongoengine.errors.DoesNotExist:
+            return "That shift model does not exist"
     else:
-        worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.shiftUUID)
+        try:
+            worker: InferenceWorker = InferenceWorker.objects.get(shiftUUID=requestData.shiftUUID)
+        except mongoengine.errors.DoesNotExist:
+            return "That inference worker does not exist"
 
     baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", os.listdir(os.path.join(shiftFilePath, "tmp", "original"))[0])
     _, extension = os.path.splitext(baseMediaFilename)
 
-    fps=30
+    fps = DEFAULT_FPS
     if getMediaType(baseMediaFilename) == 'video':
         fps = loadVideo(baseMediaFilename).fps
 
@@ -95,7 +102,7 @@ def shiftMedia(requestJSON: dict) -> str:
         shifted.setMetadata(key=SHIFT_IMAGE_METADATA_KEY, value=SHIFT_IMAGE_METADATA_VALUE)
         shifted.save(os.path.join(current_app.root_path, IMAGE_PATH, f"{requestData.shiftUUID}{extension}"))
     
-    if requestData.prebuiltShiftModel != "PTM":
+    if requestData.training:
         mongoShift.update(set__mediaFilename=f"{requestData.shiftUUID}{extension}")
     else:
         baseMediaFilename = f"{generateUniqueFilename()[1]}{extension}"
