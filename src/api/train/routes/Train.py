@@ -6,19 +6,18 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-from src.DataModels.Marshmallow.User import UserSchema
 import mongoengine
 import tensorflow as tf
+from flask import current_app
 from flask_restful import Resource
-from flask import current_app, request
 from flask_apispec.views import MethodResource
-from flask_login import current_user, login_required
 from flask_apispec import marshal_with, use_kwargs, doc
+from flask_jwt_extended import current_user, jwt_required
 
 #First Party Imports
 from src.api.train.tasks import trainShift
 from src.variables.constants import (SHIFT_PATH,
-                                     SECURITY_TAG)
+                                     AUTHORIZATION_TAG)
 from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
@@ -29,7 +28,6 @@ from src.DataModels.Response.TrainResponse import (TrainResponse,
 
 
 class Train(MethodResource, Resource):
-    decorators = [login_required]
 
     @use_kwargs(TrainRequest.Schema(),
                 description=TrainRequestDescription)
@@ -37,7 +35,8 @@ class Train(MethodResource, Resource):
                   description=TrainResponseDescription)
     @doc(description="""Given training data Shift specializes a model for the \
 training data. Yeilds more relaisitic results than just an inference though it \
-takes longer.""", tags=["Train"], operationId="train", security=SECURITY_TAG)
+takes longer.""", tags=["Train"], operationId="train", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, str):

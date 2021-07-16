@@ -11,6 +11,7 @@ import dlib
 import yaml
 import string
 import piexif
+import datetime
 import numpy as np
 import mediapipe as mp
 
@@ -104,18 +105,24 @@ BLUEPRINT_NAMES = {
     'user': 'user',
     'category': 'category',
     'shift': 'shift',
-    'authenticate': 'authenticate'
+    'authenticate': 'authenticate',
+    'extension': 'extension',
 }
 
 #Shift Category Limits
-ANMOUNT_OF_NEW = 10
+AMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
 PAGINATION_AMOUNT = 30
 
 #OpenAPI
-USER_AUTH_SCHEME = {"type": "apiKey", "in": "header", "name": "session"}
-SECURITY_SCHEME_NAME = "UserAuth"
-SECURITY_TAG = yaml.safe_load(f"""- {SECURITY_SCHEME_NAME}: []""")
+USER_AUTHORIZATION_SCHEME = {"type": "apiKey", "in": "header", "name": "Authorization"}
+AUTHORIZATION_SCHEME_NAME = "Bearer"
+AUTHORIZATION_TAG = yaml.safe_load(f"""- {AUTHORIZATION_SCHEME_NAME}: []""")
+USER_REFRESH_SCHEME = {"type": "apiKey", "in": "cookie", "name": "csrf_refresh_token"}
+REFRESH_SCHEME_NAME = "Refresh"
+USER_CSRF_REFRESH_SCHEME = {"type": "apiKey", "in": "cookie", "name": "refresh_token_cookie"}
+CSRF_REFRESH_SCHEME_NAME = "CSRF_Refresh"
+REFRESH_TAG = yaml.safe_load(f"""- {REFRESH_SCHEME_NAME}: []\n- {CSRF_REFRESH_SCHEME_NAME}: []""")
 SERVER_URL = "localhost" #os.environ.get("SERVER_URL")
 SERVER_PORT = "5000" ##os.environ.get("SERVER_PORT")
 
@@ -132,3 +139,11 @@ ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
 #Mail
 FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
 EMAIL_SENDER = 'login@feryv.com'
+
+#JWT
+ACCESS_EXPIRES = datetime.timedelta(seconds=10)
+
+#Redis
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = 0

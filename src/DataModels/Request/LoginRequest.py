@@ -12,7 +12,6 @@ from marshmallow_dataclass import dataclass
 class LoginRequest:
     usernameOrEmail: str
     password: str
-    remember: bool = True
 
 LoginRequestDescription = """The username or email of the user logging in, \
 the password associated with the username of the user logging in, and whether \

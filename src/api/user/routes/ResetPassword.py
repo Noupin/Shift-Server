@@ -5,14 +5,14 @@ Individual user endpoint for the user part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import random
 import mongoengine
 from typing import Union
 import bcrypt as pyBcrypt
 from flask_restful import Resource
-from flask_login import current_user
 from flask_apispec.views import MethodResource
+from src.variables.constants import AUTHORIZATION_TAG
 from flask_apispec import marshal_with, doc, use_kwargs
+from flask_jwt_extended import current_user, jwt_required
 
 #First Party Imports
 from src import bcrypt
@@ -38,10 +38,11 @@ class ResetPassword(MethodResource, Resource):
                 description=ResetPasswordRequestDescription)
     @marshal_with(ResetPasswordResponse.Schema(),
                   description=ResetPasswordResponseDescription)
-    @doc(description="""Updates/modifies users password.""",
-         tags=["User"], operationId="resetPassword")
+    @doc(description="""Updates/modifies users password.""", tags=["User"],
+         operationId="resetPassword", security=AUTHORIZATION_TAG)
+    @jwt_required(optional=True)
     def patch(self, requestData: ResetPasswordRequest, token: str):
-        if current_user.is_authenticated:
+        if current_user:
             return ResetPasswordResponse(msg="You are already logged in.")
 
         user = User.verifyResetToken(token)

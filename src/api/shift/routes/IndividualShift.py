@@ -7,21 +7,21 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import shutil
-from src.utils.validators import validateShiftTitle
 from uuid import UUID
 from typing import Union
 from flask import current_app
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from flask_login import login_required, current_user
 from flask_apispec import marshal_with, doc, use_kwargs
 from src.DataModels.Marshmallow.Shift import ShiftSchema
+from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
+from src.utils.validators import validateShiftTitle
 from src.variables.constants import (IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, 
-                                     VIDEO_PATH, SHIFT_PATH, SECURITY_TAG)
+                                     VIDEO_PATH, SHIFT_PATH, AUTHORIZATION_TAG)
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
                                                                 IndividualShiftGetResponseDescription)
 from src.DataModels.Request.IndividualShiftPatchRequest import (IndividualShiftPatchRequest,
@@ -44,8 +44,9 @@ class IndividualShift(MethodResource, Resource):
 
     @marshal_with(IndividualShiftGetResponse,
                   description=IndividualShiftGetResponseDescription)
-    @doc(description="""The queried shift""",
-         tags=["Shift"], operationId="getIndivdualShift")
+    @doc(description="""The queried shift""", tags=["Shift"],
+         operationId="getIndivdualShift", security=AUTHORIZATION_TAG)
+    @jwt_required(optional=True, locations=["headers"])
     def get(self, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
@@ -54,9 +55,9 @@ class IndividualShift(MethodResource, Resource):
         shift.update(set__views=shift.views+1)
 
         shiftModel: ShiftSchema = ShiftSchema().dump(shift)
-        
+
         userID = ""
-        if current_user.is_authenticated:
+        if current_user:
             userID = current_user.id
 
         return IndividualShiftGetResponse().load(dict(shift=shiftModel,
@@ -66,8 +67,8 @@ class IndividualShift(MethodResource, Resource):
     @marshal_with(IndividualShiftDeleteResponse.Schema(),
                   description=IndividualShiftDeleteResponseDescription)
     @doc(description="""Deletes the queried shift.""",
-         tags=["Shift"], operationId="deleteIndivdualShift", security=SECURITY_TAG)
-    @login_required
+         tags=["Shift"], operationId="deleteIndivdualShift", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def delete(self, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
@@ -107,8 +108,8 @@ delete a shift which you did not create.""")
     @marshal_with(IndividualShiftPatchResponse.Schema(),
                   description=IndividualShiftPatchResponseDescription)
     @doc(description="""Updates/modifies the queried shift.""",
-         tags=["Shift"], operationId="patchIndivdualShift", security=SECURITY_TAG)
-    @login_required
+         tags=["Shift"], operationId="patchIndivdualShift", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def patch(self, requestBody: IndividualShiftPatchRequest, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):

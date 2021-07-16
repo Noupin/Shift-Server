@@ -10,16 +10,17 @@ import mongoengine
 from typing import Union
 from flask import current_app
 from flask_restful import Resource
-from flask_login import logout_user
+from datetime import datetime, timezone
 from flask_apispec.views import MethodResource
-from flask_login import login_required, current_user
 from src.DataModels.Marshmallow.User import UserSchema
 from flask_apispec import marshal_with, doc, use_kwargs
+from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 #First Party Imports
 from src.DataModels.MongoDB.User import User
 from src.utils.validators import validateEmail, validateUsername
-from src.variables.constants import IMAGE_PATH, SECURITY_TAG, USER_EDITABLE_USER_FIELDS
+from src.DataModels.MongoDB.TokenBlocklist import TokenBlocklist
+from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
 from src.DataModels.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
                                                                IndividualUserPatchRequestDescription)
 from src.DataModels.Response.IndividualUserGetResponse import (IndividualUserGetResponse,
@@ -42,17 +43,18 @@ class IndividualUser(MethodResource, Resource):
 
     @marshal_with(IndividualUserGetResponse,
                   description=IndividualUserGetResponseDescription)
-    @doc(description="""The queried user.""",
-         tags=["User"], operationId="getIndivdualUser")
+    @doc(description="""The queried user.""", tags=["User"],
+         operationId="getIndivdualUser", security=AUTHORIZATION_TAG)
+    @jwt_required(optional=True)
     def get(self, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):
-            return IndividualUserGetResponse()
+            return IndividualUserGetResponse(), 404
 
         userModel: UserSchema = UserSchema().dump(user)
         
         userID = ""
-        if current_user.is_authenticated:
+        if current_user:
             userID = current_user.id
 
         return IndividualUserGetResponse().load(dict(user=userModel,
@@ -62,8 +64,8 @@ class IndividualUser(MethodResource, Resource):
     @marshal_with(IndividualUserDeleteResponse.Schema(),
                   description=IndividualUserDeleteResponseDescription)
     @doc(description="""Deletes the queried user.""",
-         tags=["User"], operationId="deleteIndivdualUser", security=SECURITY_TAG)
-    @login_required
+         tags=["User"], operationId="deleteIndivdualUser", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def delete(self, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):
@@ -78,7 +80,10 @@ is not you.")
         
         if user.mediaFilename.find("default") == -1:
             os.remove(os.path.join(current_app.root_path, IMAGE_PATH, user.mediaFilename))
-        logout_user()
+        jti = get_jwt()["jti"]
+        now = datetime.now(timezone.utc)
+        blockedToken = TokenBlocklist(jti=jti, createdAt=now)
+        blockedToken.save()
         user.delete()
         
         return IndividualUserDeleteResponse(msg=f"User: {username} has been deleted")
@@ -89,8 +94,8 @@ is not you.")
     @marshal_with(IndividualUserPatchResponse.Schema(),
                   description=IndividualUserPatchResponseDescription)
     @doc(description="""Updates/modifies the queried user.""",
-         tags=["User"], operationId="patchIndivdualUser", security=SECURITY_TAG)
-    @login_required
+         tags=["User"], operationId="patchIndivdualUser", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):

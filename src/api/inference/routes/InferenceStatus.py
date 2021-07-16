@@ -8,13 +8,13 @@ __author__ = "Noupin"
 from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
-from flask_login import login_required
+from flask_jwt_extended import jwt_required
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Import
 from src.run import celery
-from src.variables.constants import SECURITY_TAG
+from src.variables.constants import AUTHORIZATION_TAG
 from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
@@ -26,7 +26,6 @@ from src.DataModels.Response.InferenceStatusResponse import (InferenceStatusResp
 
 
 class InferenceStatus(MethodResource, Resource):
-    decorators = [login_required]
 
     @use_kwargs(InferenceRequest.Schema(),
                 description=InferenceRequestDescription)
@@ -34,7 +33,8 @@ class InferenceStatus(MethodResource, Resource):
                   description=InferenceStatusResponseDescription)
     @doc(description="""The status of the current shift model while inferencing on the \
 original media and whether or not it has stopped inferencing.""", tags=["Inference"],
-operationId="inferenceStatus", security=SECURITY_TAG)
+operationId="inferenceStatus", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def post(self, requestData: InferenceRequest):
         requestError = validateInferenceRequest(requestData)
         if isinstance(requestData, str):

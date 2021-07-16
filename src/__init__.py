@@ -6,11 +6,12 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import flask
+import redis
 from flask import Flask
 from celery import Celery
 from flask_mail import Mail
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
 from flask_mongoengine import MongoEngine
 from flask_apispec.extension import FlaskApiSpec
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -18,17 +19,17 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import (BLUEPRINT_NAMES,
-                                     USER_AUTH_SCHEME,
-                                     SECURITY_SCHEME_NAME)
+from src.variables.constants import (BLUEPRINT_NAMES, REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME,
+                                     USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
+                                     CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
 
 
 mail = Mail()
 bcrypt = Bcrypt()
+jwt = JWTManager()
 docs = FlaskApiSpec()
 shiftDB = MongoEngine()
 feryvDB = MongoEngine()
-loginManager = LoginManager()
 
 
 def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
@@ -45,16 +46,16 @@ Defaults to Config.
         flask.app.Flask: The created Flask app.
     """
 
-    app = Flask(appName, static_folder="static/build", static_url_path="/")
+    app = Flask(appName)
     app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
 
 
+    jwt.init_app(app)
     mail.init_app(app)
     docs.init_app(app)
     bcrypt.init_app(app)
     shiftDB.init_app(app)
-    loginManager.init_app(app)
 
     return app
 
@@ -83,10 +84,12 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.content.blueprint import contentBP
     from src.api.category.blueprint import categoryBP
     from src.api.inference.blueprint import inferenceBP
+    from src.api.extensions.blueprint import extenstionBP
     from src.api.authenticate.blueprint import authenticateBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
+    app.register_blueprint(extenstionBP, url_prefix="")
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift')
@@ -114,25 +117,6 @@ def addMiddleware(app: flask.app.Flask, middleware=ProxyFix) -> flask.app.Flask:
     return app
 
 
-def enableCORS(app: flask.app.Flask):
-    """
-    Enables CORS on an already created flask app.
-
-    Args:
-        app (flask.app.Flask): The application to enable CORS on.
-
-    Returns:
-        flask.app.Flask: The Flask app with CORS enabled.
-    """
-
-    @app.after_request
-    def after_request(response):
-        header = response.headers
-        header['Access-Control-Allow-Credentials'] = 'true'
-
-        return response
-
-
 def generateSwagger() -> FlaskApiSpec:
     """
     Generates all the swagger documentation for eeach endpoint.
@@ -145,8 +129,8 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.shift.blueprint import IndividualShift
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceStatus
+    from src.api.authenticate.blueprint import Register, Login, Logout, Refresh
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
-    from src.api.authenticate.blueprint import Register, Authenticated, Login, Logout
     from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
     from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts, ChangePassword, ForgotPassword, ResetPassword
 
@@ -156,10 +140,10 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
     docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))
 
-    docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(Authenticated, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(Refresh, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
 
     docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(ResetPassword, blueprint=BLUEPRINT_NAMES.get("user"))
@@ -183,7 +167,9 @@ def generateSwagger() -> FlaskApiSpec:
 
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
 
-    docs.spec.components.security_scheme(SECURITY_SCHEME_NAME, USER_AUTH_SCHEME)
+    docs.spec.components.security_scheme(AUTHORIZATION_SCHEME_NAME, USER_AUTHORIZATION_SCHEME)
+    docs.spec.components.security_scheme(REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME)
+    docs.spec.components.security_scheme(CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
 
     return docs
 

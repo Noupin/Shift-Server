@@ -5,19 +5,18 @@ Individual user endpoint for the user part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-import random
 import mongoengine
 from typing import Union
 import bcrypt as pyBcrypt
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from flask_login import login_required, current_user
 from flask_apispec import marshal_with, doc, use_kwargs
+from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
-from src.variables.constants import SECURITY_TAG
+from src.variables.constants import AUTHORIZATION_TAG
 from src.utils.validators import validatePassword
 from src.DataModels.Request.ChangePasswordRequest import (ChangePasswordRequest,
                                                           ChangePasswordRequestDescription)
@@ -40,8 +39,8 @@ class ChangePassword(MethodResource, Resource):
     @marshal_with(ChangePasswordResponse.Schema(),
                   description=ChangePasswordResponseDescription)
     @doc(description="""Updates/modifies users password.""",
-         tags=["User"], operationId="changePassword", security=SECURITY_TAG)
-    @login_required
+         tags=["User"], operationId="changePassword", security=AUTHORIZATION_TAG)
+    @jwt_required()
     def patch(self, requestData: ChangePasswordRequest):
         user = self.userExists(current_user.username)
         if not isinstance(user, User):

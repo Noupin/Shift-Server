@@ -12,6 +12,7 @@ from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.variables.constants import AMOUNT_OF_POPULAR
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.DataModels.Response.PopularShiftsResponse import (PopularShiftsResponse,
                                                            PopularShiftsResponseDescription)
@@ -24,7 +25,7 @@ class PopularShifts(MethodResource, Resource):
     @doc(description="""The popular shifts to display on the home page.""", tags=["Category"],
 operationId="popular")
     def get(self) -> dict:
-        popularShifts = Shift.objects().order_by('-views').limit(10)
+        popularShifts = Shift.objects().order_by('-views').limit(AMOUNT_OF_POPULAR)
         popularShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in popularShifts]
 
         return PopularShiftsResponse().dump(dict(shifts=popularShiftsJSON))

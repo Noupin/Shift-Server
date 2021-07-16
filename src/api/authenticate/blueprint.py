@@ -17,10 +17,10 @@ authenticateAPI = Api(authenticateBP)
 
 from src.api.authenticate.routes.Login import Login
 from src.api.authenticate.routes.Logout import Logout
+from src.api.authenticate.routes.Refresh import Refresh
 from src.api.authenticate.routes.Register import Register
-from src.api.authenticate.routes.Authenticated import Authenticated
 
 authenticateAPI.add_resource(Login, "/login")
 authenticateAPI.add_resource(Logout, "/logout")
-authenticateAPI.add_resource(Authenticated, "/")
+authenticateAPI.add_resource(Refresh, "/refresh")
 authenticateAPI.add_resource(Register, "/register")

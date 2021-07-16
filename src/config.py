@@ -6,16 +6,16 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-from typing import Dict, List
 import yaml
 import datetime
 from apispec import APISpec
+from typing import Dict, List
 from dotenv import load_dotenv
 from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
-from src.variables.constants import SERVER_URL, SERVER_PORT
+from src.variables.constants import ACCESS_EXPIRES, SERVER_URL
 
 
 FERYV_DB_ALIAS = 'feryv'
@@ -25,7 +25,12 @@ load_dotenv()
 marshmallowPlugin = MarshmallowPlugin()
 
 class Config:
-    SECRET_KEY = open('keys/jwt-key').read()
+    #JWT
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    JWT_COOKIE_SECURE = False #Should always be set to true in production.
+    JWT_SECRET_KEY = open('keys/jwt-key').read()
+    JWT_ACCESS_TOKEN_EXPIRES = ACCESS_EXPIRES
+    JWT_COOKIE_CSRF_PROTECT = True
 
     #MongoDB
     MONGODB_SETTINGS: List[Dict[str, str]] = [
@@ -57,6 +62,9 @@ class Config:
     info:
         description: Shift Server API documentation
     host: {SERVER_URL}
+    schemes:
+        - http
+        - https
     """
     APISPEC_SPEC = APISpec(
         title='Shift',
@@ -65,8 +73,8 @@ class Config:
         openapi_version='2.0',
         **yaml.safe_load(OPENAPI_SPEC)
     )
-    APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON 
-    APISPEC_SWAGGER_UI_URL = '/swagger-ui/'  # URI to access UI of API Doc
+    APISPEC_SWAGGER_URL = '/api/oas/'  # URI to access API Doc JSON 
+    APISPEC_SWAGGER_UI_URL = '/api/oasUI/'  # URI to access UI of API Doc
     
     #Mail
     MAIL_SERVER = 'smtp.gmail.com'

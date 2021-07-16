@@ -5,11 +5,14 @@ Login endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask import request
+from flask import request, jsonify
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from flask_login import current_user, login_user
+from src.variables.constants import AUTHORIZATION_TAG
 from flask_apispec import marshal_with, use_kwargs, doc
+from flask_jwt_extended import (current_user, create_access_token,
+                                jwt_required, create_refresh_token,
+                                set_refresh_cookies)
 
 #First Party Imports
 from src import bcrypt
@@ -26,13 +29,15 @@ class Login(MethodResource, Resource):
                 description=LoginRequestDescription)
     @marshal_with(LoginResponse.Schema(),
                   description=LoginResponseDescription)
-    @doc(description="""The login for the user.""", tags=["Authenticate"], operationId="login")
+    @doc(description="""The login for the user.""", tags=["Authenticate"],
+         operationId="login", security=AUTHORIZATION_TAG)
+    @jwt_required(optional=True)
     def post(self, requestData: LoginRequest) -> dict:
         """
         The login for the user.
         """
 
-        if current_user.is_authenticated:
+        if current_user:
             return LoginResponse(msg="You are already logged in.")
         
         if not request.is_json:
@@ -51,10 +56,14 @@ class Login(MethodResource, Resource):
                                  usernameMessage="Username or Email incorrect.")
 
         seasonedRequestPassword = f"{requestData.password}{user.passwordSalt}"
-        if bcrypt.check_password_hash(user.password, seasonedRequestPassword):
-            login_user(user, remember=requestData.remember)
-        else:
+        if not bcrypt.check_password_hash(user.password, seasonedRequestPassword):
             return LoginResponse(msg="Login Unsuccesful.",
-                                passwordMessage="Password incorrect.")
+                                 passwordMessage="Password incorrect.")
 
-        return LoginResponse(msg="Login success.")
+        accessToken = create_access_token(identity=user)
+        refreshToken = create_refresh_token(identity=user)
+        flaskResponse = jsonify(LoginResponse(msg="Login success.",
+                                              accessToken=accessToken))
+        set_refresh_cookies(flaskResponse, refreshToken)
+
+        return flaskResponse

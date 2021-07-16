@@ -12,15 +12,15 @@ from flask_restful import Resource
 from werkzeug.utils import secure_filename
 from flask_apispec.views import MethodResource
 from werkzeug.datastructures import FileStorage
-from flask_login import current_user, login_required
 from flask_apispec import marshal_with, use_kwargs, doc
+from flask_jwt_extended import current_user, jwt_required
 
 #First Party Imports
 from src.utils.MultiImage import MultiImage
 from src.DataModels.MongoDB.User import User
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
-from src.variables.constants import IMAGE_PATH, SECURITY_TAG
+from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.DataModels.Request.UpdatePictureRequest import (UpdatePictureRequest,
                                                          UpdatePictureRequestDescription)
@@ -29,14 +29,14 @@ from src.DataModels.Response.UpdatePictureResponse import (UpdatePictureResponse
 
 
 class UpdatePicture(MethodResource, Resource):
-    decorators = [login_required]
 
     @use_kwargs(UpdatePictureRequest, location="files",
                 description=UpdatePictureRequestDescription)
     @marshal_with(UpdatePictureResponse.Schema(),
                   description=UpdatePictureResponseDescription)
     @doc(description="""Changes the users profile picture to the uploaded picture.""", tags=["User"],
-operationId="updatePicture", consumes=['multipart/form-data'], security=SECURITY_TAG)
+operationId="updatePicture", consumes=['multipart/form-data'], security=AUTHORIZATION_TAG)
+    @jwt_required()
     def put(self, requestFile: FileStorage):
         if not validateFileRequest([requestFile]):
             return UpdatePictureResponse(msg="The request payload had no files")

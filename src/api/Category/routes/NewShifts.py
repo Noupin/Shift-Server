@@ -12,6 +12,7 @@ from flask_apispec.views import MethodResource
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
+from src.variables.constants import AMOUNT_OF_NEW
 from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.DataModels.Response.NewShiftsResponse import (NewShiftsResponse,
                                                        NewShiftsResponseDescription)
@@ -24,7 +25,7 @@ class NewShifts(MethodResource, Resource):
     @doc(description="""The new shifts to display on the home page.""", tags=["Category"],
 operationId="new")
     def get(self) -> dict:
-        newShifts = Shift.objects().order_by('-id').limit(10)
+        newShifts = Shift.objects().order_by('-id').limit(AMOUNT_OF_NEW)
         newShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in newShifts]
 
         return NewShiftsResponse().dump(dict(shifts=newShiftsJSON))

@@ -5,11 +5,11 @@ Individual user endpoint for the user part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from typing import Union
 from flask_restful import Resource
-from flask_login import current_user
 from flask_apispec.views import MethodResource
+from src.variables.constants import AUTHORIZATION_TAG
 from flask_apispec import marshal_with, doc, use_kwargs
+from flask_jwt_extended import current_user, jwt_required
 
 #First Party Imports
 from src import mail
@@ -28,10 +28,11 @@ class ForgotPassword(MethodResource, Resource):
                 description=ForgotPasswordRequestDescription)
     @marshal_with(ForgotPasswordResponse.Schema(),
                   description=ForgotPasswordResponseDescription)
-    @doc(description="""Updates/modifies users password.""",
-         tags=["User"], operationId="forgotPassword")
+    @doc(description="""Updates/modifies users password.""", tags=["User"],
+         operationId="forgotPassword", security=AUTHORIZATION_TAG)
+    @jwt_required(optional=True)
     def post(self, requestBody: ForgotPasswordRequest):
-        if current_user.is_authenticated:
+        if current_user:
             return ForgotPasswordResponse(msg="You are already logged in.")
 
         emailValid, emailMsg = validateEmail(requestBody.email)

@@ -124,7 +124,7 @@ def saveFlaskFile(data: werkzeug.datastructures.FileStorage, uuid: str, requestD
     makeShiftFolders(folderPath)
 
     #FileStorage.save deletes the object
-    if count == 0:
+    if count == 0 and requestData[count] == "base":
         data.save(os.path.join(folderPath, "tmp", "original", filename))
     elif requestData[count] == "base":
         data.save(os.path.join(folderPath, "tmp", "base", filename))
