@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import shutil
 import mongoengine
 import numpy as np
 from mutagen import File
@@ -105,6 +106,11 @@ def shiftMedia(requestJSON: dict) -> str:
     if requestData.training:
         mongoShift.update(set__mediaFilename=f"{requestData.shiftUUID}{extension}")
     else:
+        try:
+            shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(worker.shiftUUID)))
+        except FileNotFoundError:
+            pass
+
         baseMediaFilename = f"{generateUniqueFilename()[1]}{extension}"
         inferencingData[0].save(os.path.join(current_app.root_path, IMAGE_PATH, baseMediaFilename))
         worker.update(set__mediaFilename=f"{requestData.shiftUUID}{extension}",

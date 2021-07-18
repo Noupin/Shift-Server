@@ -38,6 +38,7 @@ def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
         return rects
 
 
+#Files
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'mp4', 'm4a', 'mov'}
 EXTENSION_FILE_TYPES = {'': '', 'png': 'image',
                         'jpg': 'image', 'jpeg': 'image',
@@ -97,6 +98,7 @@ PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
 PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
 
+#Blueprint
 BLUEPRINT_NAMES = {
     'inference': 'inference',
     'train': 'train',
@@ -147,3 +149,7 @@ ACCESS_EXPIRES = datetime.timedelta(minutes=15)
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+#Celery
+CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
+CELERY_DELETE_SCHEDULE = datetime.timedelta(minutes=10).seconds

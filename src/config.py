@@ -15,7 +15,8 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
-from src.variables.constants import ACCESS_EXPIRES, SERVER_URL
+from src.variables.constants import (ACCESS_EXPIRES, CELERY_DELETE_SCHEDULE,
+                                     CELERY_RESULT_BACKEND, SERVER_URL)
 
 
 FERYV_DB_ALIAS = 'feryv'
@@ -55,7 +56,15 @@ class Config:
 
     #Celery
     CELERY_BROKER_URL = "amqp://localhost//"
-    CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
+    result_backend = CELERY_RESULT_BACKEND
+    timezone = 'UTC'
+    '''beat_schedule = {
+        'delete-every-10-minutes': {
+            'task': 'background.cleanupFiles',
+            'schedule': CELERY_DELETE_SCHEDULE,
+            'args': ()
+        }
+    }'''
     
     #OpenAPI
     OPENAPI_SPEC = f"""

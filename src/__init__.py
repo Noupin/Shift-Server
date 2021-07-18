@@ -18,7 +18,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import (BLUEPRINT_NAMES, REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME,
+from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND, REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME,
                                      USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
                                      CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
 
@@ -175,7 +175,7 @@ def generateSwagger() -> FlaskApiSpec:
 
 def makeCelery(app: flask.app.Flask) -> Celery:
     celery = Celery(app.import_name,
-                    backend=app.config['CELERY_RESULT_BACKEND'],
+                    backend=CELERY_RESULT_BACKEND,
                     broker=app.config['CELERY_BROKER_URL'])
 
     celery.conf.update(app.config)
