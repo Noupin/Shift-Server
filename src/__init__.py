@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import flask
-import redis
 from flask import Flask
 from celery import Celery
 from flask_mail import Mail

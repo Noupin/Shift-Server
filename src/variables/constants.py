@@ -141,7 +141,7 @@ FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
 EMAIL_SENDER = 'login@feryv.com'
 
 #JWT
-ACCESS_EXPIRES = datetime.timedelta(seconds=10)
+ACCESS_EXPIRES = datetime.timedelta(minutes=15)
 
 #Redis
 REDIS_HOST = "localhost"

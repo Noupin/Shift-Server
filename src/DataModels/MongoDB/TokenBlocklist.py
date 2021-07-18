@@ -4,25 +4,31 @@ The MongoDB data model for a User
 """
 
 from __future__ import annotations
-from src.variables.constants import ACCESS_EXPIRES
 
 __author__ = "Noupin"
 
 #Third Party Imports
-from src.config import FERYV_DB_ALIAS
-from mongoengine import IntField, StringField, DateTimeField
+from mongoengine import StringField, DateTimeField
 
 #First Party Imports
 from src import feryvDB
+from src.config import FERYV_DB_ALIAS
+from src.variables.constants import ACCESS_EXPIRES
+
 
 
 class TokenBlocklist(feryvDB.Document):
     jti = StringField(max_length=36, required=True)
     createdAt = DateTimeField(required=True)
-    expireAfterSeconds = IntField(default=ACCESS_EXPIRES.seconds)
 
     meta = {
         'db_alias': FERYV_DB_ALIAS,
+        'indexes': [
+            {
+                'fields': ['createdAt'],
+                'expireAfterSeconds': ACCESS_EXPIRES.seconds * 2
+            }
+        ]
     }
 
 

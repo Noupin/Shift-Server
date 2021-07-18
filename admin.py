@@ -6,8 +6,8 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from typing import List
-from src.config import Config, SHIFT_DB_ALIAS
 from mongoengine import connect
+from src.config import Config, SHIFT_DB_ALIAS
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
