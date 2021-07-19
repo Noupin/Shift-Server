@@ -34,7 +34,7 @@ class VAE(tf.keras.Model):
                  optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam):
         super(VAE, self).__init__()
 
-        self.latentDim = latentDim
+        self.latentDim = int(latentDim*2)
 
         self.encoder: Encoder = Encoder(inputShape=inputShape, outputDimension=latentDim,
                                         optimizer=optimizer)
@@ -115,7 +115,7 @@ class VAE(tf.keras.Model):
         
         self.encoder.loadModel(os.path.join(path, "encoder"), **kwargs)
         self.decoder.loadModel(os.path.join(path, "decoder"),
-                               inputShape=(int(self.latentDim/2),), **kwargs)
+                               inputShape=(int(self.latentDim),), **kwargs)
 
 
     @tf.function

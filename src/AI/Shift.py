@@ -55,7 +55,8 @@ class Shift:
                  convolutionFilters=24, codingLayers=-1):
         self.id_ = id_
         self.imageShape = imageShape
-        self.latentSpaceDimension = latentSpaceDimension
+        self.decoderLatentSpaceDimension = latentSpaceDimension
+        self.encoderLatentSpaceDimension = int(latentSpaceDimension*2)
         self.convolutionFilters = convolutionFilters
         self.optimizer = optimizer
         self.loss = loss
@@ -69,16 +70,16 @@ class Shift:
 
 
         self.encoder: Encoder = Encoder(inputShape=self.imageShape,
-                                        outputDimension=latentSpaceDimension,
+                                        outputDimension=self.encoderLatentSpaceDimension,
                                         optimizer=optimizer)
 
-        self.baseDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
+        self.baseDecoder: Decoder = Decoder(inputShape=(self.decoderLatentSpaceDimension,),
                                             latentReshape=(latentReshapeX, latentReshapeY, 24),
                                             optimizer=optimizer)
         self.baseDiscriminator: Discriminator = Discriminator(inputShape=self.imageShape,
                                                               optimizer=optimizer)
 
-        self.maskDecoder: Decoder = Decoder(inputShape=(latentSpaceDimension,),
+        self.maskDecoder: Decoder = Decoder(inputShape=(self.decoderLatentSpaceDimension,),
                                             latentReshape=(latentReshapeX, latentReshapeY, 24),
                                             optimizer=optimizer)
         self.maskDiscriminator: Discriminator = Discriminator(inputShape=self.imageShape,
@@ -88,11 +89,11 @@ class Shift:
         self.addDiscriminatorLayers(discriminatorLayers)
 
         #Will shift objects from mask to base if predicting on mask images
-        self.baseAVA: AVA = AVA(inputShape=imageShape, latentDim=self.latentSpaceDimension,
+        self.baseAVA: AVA = AVA(inputShape=imageShape, latentDim=self.decoderLatentSpaceDimension,
                                 encoder=self.encoder, decoder=self.baseDecoder,
                                 discriminator=self.baseDiscriminator, optimizer=self.optimizer)
         #Will shift objects from base to mask if predicting on base images
-        self.maskAVA: AVA = AVA(inputShape=imageShape, latentDim=self.latentSpaceDimension,
+        self.maskAVA: AVA = AVA(inputShape=imageShape, latentDim=self.decoderLatentSpaceDimension,
                                 encoder=self.encoder, decoder=self.maskDecoder,
                                 discriminator=self.maskDiscriminator, optimizer=self.optimizer)
 
@@ -105,7 +106,7 @@ class Shift:
         """
 
         self.codingLayers = 1
-        while (self.imageShape[0]/(2**(self.codingLayers+1)))*(self.imageShape[1]/(2**(self.codingLayers+1)))*self.convolutionFilters > self.latentSpaceDimension:
+        while (self.imageShape[0]/(2**(self.codingLayers+1)))*(self.imageShape[1]/(2**(self.codingLayers+1)))*self.convolutionFilters > self.encoderLatentSpaceDimension:
             self.codingLayers += 1
         self.codingLayers -= 1
 
@@ -316,13 +317,13 @@ class Shift:
         if baseDecoderPath:
             if absPath:
                 self.baseDecoder.loadModel(baseDecoderPath,
-                                           inputShape=(int(self.latentSpaceDimension/2),),
+                                           inputShape=(int(self.decoderLatentSpaceDimension),),
                                            **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
             else:
                 self.baseDecoder.loadModel(os.path.join(baseDecoderPath, "baseDecoder"),
-                                        inputShape=(int(self.latentSpaceDimension/2),),
+                                        inputShape=(int(self.decoderLatentSpaceDimension),),
                                         **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(os.path.join(baseDiscriminatorPath,
@@ -342,13 +343,13 @@ class Shift:
         if maskDecoderPath:
             if absPath:
                 self.maskDecoder.loadModel(maskDecoderPath,
-                                           inputShape=(int(self.latentSpaceDimension/2),),
+                                           inputShape=(int(self.decoderLatentSpaceDimension),),
                                            **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
             else:
                 self.maskDecoder.loadModel(os.path.join(maskDecoderPath, "maskDecoder"),
-                                        inputShape=(int(self.latentSpaceDimension/2),),
+                                        inputShape=(int(self.decoderLatentSpaceDimension),),
                                         **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(os.path.join(maskDiscriminatorPath,

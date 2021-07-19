@@ -132,7 +132,7 @@ SERVER_PORT = "5000" ##os.environ.get("SERVER_PORT")
 #MongoDB
 USER_EDITABLE_USER_FIELDS = ["username", "email"]
 COSNTANT_USER_FIELDS = ["dateCreated", "id"]
-ADMIN_ACCESS_USER_FIELDS = ["verified", "admin"]
+ADMIN_ACCESS_USER_FIELDS = ["verified", "admin", "canTrain"]
 
 USER_EDITABLE_SHIFT_FIELDS = ["title", "private"]
 COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
