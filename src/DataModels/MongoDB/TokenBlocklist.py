@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The MongoDB data model for a User
+The MongoDB data model for Token Blocklisting
 """
 
 from __future__ import annotations

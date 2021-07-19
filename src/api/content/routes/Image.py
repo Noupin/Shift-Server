@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
+import mimetypes
 from flask import current_app
 from werkzeug import Response
 from flask_restful import Resource
@@ -26,7 +27,7 @@ operationId="image")
     def get(self, filename: str='default.jpg') -> Response:
 
         return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
-                                  filename=secure_filename(filename),
-                                  as_attachment=False,
-                                  mimetype="image",
-                                  cache_timeout=0)
+                                   filename=secure_filename(filename),
+                                   as_attachment=False,
+                                   mimetype="image",
+                                   cache_timeout=0)

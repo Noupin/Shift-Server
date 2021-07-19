@@ -58,13 +58,6 @@ class Config:
     CELERY_BROKER_URL = "amqp://localhost//"
     result_backend = CELERY_RESULT_BACKEND
     timezone = 'UTC'
-    '''beat_schedule = {
-        'delete-every-10-minutes': {
-            'task': 'background.cleanupFiles',
-            'schedule': CELERY_DELETE_SCHEDULE,
-            'args': ()
-        }
-    }'''
     
     #OpenAPI
     OPENAPI_SPEC = f"""

@@ -94,6 +94,7 @@ FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
 IMAGE_PATH = os.path.join("static", "image")
 VIDEO_PATH = os.path.join("static", "video")
 SHIFT_PATH = os.path.join("static", "shift")
+INFERENCE_IMAGE_PATH = os.path.join("static", "inferenceImages")
 PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
 PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
@@ -137,6 +138,8 @@ USER_EDITABLE_SHIFT_FIELDS = ["title", "private"]
 COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
 BACKEND_ACCESS_SHIFT_FIELDS = ["views"]
 ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
+
+FILE_STREAM_TTL = datetime.timedelta(minutes=10).seconds
 
 #Mail
 FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800

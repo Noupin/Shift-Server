@@ -16,7 +16,9 @@ inferenceBP = Blueprint(BLUEPRINT_NAMES.get("inference"), __name__)
 inferenceAPI = Api(inferenceBP)
 
 from src.api.inference.routes.Inference import Inference
+from src.api.inference.routes.InferenceCDN import InferenceCDN
 from src.api.inference.routes.InferenceStatus import InferenceStatus
 
 inferenceAPI.add_resource(Inference, "/inference")
 inferenceAPI.add_resource(InferenceStatus, "/inferenceStatus")
+inferenceAPI.add_resource(InferenceCDN, "/inference/content/<string:filename>")

@@ -6,12 +6,12 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from datetime import datetime
-from src.config import SHIFT_DB_ALIAS
 from mongoengine import (StringField, DateTimeField,
                          UUIDField)
 
 #First Party Imports
 from src import shiftDB
+from src.config import SHIFT_DB_ALIAS
 
 
 class InferenceWorker(shiftDB.Document):
@@ -32,7 +32,7 @@ class InferenceWorker(shiftDB.Document):
     baseMediaFilename = StringField(required=True, default="")
     
     meta = {
-        'db_alias': SHIFT_DB_ALIAS
+        'db_alias': SHIFT_DB_ALIAS,
     }
 
 

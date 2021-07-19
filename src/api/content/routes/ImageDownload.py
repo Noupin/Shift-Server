@@ -28,7 +28,7 @@ operationId="getImageDownload")
         asAttachment = json.loads(download.lower())
 
         return send_from_directory(os.path.join(current_app.root_path, IMAGE_PATH),
-                                  filename=secure_filename(filename),
-                                  as_attachment=asAttachment,
-                                  mimetype="image",
-                                  cache_timeout=0)
+                                   filename=secure_filename(filename),
+                                   as_attachment=asAttachment,
+                                   mimetype="image",
+                                   cache_timeout=0)

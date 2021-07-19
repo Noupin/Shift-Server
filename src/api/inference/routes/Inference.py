@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import mongoengine
-from flask import request
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs, doc

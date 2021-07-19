@@ -5,7 +5,6 @@ Inference Status endpoint for the Inference part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
 from flask_jwt_extended import jwt_required
@@ -68,8 +67,8 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
                                                   maskMediaFilename=mongoShift.maskMediaFilename)
                 else:
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
-                                                   mediaFilename=worker.mediaFilename,
-                                                   baseMediaFilename=worker.baseMediaFilename)
+                                                   mediaFilename=worker.shiftedMediaUUID,
+                                                   baseMediaFilename=worker.baseMediaUUID)
 
             elif status == "FAILURE":
                 worker.delete()
