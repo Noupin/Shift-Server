@@ -67,8 +67,8 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
                                                   maskMediaFilename=mongoShift.maskMediaFilename)
                 else:
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
-                                                   mediaFilename=worker.shiftedMediaUUID,
-                                                   baseMediaFilename=worker.baseMediaUUID)
+                                                   mediaFilename=worker.mediaFilename,
+                                                   baseMediaFilename=worker.baseMediaFilename)
 
             elif status == "FAILURE":
                 worker.delete()

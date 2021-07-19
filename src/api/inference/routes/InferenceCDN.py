@@ -30,8 +30,8 @@ operationId="inferenceCDN")
             file = open(filepath, 'rb')
             mimetype = mimetypes.MimeTypes().guess_type(secureFilename)[0]
             print(mimetype)
-        except (FileNotFoundError, TypeError):
-            return abort(404, decscription="File does not exist.")
+        except FileNotFoundError:
+            return abort(404)
 
         def stream_and_remove_file():
             yield from file
