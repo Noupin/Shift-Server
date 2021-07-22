@@ -21,7 +21,7 @@ from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
 from src.DataModels.Request.InferenceRequest import InferenceRequest
 from src.utils.video import (loadVideo, extractAudio, insertAudio,
                              saveVideo)
-from src.variables.constants import (OBJECT_CLASSIFIER_KWARGS, PTM_DECODER_REALTIVE_PATH,
+from src.variables.constants import (OBJECT_DETECTOR_KWARGS, PTM_DECODER_REALTIVE_PATH,
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_IMAGE_METADATA_KEY,
                                      SHIFT_IMAGE_METADATA_VALUE, SHIFT_PATH, IMAGE_PATH,
                                      SHIFT_VIDEO_METADATA_KEY, SHIFT_VIDEO_METADATA_VALUE,
@@ -93,7 +93,7 @@ def shiftMedia(requestJSON: dict) -> str:
         fps = loadVideo(baseMediaFilename).fps
 
     inferencingData = list(shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), 1, firstMedia=True))
-    shifted = shft.shift(shft.maskAVA, inferencingData, fps, **OBJECT_CLASSIFIER_KWARGS)
+    shifted = shft.shift(shft.maskAVA, inferencingData, fps, **OBJECT_DETECTOR_KWARGS)
 
     if getMediaType(baseMediaFilename) == 'video':
         baseAudio = extractAudio(loadVideo(baseMediaFilename))

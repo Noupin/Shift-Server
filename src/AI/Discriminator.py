@@ -25,7 +25,7 @@ class Discriminator(TFModel):
         name (str, optional): The name for model. Defaults to "Discriminator".
     """
 
-    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage",
+    def __init__(self, inputShape=(None, None, 3), inputName="InputImage",
                  outputName="RealOrFake", outputActivation=tf.nn.relu, name="Discriminator",
                  optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam):
         super(Discriminator, self).__init__(inputShape=inputShape, inputName=inputName,

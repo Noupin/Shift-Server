@@ -26,7 +26,7 @@ class Encoder(TFModel):
         name (str, optional): The name for model. Defaults to "Encoder".
     """
 
-    def __init__(self, inputShape=(256, 256, 3), inputName="InputImage",
+    def __init__(self, inputShape=(None, None, 3), inputName="InputImage",
                        outputDimension=512, outputName="LatentOutput",
                        outputActivation=tf.nn.relu, name="Encoder",
                        optimizer: tf.keras.optimizers.Optimizer=tf.optimizers.Adam):

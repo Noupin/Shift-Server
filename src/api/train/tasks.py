@@ -23,7 +23,7 @@ from src.DataModels.Request.TrainRequest import TrainRequest
 from src.utils.memory import getAmountForBuffer, getGPUMemory
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.variables.constants import (EXHIBIT_IMAGE_COMPRESSION_QUALITY, IMAGE_PATH,
-                                     OBJECT_CLASSIFIER, OBJECT_CLASSIFIER_KWARGS,
+                                     OBJECT_DETECTOR, OBJECT_DETECTOR_KWARGS,
                                      LARGE_BATCH_SIZE, PTM_DECODER_REALTIVE_PATH,
                                      PTM_DISCRIMINATOR_REALTIVE_PATH,
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH)
@@ -97,8 +97,8 @@ def getBasicExhibitImage(shft: Shift) -> List[np.ndarray]:
     """
 
     inferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
-                                    1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
-    shiftedImage = shft.shift(shft.maskAVA, next(inferencingData), **OBJECT_CLASSIFIER_KWARGS)
+                                    1, action=OBJECT_DETECTOR, firstMedia=True, firstImage=True, **OBJECT_DETECTOR_KWARGS)
+    shiftedImage = shft.shift(shft.maskAVA, next(inferencingData), **OBJECT_DETECTOR_KWARGS)
     shiftedImage.resize(maxDim=1000, keepAR=True)
     shiftedImage.compress(quality=EXHIBIT_IMAGE_COMPRESSION_QUALITY)
 
@@ -117,17 +117,17 @@ def getAdvancedExhibitImages(shft: Shift) -> List[np.ndarray]:
     """
 
     baseInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
-                                        1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+                                        1, action=OBJECT_DETECTOR, firstMedia=True, firstImage=True, **OBJECT_DETECTOR_KWARGS)
     maskInferencingData = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
-                                        1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+                                        1, action=OBJECT_DETECTOR, firstMedia=True, firstImage=True, **OBJECT_DETECTOR_KWARGS)
 
     exhibitArray: List[MultiImage] = []
     
     exhibitArray.append(next(baseInferencingData))
-    exhibitArray.append(shft.shift(shft.baseAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
+    exhibitArray.append(shft.shift(shft.baseAVA, exhibitArray[0].copy(), **OBJECT_DETECTOR_KWARGS))
     exhibitArray.append(next(maskInferencingData))
-    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[2].copy(), **OBJECT_CLASSIFIER_KWARGS))
-    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[0].copy(), **OBJECT_CLASSIFIER_KWARGS))
+    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[2].copy(), **OBJECT_DETECTOR_KWARGS))
+    exhibitArray.append(shft.shift(shft.maskAVA, exhibitArray[0].copy(), **OBJECT_DETECTOR_KWARGS))
 
     for image in exhibitArray:
         image.resize(maxDim=500, keepAR=True)
@@ -150,7 +150,7 @@ def saveBaseAndMaskImages(shft: Shift) -> Tuple[str, str]:
     _, basePreviewUUID = generateUniqueFilename()
     baseFilename = f"{basePreviewUUID}.png"
     baseImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "original"),
-                                       1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+                                       1, action=OBJECT_DETECTOR, firstMedia=True, firstImage=True, **OBJECT_DETECTOR_KWARGS)
     basePreviewImage = next(baseImageGenerator)
     basePreviewImage.resize(512, keepAR=True)
     basePreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, baseFilename))
@@ -158,7 +158,7 @@ def saveBaseAndMaskImages(shft: Shift) -> Tuple[str, str]:
     _, maskPreviewUUID = generateUniqueFilename()
     maskFilename = f"{maskPreviewUUID}.png"
     maskImageGenerator = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, shft.id_, "tmp", "mask"),
-                                       1, action=OBJECT_CLASSIFIER, firstMedia=True, firstImage=True, **OBJECT_CLASSIFIER_KWARGS)
+                                       1, action=OBJECT_DETECTOR, firstMedia=True, firstImage=True, **OBJECT_DETECTOR_KWARGS)
     maskPreviewImage = next(maskImageGenerator)
     maskPreviewImage.resize(512, keepAR=True)
     maskPreviewImage.save(os.path.join(current_app.root_path, IMAGE_PATH, maskFilename))
@@ -191,13 +191,13 @@ def trainShift(requestJSON: dict, userID: str):
 
     if True: #Needs check for if the model is being retrained or iterativley trained Old Line: requestData.prebuiltShiftModel == ""
         def baseGen():
-            originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
-            baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
+            originalImageList = shft.loadData(os.path.join(shiftFilePath, "tmp", "original"), action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS)
+            baseImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "base"), action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS)
 
-            for img in shft.formatTrainingData(originalImageList, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+            for img in shft.formatTrainingData(originalImageList, OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS):
                 yield img
             
-            for img in shft.formatTrainingData(baseImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+            for img in shft.formatTrainingData(baseImages, OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS):
                 yield img
         baseDataset = datasetFrom(baseGen, batchSize=batchSize,
                                   output_signature=(
@@ -209,11 +209,11 @@ def trainShift(requestJSON: dict, userID: str):
         def maskGen():
             if requestData.prebuiltShiftModel:
                 maskImages = shft.loadData(os.path.join(current_app.root_path, SHIFT_PATH, requestData.prebuiltShiftModel, "tmp", "mask"))
-                for img in shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                for img in shft.formatTrainingData(maskImages, OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS):
                     yield img
             else:
-                maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS)
-                for img in shft.formatTrainingData(maskImages, OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS):
+                maskImages = shft.loadData(os.path.join(shiftFilePath, "tmp", "mask"), action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS)
+                for img in shft.formatTrainingData(maskImages, OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS):
                     yield img
         maskDataset = datasetFrom(maskGen, batchSize=batchSize,
                                   output_signature=(

@@ -15,7 +15,7 @@ from src.utils.video import loadVideo, videoToImages
 from src.utils.MultiImage import MultiImage
 from src.utils.detection import detectObject
 from src.utils.math import getLargestRectangle
-from src.variables.constants import OBJECT_CLASSIFIER_KWARGS, OBJECT_CLASSIFIER
+from src.variables.constants import OBJECT_DETECTOR_KWARGS, OBJECT_DETECTOR
 
 
 def test_EmptyConstructor():
@@ -41,16 +41,16 @@ def test_FormatTrainingData():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
 
-    baseTrainingData = list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS))
-    maskTrainingData = list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS))
+    baseTrainingData = list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS))
+    maskTrainingData = list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS))
     
     assert baseTrainingData[0].shape == shft.imageShape
     assert maskTrainingData[0].shape == shft.imageShape
@@ -76,16 +76,16 @@ def test_TFTraining():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -98,10 +98,10 @@ def test_TFTrainingLoadedModel():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
@@ -110,8 +110,8 @@ def test_TFTrainingLoadedModel():
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
               maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -123,9 +123,9 @@ def test_PredictUntrainedModel():
     shft = Shift()
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
-    objects = detectObject(OBJECT_CLASSIFIER, image=image.CVImage, **OBJECT_CLASSIFIER_KWARGS)
+    objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
@@ -139,16 +139,16 @@ def test_PredictTFTrainedModel():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -156,9 +156,9 @@ def test_PredictTFTrainedModel():
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
-    objects = detectObject(OBJECT_CLASSIFIER, image=image.CVImage, **OBJECT_CLASSIFIER_KWARGS)
+    objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
@@ -175,9 +175,9 @@ def test_PredictLoadedModel():
               maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
-    objects = detectObject(OBJECT_CLASSIFIER, image=image.CVImage, **OBJECT_CLASSIFIER_KWARGS)
+    objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
@@ -191,10 +191,10 @@ def test_PredictTFTrainedLoadedModel():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
@@ -203,8 +203,8 @@ def test_PredictTFTrainedLoadedModel():
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
               maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -212,9 +212,9 @@ def test_PredictTFTrainedLoadedModel():
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
-    objects = detectObject(OBJECT_CLASSIFIER, image=image.CVImage, **OBJECT_CLASSIFIER_KWARGS)
+    objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
     
@@ -227,7 +227,7 @@ def test_ShiftImageUntrainedModel():
     shft = Shift()
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
@@ -239,16 +239,16 @@ def test_ShiftImageTFTrainedModel():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -256,7 +256,7 @@ def test_ShiftImageTFTrainedModel():
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
@@ -271,7 +271,7 @@ def test_ShiftImageLoadedModel():
               maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
@@ -283,10 +283,10 @@ def test_ShiftImageTFTrainedLoadedModel():
     maskMedia: List[MultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(MultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
-                            action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100):
+                            action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(MultiImage(image))
 
     shft = Shift()
@@ -295,8 +295,8 @@ def test_ShiftImageTFTrainedLoadedModel():
               basePath=r"src\static\shift\PTM\Decoder\Decoder",
               maskPath=r"src\static\shift\PTM\Decoder\Decoder")
 
-    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_CLASSIFIER_KWARGS)))
-    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_CLASSIFIER_KWARGS)))
+    baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
+    maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
     
     shft.compile()
     
@@ -304,7 +304,7 @@ def test_ShiftImageTFTrainedLoadedModel():
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
     images = videoToImages(r"src\static\video\default.mp4",
-                          action=OBJECT_CLASSIFIER, **OBJECT_CLASSIFIER_KWARGS, interval=100)
+                          action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = MultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     

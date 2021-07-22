@@ -7,8 +7,8 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import time
-from typing import Tuple
 import tensorflow as tf
+from typing import Callable, Tuple
 
 #First Party Imports
 from src.AI.VAE import VAE
@@ -140,13 +140,13 @@ class AVA(VAE):
             self.decoder.optimizer.apply_gradients(
                 zip(decoderGradients, self.decoder.trainable_variables)
             )
-        
+
         VAELoss = super(AVA, self).train_step(images)
 
         return VAELoss, decoderLoss, discriminatorLoss
 
 
-    def train(self, trainDataset: tf.data.Dataset, epochs=1) -> None:
+    def train(self, trainDataset: tf.data.Dataset, epochs=1, callback: Callable[[], None]=None) -> None:
         for epoch in range(epochs):
             start = time.time()
 
@@ -158,3 +158,6 @@ Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-batchStart:.5} sec")
 
             print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
 Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-start:.5} sec")
+            
+            if callback:
+                callback()

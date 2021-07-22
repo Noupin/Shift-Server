@@ -29,7 +29,7 @@ from src.utils.image import (resizeImage, blendImageAndColor,
                              replaceAreaOfImage, viewImage,
                              drawPolygon, applyMask,
                              imagesToVideo)
-from src.variables.constants import (OBJECT_CLASSIFIER, SHIFT_PATH,
+from src.variables.constants import (OBJECT_DETECTOR, SHIFT_PATH,
                                      VIDEO_FRAME_GRAB_INTERVAL,
                                      HUE_ADJUSTMENT)
 
@@ -111,7 +111,7 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: Iterator[MultiImage], objectClassifier=OBJECT_CLASSIFIER,
+    def formatTrainingData(self, images: Iterator[MultiImage], objectClassifier=OBJECT_DETECTOR,
                            flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
@@ -202,7 +202,7 @@ class Shift:
 
     
     def shiftImages(self, model: tf.keras.Model, images: Iterator[MultiImage],
-                    objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
+                    objectClassifier=OBJECT_DETECTOR, imageResizer=resizeImage,
                     asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
@@ -231,7 +231,7 @@ class Shift:
 
             replaceArea = getLargestRectangle(objects)
             originalCroppedImage = cropImage(image.CVImage, replaceArea)
-            replaceImageXY = (originalCroppedImage.shape[0], originalCroppedImage.shape[1])
+            replaceImageXY = (originalCroppedImage.shape[1], originalCroppedImage.shape[0])
 
             replaceImage = image.copy()
             replaceImage = MultiImage(originalCroppedImage)
@@ -251,7 +251,7 @@ class Shift:
     
 
     def shift(self, model: tf.keras.Model, media: Union[Iterator[MultiImage], MultiImage],
-              fps=30.0, objectClassifier=OBJECT_CLASSIFIER, imageResizer=resizeImage,
+              fps=30.0, objectClassifier=OBJECT_DETECTOR, imageResizer=resizeImage,
               **kwargs)-> Union[mediaEditor.VideoFileClip, MultiImage]:
         """
         Shifts the desired objects in the media.

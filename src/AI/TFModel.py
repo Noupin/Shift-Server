@@ -232,7 +232,10 @@ class TFModel(tf.keras.Model):
         if inputShape:
             self.inputShape = inputShape
 
-        testTensor = np.zeros(self.inputShape, dtype=np.float32).reshape(1, *self.inputShape)
+        try:
+            testTensor = np.zeros(self.inputShape, dtype=np.float32).reshape(1, *self.inputShape)
+        except:
+            raise TypeError("The mode loaded in has a dynamic input shape(a value of none). Please specify an inputShape to load this model.")
 
         loadedModel: tf.keras.Model = tf.keras.models.load_model(path, **kwargs)
 

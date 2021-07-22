@@ -191,11 +191,11 @@ class VAE(tf.keras.Model):
         with tf.GradientTape() as encoderTape, tf.GradientTape() as decoderTape:
             loss = self.compute_loss(x)
 
-        encoderGradients = encoderTape.gradient(loss, self.encoder.trainable_variables)
-        decoderGradients = decoderTape.gradient(loss, self.decoder.trainable_variables)
+            encoderGradients = encoderTape.gradient(loss, self.encoder.trainable_variables)
+            decoderGradients = decoderTape.gradient(loss, self.decoder.trainable_variables)
 
-        self.encoder.optimizer.apply_gradients(zip(encoderGradients, self.encoder.trainable_variables))
-        self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
+            self.encoder.optimizer.apply_gradients(zip(encoderGradients, self.encoder.trainable_variables))
+            self.decoder.optimizer.apply_gradients(zip(decoderGradients, self.decoder.trainable_variables))
         
         return loss / 100000.
 

@@ -14,12 +14,13 @@ import piexif
 import datetime
 import numpy as np
 import mediapipe as mp
+from mtcnn import MTCNN
 
+
+MP_FACE_DETECTION = mp.solutions.mediapipe.python.solutions.face_detection
 
 def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
-    mpFaceDetection = mp.solutions.mediapipe.python.solutions.face_detection
-    
-    with mpFaceDetection.FaceDetection(**kwargs) as faceDetection:
+    with MP_FACE_DETECTION.FaceDetection(**kwargs) as faceDetection:
         results = faceDetection.process(img)
         
         rects = []
@@ -31,11 +32,23 @@ def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
             bboxC = detection.location_data.relative_bounding_box
             ih, iw, _ = img.shape
 
-            bbox = [abs(int(bboxC.xmin*iw)), abs(int(bboxC.ymin*ih)),
-                    abs(int(bboxC.width*iw)), abs(int(bboxC.height*ih))]
+            bbox = [int(bboxC.xmin*iw), int(bboxC.ymin*ih),
+                    int(bboxC.width*iw), int(bboxC.height*ih)]
+
             rects.append(bbox)
-        
-        return rects
+
+    return rects
+
+MTCNN_DETECTOR = MTCNN(scale_factor=0.15)
+def mtcnnDetection(pixels: np.ndarray):
+    results = MTCNN_DETECTOR.detect_faces(pixels)
+    rects = []
+
+    for rect in results:
+        rects.append(rect['box'])
+
+    del results
+    return rects
 
 
 #Files
@@ -59,25 +72,47 @@ ALLOWED_CAPITALS = '[A-Z]'
 ALLOWED_SPECIAL_CHARS = '[!@#\$%\^&*\(\)_+{}|:"<>?`\~\-\=\[\]\\\;\',\./]'
 PEPPER_CHARACTERS = list(string.ascii_uppercase) + list(string.ascii_lowercase)
 
+
+#Detection
 """
 Haar Cascade for the 70,001 Flikr Images takes 126 minutes for 61,952 of the 70,001
-images being an 88.5% yield.
+images being an 88.5% yield. On tony.mp4 an average FPS of 19.12 and 99.6% of images detected.
 
 Google TFLite model for the 70,001 Flikr Images takes 70 minutes for ___ of the 70,001
-images being an __% yield.
+images being an __% yield. On tony.mp4 an average FPS of 51.65 and 88.3% of images detected.
+
+Google MTCNN model on tony.mp4 an average FPS of 1.9 and 99.66% of images detected.
 """
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
-TEST_OBJECT_CLASSIFIER = googleLightweightFacialDetection
-TEST_OBJECT_CLASSIFIER_KWARGS = {'min_detection_confidence': 0.7}
+GOOGLE_OBJECT_DETECTOR = googleLightweightFacialDetection
+GOOGLE_OBJECT_DETECTOR_KWARGS = {'min_detection_confidence': 0.5}
 
-OBJECT_CLASSIFIER = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
+MTCNN_OBJECT_DETECTOR = mtcnnDetection
+
+HAAR_OBJECT_DETECTOR = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
                                                        'site-packages', 'cv2',
                                                        'data', 'haarcascade_frontalface_default.xml')
                                           ).detectMultiScale
-OBJECT_CLASSIFIER_KWARGS = {'scaleFactor': 1.15, 'minNeighbors': 7, 'minSize': (30, 30)}
-CV_WAIT_KEY = 1
+HAAR_OBJECT_DETECTOR_KWARGS = {'scaleFactor': 1.55, 'minNeighbors': 7, 'minSize': (30, 30)}
 
+
+PRIMARY_OBJECT_CLASSIFIER = HAAR_OBJECT_DETECTOR
+SECONDARY_OBJECT_CLASSIFIER = MTCNN_OBJECT_DETECTOR
+def combinedDetector(image: np.ndarray, **kwargs):
+    grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    objects = HAAR_OBJECT_DETECTOR(grayImage, **kwargs)
+
+    if len(objects) < 1:
+        objects = SECONDARY_OBJECT_CLASSIFIER(image)
+    
+    return objects
+
+OBJECT_DETECTOR = combinedDetector
+OBJECT_DETECTOR_KWARGS = HAAR_OBJECT_DETECTOR_KWARGS
+
+
+#Image Processing
 HUE_ADJUSTMENT = [0, 320/360, 120/360, 215/360] #RGB hue adjustment values
 
 LARGE_BATCH_SIZE = 64
@@ -85,6 +120,7 @@ LARGE_BATCH_SIZE = 64
 EXHIBIT_IMAGE_COMPRESSION_QUALITY = 50
 
 DEFAULT_FPS = 30
+CV_WAIT_KEY = 1
 
 #Facial Landmark Model & Detector
 FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
