@@ -15,8 +15,7 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
-from src.variables.constants import (ACCESS_EXPIRES, CELERY_DELETE_SCHEDULE,
-                                     CELERY_RESULT_BACKEND, SERVER_URL)
+from src.variables.constants import ACCESS_EXPIRES, CELERY_RESULT_BACKEND
 
 
 FERYV_DB_ALIAS = 'feryv'
@@ -63,7 +62,7 @@ class Config:
     OPENAPI_SPEC = f"""
     info:
         description: Shift Server API documentation
-    host: {SERVER_URL}
+    host: \\
     schemes:
         - http
         - https

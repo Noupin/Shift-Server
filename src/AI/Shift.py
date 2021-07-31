@@ -233,13 +233,12 @@ class Shift:
             originalCroppedImage = cropImage(image.CVImage, replaceArea)
             replaceImageXY = (originalCroppedImage.shape[1], originalCroppedImage.shape[0])
 
-            replaceImage = image.copy()
             replaceImage = MultiImage(originalCroppedImage)
             replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
             replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
 
-            landmarks = getFacialLandmarks(image.CVImage, replaceArea)
+            landmarks = getFacialLandmarks(image.CVImage, replaceArea, xywh2tlbr=True)
             maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
             mask = drawPolygon(image.CVImage, maskLandmarks, mask=True)
             mask = cropImage(mask, replaceArea) #Cropping the mask to fit the shifted image
@@ -317,13 +316,13 @@ class Shift:
         if baseDecoderPath:
             if absPath:
                 self.baseDecoder.loadModel(baseDecoderPath,
-                                           inputShape=(int(self.decoderLatentSpaceDimension),),
+                                           inputShape=(int(self.encoderLatentSpaceDimension),),
                                            **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
             else:
                 self.baseDecoder.loadModel(os.path.join(baseDecoderPath, "baseDecoder"),
-                                        inputShape=(int(self.decoderLatentSpaceDimension),),
+                                        inputShape=(int(self.encoderLatentSpaceDimension),),
                                         **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(os.path.join(baseDiscriminatorPath,
@@ -343,13 +342,13 @@ class Shift:
         if maskDecoderPath:
             if absPath:
                 self.maskDecoder.loadModel(maskDecoderPath,
-                                           inputShape=(int(self.decoderLatentSpaceDimension),),
+                                           inputShape=(int(self.encoderLatentSpaceDimension),),
                                            **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
             else:
                 self.maskDecoder.loadModel(os.path.join(maskDecoderPath, "maskDecoder"),
-                                        inputShape=(int(self.decoderLatentSpaceDimension),),
+                                        inputShape=(int(self.encoderLatentSpaceDimension),),
                                         **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(os.path.join(maskDiscriminatorPath,

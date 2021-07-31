@@ -46,8 +46,8 @@ class AVA(VAE):
                                                           optimizer=optimizer)
         if discriminator:
             self.discriminator: Discriminator = discriminator
-    
-    
+
+
     def compileModel(self, optimizer: tf.optimizers.Optimizer=None, loss=None) -> None:
         """
         Compiles self.model.
@@ -60,8 +60,8 @@ class AVA(VAE):
         super(AVA, self).compileModel(optimizer=optimizer, loss=loss)
 
         self.discriminator.compileModel(optimizer=optimizer, loss=loss)
-    
-    
+
+
     def saveModel(self, path: str, **kwargs):
         """
         Saves the weights of the models to be loaded in to path.
@@ -123,7 +123,7 @@ class AVA(VAE):
                 self.discriminator.optimizer.apply_gradients(
                     zip(discriminatorGradients, self.discriminator.trainable_variables)
                 )
-                
+
                 for weight in self.discriminator.trainable_variables:
                     weight.assign(tf.clip_by_value(weight, -self.clipConstant, self.clipConstant))
 
@@ -158,6 +158,6 @@ Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-batchStart:.5} sec")
 
             print (f"Epoch {epoch+1}, VAE Loss {VAELoss:.5}, Decoder Loss {decoderLoss:.5}, \
 Dicriminator Loss {discriminatorLoss:.5}, in {time.time()-start:.5} sec")
-            
+
             if callback:
                 callback()

@@ -31,9 +31,13 @@ def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
         for detection in results.detections:
             bboxC = detection.location_data.relative_bounding_box
             ih, iw, _ = img.shape
+            xmin, ymin, width, height = (bboxC.xmin if bboxC.xmin > 0 else 0,
+                                         bboxC.ymin if bboxC.ymin > 0 else 0,
+                                         bboxC.width if bboxC.width > 0 else 0,
+                                         bboxC.height if bboxC.height > 0 else 0,)
 
-            bbox = [int(bboxC.xmin*iw), int(bboxC.ymin*ih),
-                    int(bboxC.width*iw), int(bboxC.height*ih)]
+            bbox = [int(xmin*iw), int(ymin*ih),
+                    int(width*iw), int(height*ih)]
 
             rects.append(bbox)
 
@@ -86,25 +90,29 @@ Google MTCNN model on tony.mp4 an average FPS of 1.9 and 99.66% of images detect
 VIDEO_FRAME_GRAB_INTERVAL = 5
 #Haar Cascade: https://stackoverflow.com/questions/20801015/recommended-values-for-opencv-detectmultiscale-parameters
 GOOGLE_OBJECT_DETECTOR = googleLightweightFacialDetection
-GOOGLE_OBJECT_DETECTOR_KWARGS = {'min_detection_confidence': 0.5}
+GOOGLE_OBJECT_DETECTOR_KWARGS = {'min_detection_confidence': 0.65}
 
 MTCNN_OBJECT_DETECTOR = mtcnnDetection
 
 HAAR_OBJECT_DETECTOR = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
-                                                       'site-packages', 'cv2',
-                                                       'data', 'haarcascade_frontalface_default.xml')
-                                          ).detectMultiScale
-HAAR_OBJECT_DETECTOR_KWARGS = {'scaleFactor': 1.55, 'minNeighbors': 7, 'minSize': (30, 30)}
+                                                          'site-packages', 'cv2',
+                                                          'data', 'haarcascade_frontalface_default.xml')
+                                            ).detectMultiScale
+HAAR_SECONDARY_OBJECT_DETECTOR = cv2.CascadeClassifier(os.path.join('shift-env', 'Lib',
+                                                                    'site-packages', 'cv2',
+                                                                    'data', 'haarcascade_frontalface_alt.xml')
+                                                      ).detectMultiScale
+HAAR_OBJECT_DETECTOR_KWARGS = {'scaleFactor': 1.35, 'minNeighbors': 7, 'minSize': (30, 30)}
 
 
 PRIMARY_OBJECT_CLASSIFIER = HAAR_OBJECT_DETECTOR
-SECONDARY_OBJECT_CLASSIFIER = MTCNN_OBJECT_DETECTOR
+SECONDARY_OBJECT_CLASSIFIER = HAAR_SECONDARY_OBJECT_DETECTOR
 def combinedDetector(image: np.ndarray, **kwargs):
     grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     objects = HAAR_OBJECT_DETECTOR(grayImage, **kwargs)
 
     if len(objects) < 1:
-        objects = SECONDARY_OBJECT_CLASSIFIER(image)
+        objects = SECONDARY_OBJECT_CLASSIFIER(grayImage, **kwargs)
     
     return objects
 

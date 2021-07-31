@@ -35,14 +35,18 @@ def detectObject(classifier, image: np.ndarray, **kwargs) -> Iterable[int]:
     if kwargs.get("gray"):
         del kwargs["gray"]
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        image.flags.writeable = False
         attributes = classifier(image, **kwargs)
+        image.flags.writeable = True
     else:
+        image.flags.writeable = False
         attributes = classifier(image, **kwargs)
+        image.flags.writeable = True
     
     return attributes
 
 
-def getFacialLandmarks(image: np.ndarray, objectBoundingBox: _dlib_pybind11.rectangle, xywh2tlbr=True, gray=True) -> List[List[int]]:
+def getFacialLandmarks(image: np.ndarray, objectBoundingBox: _dlib_pybind11.rectangle, **kwargs) -> List[List[int]]:
     """
     Given an image and the bounding box where the face is in that image facial landmarks
     will be found. If the bounding box is in x, y, width, height terms then it can be
@@ -68,11 +72,13 @@ def getFacialLandmarks(image: np.ndarray, objectBoundingBox: _dlib_pybind11.rect
                              Lips Points = 61–67
     """
 
-    if xywh2tlbr:
+    if kwargs.get('xywh2tlbr'):
         objectBoundingBox = xywhTotrblRectangle(objectBoundingBox)
+        del kwargs['xywh2tlbr']
 
-    if gray:
+    if kwargs.get('gray'):
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        del kwargs['gray']
     
     landmarks = FACIAL_LANDMARK_DETECTOR(image, objectBoundingBox)
     landmarks = face_utils.shape_to_np(landmarks)
