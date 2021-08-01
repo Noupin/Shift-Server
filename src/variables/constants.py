@@ -200,3 +200,6 @@ REDIS_DB = 0
 #Celery
 CELERY_RESULT_BACKEND = "mongodb://localhost:27017"
 CELERY_DELETE_SCHEDULE = datetime.timedelta(minutes=10).seconds
+
+#AI Settings
+LATENT_SPACE_DIM = 1024

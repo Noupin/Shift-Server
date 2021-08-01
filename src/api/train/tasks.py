@@ -26,7 +26,8 @@ from src.variables.constants import (EXHIBIT_IMAGE_COMPRESSION_QUALITY, IMAGE_PA
                                      OBJECT_DETECTOR, OBJECT_DETECTOR_KWARGS,
                                      LARGE_BATCH_SIZE, PTM_DECODER_REALTIVE_PATH,
                                      PTM_DISCRIMINATOR_REALTIVE_PATH,
-                                     PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH)
+                                     PTM_ENCODER_REALTIVE_PATH, SHIFT_PATH,
+                                     LATENT_SPACE_DIM)
 
 
 def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
@@ -182,7 +183,7 @@ def trainShift(requestJSON: dict, userID: str):
 
     shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, requestData.shiftUUID)
 
-    shft = Shift(id_=requestData.shiftUUID)
+    shft = Shift(id_=requestData.shiftUUID, latentSpaceDimension=LATENT_SPACE_DIM)
     loadPTM(requestData, shft)
     
     #Subprocess cannot complete task "FileNotFoundError: [WinError 2] The system cannot find the file specified"

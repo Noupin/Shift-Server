@@ -25,7 +25,8 @@ from src.variables.constants import (OBJECT_DETECTOR_KWARGS, PTM_DECODER_REALTIV
                                      PTM_ENCODER_REALTIVE_PATH, SHIFT_IMAGE_METADATA_KEY,
                                      SHIFT_IMAGE_METADATA_VALUE, SHIFT_PATH, IMAGE_PATH,
                                      SHIFT_VIDEO_METADATA_KEY, SHIFT_VIDEO_METADATA_VALUE,
-                                     VIDEO_PATH, DEFAULT_FPS, INFERENCE_IMAGE_PATH)
+                                     VIDEO_PATH, DEFAULT_FPS, INFERENCE_IMAGE_PATH,
+                                     LATENT_SPACE_DIM)
 
 
 def loadModels(shiftInstance: Shift, requestData: InferenceRequest, shiftFilePath: str) -> Shift:
@@ -68,7 +69,7 @@ def shiftMedia(requestJSON: dict) -> str:
 
     requestData: InferenceRequest = InferenceRequest(**requestJSON)
 
-    shft = Shift(id_=requestData.shiftUUID)
+    shft = Shift(id_=requestData.shiftUUID, latentSpaceDimension=LATENT_SPACE_DIM)
     inferencingData = [np.ones(shft.imageShape)]
     shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
 

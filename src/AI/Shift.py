@@ -316,13 +316,13 @@ class Shift:
         if baseDecoderPath:
             if absPath:
                 self.baseDecoder.loadModel(baseDecoderPath,
-                                           inputShape=(int(self.encoderLatentSpaceDimension),),
+                                           inputShape=(int(self.decoderLatentSpaceDimension),),
                                            **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(baseDiscriminatorPath, **kwargs)
             else:
                 self.baseDecoder.loadModel(os.path.join(baseDecoderPath, "baseDecoder"),
-                                        inputShape=(int(self.encoderLatentSpaceDimension),),
+                                        inputShape=(int(self.decoderLatentSpaceDimension),),
                                         **kwargs)
                 if baseDiscriminatorPath:
                     self.baseDiscriminator.loadModel(os.path.join(baseDiscriminatorPath,
@@ -342,13 +342,13 @@ class Shift:
         if maskDecoderPath:
             if absPath:
                 self.maskDecoder.loadModel(maskDecoderPath,
-                                           inputShape=(int(self.encoderLatentSpaceDimension),),
+                                           inputShape=(int(self.decoderLatentSpaceDimension),),
                                            **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(maskDiscriminatorPath, **kwargs)
             else:
                 self.maskDecoder.loadModel(os.path.join(maskDecoderPath, "maskDecoder"),
-                                        inputShape=(int(self.encoderLatentSpaceDimension),),
+                                        inputShape=(int(self.decoderLatentSpaceDimension),),
                                         **kwargs)
                 if maskDiscriminatorPath:
                     self.maskDiscriminator.loadModel(os.path.join(maskDiscriminatorPath,
