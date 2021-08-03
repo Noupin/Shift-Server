@@ -165,11 +165,12 @@ PAGINATION_AMOUNT = 30
 USER_AUTHORIZATION_SCHEME = {"type": "apiKey", "in": "header", "name": "Authorization"}
 AUTHORIZATION_SCHEME_NAME = "Bearer"
 AUTHORIZATION_TAG = yaml.safe_load(f"""- {AUTHORIZATION_SCHEME_NAME}: []""")
-USER_REFRESH_SCHEME = {"type": "apiKey", "in": "cookie", "name": "csrf_refresh_token"}
-REFRESH_SCHEME_NAME = "Refresh"
-USER_CSRF_REFRESH_SCHEME = {"type": "apiKey", "in": "cookie", "name": "refresh_token_cookie"}
+USER_REFRESH_TOKEN_COOKIE_SCHEME = {"type": "apiKey", "in": "cookie", "name": "Feryvrefreshtoken"}
+REFRESH_TOKEN_COOKIE_SCHEME_NAME = "Refresh_Token_Cookie"
+USER_CSRF_REFRESH_SCHEME = {"type": "apiKey", "in": "cookie", "name": "Feryvcsrftoken"}
 CSRF_REFRESH_SCHEME_NAME = "CSRF_Refresh"
-REFRESH_TAG = yaml.safe_load(f"""- {REFRESH_SCHEME_NAME}: []\n- {CSRF_REFRESH_SCHEME_NAME}: []""")
+COOKIE_REFRESH_TAG = yaml.safe_load(f"""- {REFRESH_TOKEN_COOKIE_SCHEME_NAME}: []\n- {CSRF_REFRESH_SCHEME_NAME}: []\n- {AUTHORIZATION_SCHEME_NAME}: []""")
+
 SERVER_URL = "localhost" #os.environ.get("SERVER_URL")
 SERVER_PORT = "5000" ##os.environ.get("SERVER_PORT")
 

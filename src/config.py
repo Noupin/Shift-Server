@@ -15,7 +15,8 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
 from src.utils.ObjectIdConverter import ObjectIdConverter
-from src.variables.constants import ACCESS_EXPIRES, CELERY_RESULT_BACKEND
+from src.variables.constants import (ACCESS_EXPIRES, CELERY_RESULT_BACKEND,
+                                     USER_CSRF_REFRESH_SCHEME, USER_REFRESH_TOKEN_COOKIE_SCHEME)
 
 
 FERYV_DB_ALIAS = 'feryv'
@@ -31,6 +32,8 @@ class Config:
     JWT_SECRET_KEY = open('keys/jwt-key').read()
     JWT_ACCESS_TOKEN_EXPIRES = ACCESS_EXPIRES
     JWT_COOKIE_CSRF_PROTECT = True
+    JWT_REFRESH_COOKIE_NAME = USER_REFRESH_TOKEN_COOKIE_SCHEME.get('name')
+    JWT_REFRESH_CSRF_COOKIE_NAME = USER_CSRF_REFRESH_SCHEME.get('name')
 
     #MongoDB
     MONGODB_SETTINGS: List[Dict[str, str]] = [

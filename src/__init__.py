@@ -18,7 +18,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND, REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME,
+from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND, REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME,
                                      USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
                                      CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
 
@@ -168,7 +168,7 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
 
     docs.spec.components.security_scheme(AUTHORIZATION_SCHEME_NAME, USER_AUTHORIZATION_SCHEME)
-    docs.spec.components.security_scheme(REFRESH_SCHEME_NAME, USER_REFRESH_SCHEME)
+    docs.spec.components.security_scheme(REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME)
     docs.spec.components.security_scheme(CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
 
     return docs
