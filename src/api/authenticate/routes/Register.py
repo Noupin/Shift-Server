@@ -16,8 +16,9 @@ from flask_jwt_extended import (create_access_token, current_user,
                                 set_refresh_cookies)
 
 #First Party Imports
-from src import bcrypt
+from src import bcrypt, mail
 from src.DataModels.MongoDB.User import User
+from src.utils.email import sendConfirmRegistrationEmail
 from src.DataModels.Request.RegisterRequest import (RegisterRequest,
                                                     RegisterRequestDescription)
 from src.DataModels.Response.RegisterResponse import (RegisterResponse,
@@ -67,6 +68,8 @@ class Register(MethodResource, Resource):
         user = User(username=requestData.username, email=requestData.email,
                     password=hashedPassword, passwordSalt=passwordSalt)
         user.save()
+
+        sendConfirmRegistrationEmail(mail, user)
 
         accessToken = create_access_token(identity=user)
         refreshToken = create_refresh_token(identity=user)

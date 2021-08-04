@@ -18,6 +18,7 @@ from src.utils.validators import validateInferenceRequest
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.MongoDB.Shift import Shift as ShiftDataModel
 from src.DataModels.MongoDB.InferenceWorker import InferenceWorker
+from src.decorators.confirmationRequired import confirmationRequired
 from src.DataModels.Request.InferenceRequest import (InferenceRequest,
                                                      InferenceRequestDescription)
 from src.DataModels.Response.InferenceStatusResponse import (InferenceStatusResponse,
@@ -34,6 +35,7 @@ class InferenceStatus(MethodResource, Resource):
 original media and whether or not it has stopped inferencing.""", tags=["Inference"],
 operationId="inferenceStatus", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def post(self, requestData: InferenceRequest):
         requestError = validateInferenceRequest(requestData)
         if isinstance(requestData, str):

@@ -184,11 +184,11 @@ COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
 BACKEND_ACCESS_SHIFT_FIELDS = ["views"]
 ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
 
-FILE_STREAM_TTL = datetime.timedelta(minutes=10).seconds
-
 #Mail
 FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
+CONFIRM_EMAIL_TOKEN_EXPIRE = 1800
 EMAIL_SENDER = 'login@feryv.com'
+FRONT_END_URL = 'localhost'
 
 #JWT
 ACCESS_EXPIRES = datetime.timedelta(minutes=15)

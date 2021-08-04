@@ -20,6 +20,7 @@ from flask_jwt_extended import jwt_required, current_user, get_jwt
 from src.DataModels.MongoDB.User import User
 from src.utils.validators import validateEmail, validateUsername
 from src.DataModels.MongoDB.TokenBlocklist import TokenBlocklist
+from src.decorators.confirmationRequired import confirmationRequired
 from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
 from src.DataModels.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
                                                                IndividualUserPatchRequestDescription)
@@ -66,6 +67,7 @@ class IndividualUser(MethodResource, Resource):
     @doc(description="""Deletes the queried user.""",
          tags=["User"], operationId="deleteIndivdualUser", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def delete(self, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):
@@ -96,6 +98,7 @@ is not you.")
     @doc(description="""Updates/modifies the queried user.""",
          tags=["User"], operationId="patchIndivdualUser", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):

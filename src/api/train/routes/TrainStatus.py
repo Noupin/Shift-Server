@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import mongoengine
-from flask import request
 from flask_restful import Resource
 from celery.result import AsyncResult
 from flask_jwt_extended import jwt_required
@@ -20,6 +19,7 @@ from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.Request.TrainRequest import (TrainRequest,
                                                  TrainRequestDescription)
+from src.decorators.confirmationRequired import confirmationRequired
 from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.Response.TrainStatusResponse import (TrainStatusResponse,
                                                          TrainStatusResponseDescription)
@@ -36,6 +36,7 @@ the task will switch to give an update image. After a certain amount of time the
 will be completed automatically to allow for multiple users to train.""", tags=["Train"],
 operationId="trainStatus", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, str):

@@ -17,6 +17,7 @@ from src.variables.constants import AUTHORIZATION_TAG
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
 from src.utils.files import generateUniqueFilename, saveFlaskFile
+from src.decorators.confirmationRequired import confirmationRequired
 from src.DataModels.Request.LoadDataRequest import (LoadDataBodyRequest,
                                                     LoadDataBodyRequestDescription,
                                                     LoadDataHeaderRequest,
@@ -37,6 +38,7 @@ class LoadData(MethodResource, Resource):
 Yeilds more relaisitic results than just an inference though it takes longer.""", tags=["Load"],
 operationId="loadData", consumes=['multipart/form-data'], security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def post(self, requestHeaders: LoadDataHeaderRequest, requestFiles: List[FileStorage]):
         if not validateFileRequest(requestFiles):
             return LoadDataResponse(msg="The request payload had no files")

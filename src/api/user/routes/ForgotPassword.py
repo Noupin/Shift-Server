@@ -43,6 +43,9 @@ class ForgotPassword(MethodResource, Resource):
         if user is None:
             return ForgotPasswordResponse(msg="There is no account with that email please register.")
 
+        if not user.confirmed:
+            return ForgotPasswordResponse(msg="Please confirm your email before you reset your password")
+
         sendForgotPasswordEmail(mail, user)
 
         return ForgotPasswordResponse(msg="Email Sent!", complete=True)

@@ -16,8 +16,9 @@ from flask_jwt_extended import jwt_required, current_user
 #First Party Imports
 from src import bcrypt
 from src.DataModels.MongoDB.User import User
-from src.variables.constants import AUTHORIZATION_TAG
 from src.utils.validators import validatePassword
+from src.variables.constants import AUTHORIZATION_TAG
+from src.decorators.confirmationRequired import confirmationRequired
 from src.DataModels.Request.ChangePasswordRequest import (ChangePasswordRequest,
                                                           ChangePasswordRequestDescription)
 from src.DataModels.Response.ChangePasswordResponse import (ChangePasswordResponse,
@@ -41,6 +42,7 @@ class ChangePassword(MethodResource, Resource):
     @doc(description="""Updates/modifies users password.""",
          tags=["User"], operationId="changePassword", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def patch(self, requestData: ChangePasswordRequest):
         user = self.userExists(current_user.username)
         if not isinstance(user, User):

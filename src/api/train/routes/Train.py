@@ -18,13 +18,14 @@ from flask_jwt_extended import current_user, jwt_required
 from src.api.train.tasks import trainShift
 from src.variables.constants import (SHIFT_PATH,
                                      AUTHORIZATION_TAG)
-from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.MongoDB.TrainWorker import TrainWorker
 from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.Request.TrainRequest import (TrainRequest,
                                                  TrainRequestDescription)
+from src.decorators.confirmationRequired import confirmationRequired
 from src.DataModels.Response.TrainResponse import (TrainResponse,
                                                    TrainResponseDescription)
+from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 
 
 class Train(MethodResource, Resource):
@@ -37,6 +38,7 @@ class Train(MethodResource, Resource):
 training data. Yeilds more relaisitic results than just an inference though it \
 takes longer.""", tags=["Train"], operationId="train", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, str):

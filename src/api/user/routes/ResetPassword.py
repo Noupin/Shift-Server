@@ -49,6 +49,9 @@ class ResetPassword(MethodResource, Resource):
         
         if user is None:
             return ResetPasswordResponse(msg="The token has expired.")
+        
+        if not user.confirmed:
+            return ResetPasswordResponse(msg="Please confirm your email before you reset your password")
 
         passwordValid, passwordMsg = validatePassword(requestData.password)
         if not passwordValid:

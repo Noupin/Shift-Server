@@ -17,6 +17,7 @@ from src.DataModels.DataModelAdapter import DataModelAdapter
 from src.DataModels.Request.TrainRequest import TrainRequest
 from src.DataModels.Request.TrainRequest import (TrainRequest,
                                                  TrainRequestDescription)
+from src.decorators.confirmationRequired import confirmationRequired
 from src.utils.validators import validateBaseTrainRequest, validateShiftTitle
 from src.DataModels.Response.StopTrainResponse import (StopTrainResponse,
                                                        StopTrainResponseDescription)
@@ -31,6 +32,7 @@ class StopTrain(MethodResource, Resource):
     @doc(description="""Stop the training with the UUID of the shift model being \
 trained.""", tags=["Train"], operationId="stopTrain", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def post(self, requestData: TrainRequest) -> dict:
         requestError = validateBaseTrainRequest(requestData)
         if isinstance(requestError, str):

@@ -20,6 +20,7 @@ from flask_jwt_extended import jwt_required, current_user
 from src.utils.files import getMediaType
 from src.DataModels.MongoDB.Shift import Shift
 from src.utils.validators import validateShiftTitle
+from src.decorators.confirmationRequired import confirmationRequired
 from src.variables.constants import (IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, 
                                      VIDEO_PATH, SHIFT_PATH, AUTHORIZATION_TAG)
 from src.DataModels.Response.IndividualShiftGetResponse import (IndividualShiftGetResponse,
@@ -69,6 +70,7 @@ class IndividualShift(MethodResource, Resource):
     @doc(description="""Deletes the queried shift.""",
          tags=["Shift"], operationId="deleteIndivdualShift", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def delete(self, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):
@@ -110,6 +112,7 @@ delete a shift which you did not create.""")
     @doc(description="""Updates/modifies the queried shift.""",
          tags=["Shift"], operationId="patchIndivdualShift", security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def patch(self, requestBody: IndividualShiftPatchRequest, uuid: str):
         shift = self.shiftExists(uuid)
         if not isinstance(shift, Shift):

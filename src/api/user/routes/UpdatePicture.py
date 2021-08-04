@@ -20,8 +20,9 @@ from src.utils.MultiImage import MultiImage
 from src.DataModels.MongoDB.User import User
 from src.utils.validators import (validateFilename,
                                   validateFileRequest)
-from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG
 from src.utils.files import generateUniqueFilename, getMediaType
+from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG
+from src.decorators.confirmationRequired import confirmationRequired
 from src.DataModels.Request.UpdatePictureRequest import (UpdatePictureRequest,
                                                          UpdatePictureRequestDescription)
 from src.DataModels.Response.UpdatePictureResponse import (UpdatePictureResponse,
@@ -37,6 +38,7 @@ class UpdatePicture(MethodResource, Resource):
     @doc(description="""Changes the users profile picture to the uploaded picture.""", tags=["User"],
 operationId="updatePicture", consumes=['multipart/form-data'], security=AUTHORIZATION_TAG)
     @jwt_required()
+    @confirmationRequired
     def put(self, requestFile: FileStorage):
         if not validateFileRequest([requestFile]):
             return UpdatePictureResponse(msg="The request payload had no files")
