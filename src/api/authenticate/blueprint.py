@@ -20,9 +20,11 @@ from src.api.authenticate.routes.Logout import Logout
 from src.api.authenticate.routes.Refresh import Refresh
 from src.api.authenticate.routes.Register import Register
 from src.api.authenticate.routes.ConfirmEmail import ConfirmEmail
+from src.api.authenticate.routes.ResendConfirmEmail import ResendConfirmEmail
 
 authenticateAPI.add_resource(Login, "/login")
 authenticateAPI.add_resource(Logout, "/logout")
 authenticateAPI.add_resource(Refresh, "/refresh")
 authenticateAPI.add_resource(Register, "/register")
+authenticateAPI.add_resource(ResendConfirmEmail, "/resend-confirm-email")
 authenticateAPI.add_resource(ConfirmEmail, "/confirm-email/<string:token>")

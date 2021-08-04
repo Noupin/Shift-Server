@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-Confirm endpoint for the Users part of the Shift API
+Confirmation Email endpoint for the Users part of the Shift API
 """
 __author__ = "Noupin"
 
@@ -25,7 +25,7 @@ class ConfirmEmail(MethodResource, Resource):
 operationId="confirmEmail", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
     def get(self, token) -> dict:
-        user = User.verifyConfimationToken(token)
+        email, user = User.verifyConfimationToken(token)
         
         if user is None:
             return ConfirmEmailResponse(msg="The token has expired.")
@@ -33,6 +33,6 @@ operationId="confirmEmail", security=AUTHORIZATION_TAG)
         if user.confirmed:
             return ConfirmEmailResponse(msg="Your account has already been confirmed please login.", confirmed=True)
         else:
-            user.update(set__confirmed=True)
+            user.update(set__confirmed=True, set__email=email)
 
         return ConfirmEmailResponse(msg=f"You have confirmed your account. Thank you {current_user.username}.", confirmed=True)

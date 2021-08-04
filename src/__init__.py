@@ -18,9 +18,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 #First Party Imports
 from src.config import Config
 from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND, REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME,
+from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND,
                                      USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
-                                     CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME)
+                                     CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME,
+                                     REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME,)
 
 
 mail = Mail()
@@ -129,8 +130,8 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.train.blueprint import Train, TrainStatus, StopTrain
     from src.api.inference.blueprint import Inference, InferenceCDN, InferenceStatus
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
-    from src.api.authenticate.blueprint import Register, Login, Logout, Refresh, ConfirmEmail
     from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
+    from src.api.authenticate.blueprint import Register, Login, Logout, Refresh, ConfirmEmail, ResendConfirmEmail
     from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts, ChangePassword, ForgotPassword, ResetPassword
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
@@ -144,6 +145,8 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Refresh, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(ConfirmEmail, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    docs.register(ResendConfirmEmail, blueprint=BLUEPRINT_NAMES.get("authenticate"))
+    
 
     docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(ResetPassword, blueprint=BLUEPRINT_NAMES.get("user"))

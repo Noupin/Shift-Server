@@ -79,10 +79,10 @@ class User(feryvDB.Document):
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
             email = s.loads(token)['email']
-        except itsdangerous.SignatureExpired:
-            return None
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
+            return None, None
 
-        return User.objects(email=email).first()
+        return email, User.objects(email=email).first()
 
 
     def get_id(self) -> str:
