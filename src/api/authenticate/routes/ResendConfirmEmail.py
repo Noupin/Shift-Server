@@ -25,7 +25,7 @@ class ResendConfirmEmail(MethodResource, Resource):
     @doc(description="""Resends the email to confirm the user.""", tags=["Authenticate"],
 operationId="resendConfirmEmail", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
-    def get(self) -> dict:
+    def get(self):
         sendConfirmRegistrationEmail(mail, current_user)
 
         return ResendConfirmEmailResponse(msg=f"You have confirmed your account. Thank you {current_user.username}.")
