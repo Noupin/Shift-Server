@@ -12,8 +12,8 @@ from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src import mail
-from src.variables.constants import AUTHORIZATION_TAG
-from src.utils.email import sendConfirmRegistrationEmail
+from src.utils.email import sendEmail
+from src.variables.constants import AUTHORIZATION_TAG, CONFIRM_ACCOUNT_SUBJECT, confirmAccountMessageTemplate
 from src.DataModels.Response.ResendConfirmEmailResponse import (ResendConfirmEmailResponse,
                                                                 ResendConfirmEmailResponseDescription)
 
@@ -26,6 +26,7 @@ class ResendConfirmEmail(MethodResource, Resource):
 operationId="resendConfirmEmail", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
     def get(self):
-        sendConfirmRegistrationEmail(mail, current_user, current_user.email)
+        sendEmail(mail, subject=CONFIRM_ACCOUNT_SUBJECT, recipients=[current_user.email],
+                  msg=confirmAccountMessageTemplate(current_user.getConfirmationToken()))
 
         return ResendConfirmEmailResponse(msg=f"The email has been sent again to you, {current_user.username}.")

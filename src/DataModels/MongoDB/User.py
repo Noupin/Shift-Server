@@ -62,7 +62,7 @@ class User(feryvDB.Document):
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
             userID = s.loads(token)['user-id']
-        except itsdangerous.SignatureExpired:
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
             return None
 
         return User.objects(id=userID).first()
@@ -76,6 +76,23 @@ class User(feryvDB.Document):
 
     @staticmethod
     def verifyConfimationToken(token) -> Union[User]:
+        s = Serializer(current_app.config["JWT_SECRET_KEY"])
+        try:
+            email = s.loads(token)['email']
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
+            return None, None
+
+        return email, User.objects(email=email).first()
+    
+    
+    def getChangeEmailToken(self, expiresSec=1800) -> JSONWebSignatureSerializer:
+        s = Serializer(current_app.config["JWT_SECRET_KEY"], expiresSec)
+        
+        return s.dumps({'email': str(self.email)}).decode('utf-8')
+
+
+    @staticmethod
+    def verifyChangeEmailToken(token) -> Union[User]:
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
             email = s.loads(token)['email']
