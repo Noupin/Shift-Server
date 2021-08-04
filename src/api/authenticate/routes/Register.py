@@ -69,7 +69,7 @@ class Register(MethodResource, Resource):
                     password=hashedPassword, passwordSalt=passwordSalt)
         user.save()
 
-        sendConfirmRegistrationEmail(mail, user)
+        sendConfirmRegistrationEmail(mail, user, user.email)
 
         accessToken = create_access_token(identity=user)
         refreshToken = create_refresh_token(identity=user)

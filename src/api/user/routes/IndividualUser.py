@@ -17,7 +17,9 @@ from flask_apispec import marshal_with, doc, use_kwargs
 from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 #First Party Imports
+from src import mail
 from src.DataModels.MongoDB.User import User
+from src.utils.email import sendConfirmRegistrationEmail
 from src.utils.validators import validateEmail, validateUsername
 from src.DataModels.MongoDB.TokenBlocklist import TokenBlocklist
 from src.decorators.confirmationRequired import confirmationRequired
@@ -110,6 +112,7 @@ it does not exist.""")
 is not you.""")
 
         queries = {}
+        mailMessage = ""
         for field, value in requestBody.data.items():
             if field not in USER_EDITABLE_USER_FIELDS:
                 return IndividualUserPatchResponse(msg="You are not allowed to change this field.")
@@ -129,19 +132,22 @@ is not you.""")
                     return IndividualUserPatchResponse(msg=emailMsg)
                 if User.objects(email=value).first():
                     return IndividualUserPatchResponse(msg="A user with that email already exists")
-                queries[f"set__{field}"] = value
-
-        try:
-            user.update(**queries)
-        except ValueError:
-            return IndividualUserPatchResponse(msg=f"The field you are changing is \
-not the same type as the value you submitted"), 500
-        except TypeError:
-            return IndividualUserPatchResponse(msg=f"The field you are changing is \
-not the same type as the value you submitted"), 500
-        except mongoengine.errors.OperationError:
-            return IndividualUserPatchResponse(msg=f"There was no data sent to update \
-this would remove data."), 500
+                sendConfirmRegistrationEmail(mail, user, value)
+                mailMessage = " Please verify your new email address to change it."
+                #queries[f"set__{field}"] = value
+        
+        if 'email' not in requestBody.data:
+            try:
+                user.update(**queries)
+            except ValueError:
+                return IndividualUserPatchResponse(msg=f"The field you are changing is \
+    not the same type as the value you submitted"), 500
+            except TypeError:
+                return IndividualUserPatchResponse(msg=f"The field you are changing is \
+    not the same type as the value you submitted"), 500
+            except mongoengine.errors.OperationError:
+                return IndividualUserPatchResponse(msg=f"There was no data sent to update \
+    this would remove data."), 500
 
         return IndividualUserPatchResponse(msg=f"The fields \
-{[field for field, _ in requestBody.data.items()]} for the User: {user.username} have been modified.")
+{[field for field, _ in queries.items()]} for the User: {user.username} have been modified.{mailMessage}")

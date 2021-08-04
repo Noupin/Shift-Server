@@ -26,6 +26,6 @@ class ResendConfirmEmail(MethodResource, Resource):
 operationId="resendConfirmEmail", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
     def get(self):
-        sendConfirmRegistrationEmail(mail, current_user)
+        sendConfirmRegistrationEmail(mail, current_user, current_user.email)
 
         return ResendConfirmEmailResponse(msg=f"The email has been sent again to you, {current_user.username}.")

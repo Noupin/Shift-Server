@@ -30,13 +30,13 @@ If you did not make this request then please ignore this email.
 
     mail.send(msg)
 
-def sendConfirmRegistrationEmail(mail: Mail, user: User):
+def sendConfirmRegistrationEmail(mail: Mail, user: User, email: str):
     token = User.getConfirmationToken(user, FORGOT_PASSWORD_RESET_TOKEN_EXPIRE)
-    msg = Message(subject="Confirm Registration",
+    msg = Message(subject="Confirm Email",
                   sender=os.environ.get("MAIL_USERNAME"),
-                  recipients=[user.email])
+                  recipients=[email])
 
-    msg.body = f"""To confirm your account visit the following link:
+    msg.body = f"""To confirm your email visit the following link:
 
 {FRONT_END_URL}/confirm-email/{token}
 
