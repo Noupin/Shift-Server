@@ -187,8 +187,29 @@ ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
 #Mail
 FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
 CONFIRM_EMAIL_TOKEN_EXPIRE = 1800
-EMAIL_SENDER = 'login@feryv.com'
+EMAIL_SENDER = 'login.feryv@gmail.com'
 FRONT_END_URL = 'localhost'
+
+FORGOT_PASSWORD_SUBJECT = "Password Reset Request"
+def forgotPasswordMessageTemplate(token: str) -> str:
+    return f"""To reset your password visit the following link:
+
+{FRONT_END_URL}/reset-password/{token}
+
+If you did not make this request then please ignore this email.
+
+- Feryv"""
+
+CONFIRM_ACCOUNT_SUBJECT = "Confirm Your Feryv Account"
+def confirmAccountMessageTemplate(token: str) -> str:
+    return f"""To confirm your account visit the following link:
+
+{FRONT_END_URL}/confirm-email/{token}
+
+If you did not make this request then please ignore this email.
+
+- Feryv"""
+
 
 #JWT
 ACCESS_EXPIRES = datetime.timedelta(minutes=15)

@@ -9,7 +9,6 @@ import bcrypt as pyBcrypt
 from flask import request, jsonify
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from src.variables.constants import AUTHORIZATION_TAG
 from flask_apispec import marshal_with, use_kwargs, doc
 from flask_jwt_extended import (create_access_token, current_user,
                                 jwt_required, create_refresh_token,
@@ -17,12 +16,14 @@ from flask_jwt_extended import (create_access_token, current_user,
 
 #First Party Imports
 from src import bcrypt, mail
+from src.utils.email import sendEmail
 from src.DataModels.MongoDB.User import User
-from src.utils.email import sendConfirmRegistrationEmail
 from src.DataModels.Request.RegisterRequest import (RegisterRequest,
                                                     RegisterRequestDescription)
 from src.DataModels.Response.RegisterResponse import (RegisterResponse,
                                                       RegisterResponseDescription)
+from src.variables.constants import (AUTHORIZATION_TAG, CONFIRM_ACCOUNT_SUBJECT,
+                                     confirmAccountMessageTemplate)
 from src.utils.validators import validateEmail, validatePassword, validateUsername
 
 
@@ -69,7 +70,8 @@ class Register(MethodResource, Resource):
                     password=hashedPassword, passwordSalt=passwordSalt)
         user.save()
 
-        sendConfirmRegistrationEmail(mail, user, user.email)
+        sendEmail(mail, subject=CONFIRM_ACCOUNT_SUBJECT, recipients=[user.email],
+                  msg=confirmAccountMessageTemplate(user.getConfirmationToken))
 
         accessToken = create_access_token(identity=user)
         refreshToken = create_refresh_token(identity=user)

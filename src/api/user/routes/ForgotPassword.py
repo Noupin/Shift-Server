@@ -7,15 +7,15 @@ __author__ = "Noupin"
 #Third Party Imports
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from src.variables.constants import AUTHORIZATION_TAG
+from src.variables.constants import AUTHORIZATION_TAG, FORGOT_PASSWORD_SUBJECT, forgotPasswordMessageTemplate
 from flask_apispec import marshal_with, doc, use_kwargs
 from flask_jwt_extended import current_user, jwt_required
 
 #First Party Imports
 from src import mail
+from src.utils.email import sendEmail
 from src.DataModels.MongoDB.User import User
 from src.utils.validators import validateEmail
-from src.utils.email import sendForgotPasswordEmail
 from src.DataModels.Request.ForgotPasswordRequest import (ForgotPasswordRequest,
                                                           ForgotPasswordRequestDescription)
 from src.DataModels.Response.ForgotPasswordResponse import (ForgotPasswordResponse,
@@ -46,6 +46,7 @@ class ForgotPassword(MethodResource, Resource):
         if not user.confirmed:
             return ForgotPasswordResponse(msg="Please confirm your email before you reset your password")
 
-        sendForgotPasswordEmail(mail, user)
+        sendEmail(mail, subject=FORGOT_PASSWORD_SUBJECT, recipients=[user.email],
+                  msg=forgotPasswordMessageTemplate(user.getResetToken()))
 
         return ForgotPasswordResponse(msg="Email Sent!", complete=True)
