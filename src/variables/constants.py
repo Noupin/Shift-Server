@@ -200,13 +200,31 @@ If you did not make this request then please ignore this email.
 
 - Feryv"""
 
-CONFIRM_ACCOUNT_SUBJECT = "Confirm Your Feryv Account"
+CONFIRM_ACCOUNT_SUBJECT = "Confirm Your Account"
 def confirmAccountMessageTemplate(token: str) -> str:
     return f"""To confirm your account visit the following link:
 
 {FRONT_END_URL}/confirm-email/{token}
 
 If you did not make this request then please ignore this email.
+
+- Feryv"""
+
+VERIFY_EMAIL_CHANGE_SUBJECT = "Verify Your Email Change"
+def verifyEmailChangeMessageTemplate(token: str) -> str:
+    return f"""A request has been made to change from this email to another to verify this request visit the following link:
+
+{FRONT_END_URL}/verify-email-change/{token}
+
+If you did not make this request then please CHANGE YOUR PASSWORD IMMEDIATELY.
+
+- Feryv"""
+
+CONFIRM_EMAIL_CHANGE_SUBJECT = "Confirm Your Email Change"
+def verifyEmailChangeMessageTemplate(token: str) -> str:
+    return f"""To confirm this as your new email visit the following link:
+
+{FRONT_END_URL}/confirm-email-change/{token}
 
 - Feryv"""
 
