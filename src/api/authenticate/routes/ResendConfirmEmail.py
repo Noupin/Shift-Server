@@ -28,4 +28,4 @@ operationId="resendConfirmEmail", security=AUTHORIZATION_TAG)
     def get(self):
         sendConfirmRegistrationEmail(mail, current_user)
 
-        return ResendConfirmEmailResponse(msg=f"You have confirmed your account. Thank you {current_user.username}.")
+        return ResendConfirmEmailResponse(msg=f"The email has been sent again to you, {current_user.username}.")
