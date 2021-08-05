@@ -160,6 +160,7 @@ BLUEPRINT_NAMES = {
 AMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
 PAGINATION_AMOUNT = 30
+ITEMS_PER_PAGE = 10
 
 #OpenAPI
 USER_AUTHORIZATION_SCHEME = {"type": "apiKey", "in": "header", "name": "Authorization"}
