@@ -14,7 +14,8 @@ from src.DataModels.Response.DefaultResponse import DefaultResponse
 
 @dataclass(frozen=True)
 class VerifyEmailChangeResponse(DefaultResponse):
-    nextEmail: str=""
+    confirmed: bool = False
+    nextEmail: str = ""
 
 VerifyEmailChangeResponseDescription = """Whether the verifying of the email change
 went according to plan and the next email to confirm."""

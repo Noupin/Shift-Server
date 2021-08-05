@@ -39,4 +39,4 @@ address.""", tags=["User"], operationId="verifyEmailChange", security=AUTHORIZAT
                   msg=confirmEmailChangeMessageTemplate(user.getChangeEmailToken(nextEmail)))
 
         return VerifyEmailChangeResponse(msg=f"You have verified your email to be changed. Please confirm your new email.",
-                                         nextEmail=nextEmail)
+                                         confirmed=True, nextEmail=nextEmail)
