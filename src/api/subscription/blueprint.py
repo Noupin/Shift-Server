@@ -12,7 +12,7 @@ from flask_restful import Api
 from src.variables.constants import BLUEPRINT_NAMES
 
 
-subscriptionBP = Blueprint(BLUEPRINT_NAMES.get("user"), __name__)
+subscriptionBP = Blueprint(BLUEPRINT_NAMES.get("subscription"), __name__)
 subscriptionAPI = Api(subscriptionBP)
 
 from src.api.subscription.routes.StripePublishableKey import StripePublishableKey
