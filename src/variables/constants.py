@@ -190,7 +190,7 @@ ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
 FORGOT_PASSWORD_RESET_TOKEN_EXPIRE = 1800
 CONFIRM_EMAIL_TOKEN_EXPIRE = 1800
 EMAIL_SENDER = 'login.feryv@gmail.com'
-FRONT_END_URL = 'localhost'
+FRONT_END_URL = 'http://192.168.1.52'
 
 FORGOT_PASSWORD_SUBJECT = "Password Reset Request"
 def forgotPasswordMessageTemplate(token: str) -> str:
