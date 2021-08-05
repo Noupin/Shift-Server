@@ -86,6 +86,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.api.inference.blueprint import inferenceBP
     from src.api.extensions.blueprint import extenstionBP
     from src.api.authenticate.blueprint import authenticateBP
+    from src.api.subscription.blueprint import subscriptionBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
@@ -96,6 +97,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(contentBP, url_prefix='/api/content')
     app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
     app.register_blueprint(authenticateBP, url_prefix='/api/authenticate')
+    app.register_blueprint(subscriptionBP, url_prefix='/api/subscription')
 
     return app
 
@@ -133,6 +135,7 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
     from src.api.authenticate.blueprint import (Register, Login, Logout, Refresh, ConfirmEmail,
                                                 ResendConfirmEmail)
+    from src.api.subscription.blueprint import StripePublishableKey, StripeCreateCheckoutSession
     from src.api.user.blueprint import (UpdatePicture, IndividualUser, UserShifts, ChangePassword,
                                         ForgotPassword, ResetPassword, VerifyEmailChange, ConfirmEmailChange)
 
@@ -174,6 +177,9 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(ShiftCategory, blueprint=BLUEPRINT_NAMES.get("category"))
 
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
+    
+    docs.register(StripePublishableKey, blueprint=BLUEPRINT_NAMES.get("subscription"))
+    docs.register(StripeCreateCheckoutSession, blueprint=BLUEPRINT_NAMES.get("subscription"))
 
     docs.spec.components.security_scheme(AUTHORIZATION_SCHEME_NAME, USER_AUTHORIZATION_SCHEME)
     docs.spec.components.security_scheme(REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME)

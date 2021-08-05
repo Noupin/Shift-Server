@@ -16,5 +16,7 @@ subscriptionBP = Blueprint(BLUEPRINT_NAMES.get("subscription"), __name__)
 subscriptionAPI = Api(subscriptionBP)
 
 from src.api.subscription.routes.StripePublishableKey import StripePublishableKey
+from src.api.subscription.routes.StripeCreateCheckoutSession import StripeCreateCheckoutSession
 
 subscriptionAPI.add_resource(StripePublishableKey, "/stripe-publishable-key")
+subscriptionAPI.add_resource(StripeCreateCheckoutSession, "/create-checkout-session")
