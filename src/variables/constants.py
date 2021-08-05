@@ -154,6 +154,7 @@ BLUEPRINT_NAMES = {
     'shift': 'shift',
     'authenticate': 'authenticate',
     'extension': 'extension',
+    'subscription': 'subscription',
 }
 
 #Shift Category Limits

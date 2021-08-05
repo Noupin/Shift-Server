@@ -5,7 +5,6 @@ Routes for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
-from src.api.user.routes.ResetPassword import ResetPassword
 from flask import Blueprint
 from flask_restful import Api
 
@@ -17,6 +16,7 @@ userBP = Blueprint(BLUEPRINT_NAMES.get("user"), __name__)
 userAPI = Api(userBP)
 
 from src.api.user.routes.UserShifts import UserShifts
+from src.api.user.routes.ResetPassword import ResetPassword
 from src.api.user.routes.UpdatePicture import UpdatePicture
 from src.api.user.routes.IndividualUser import IndividualUser
 from src.api.user.routes.ChangePassword import ChangePassword

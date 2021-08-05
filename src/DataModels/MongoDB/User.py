@@ -5,6 +5,8 @@ The MongoDB data model for a User
 
 from __future__ import annotations
 
+from mongoengine.fields import ReferenceField
+
 from src.variables.constants import CONFIRM_EMAIL_TOKEN_EXPIRE
 
 __author__ = "Noupin"
@@ -15,9 +17,10 @@ from flask import current_app
 from datetime import datetime
 from typing import Union, Tuple
 from src.config import FERYV_DB_ALIAS
-from mongoengine import StringField, BooleanField, DateTimeField
+from src.DataModels.MongoDB.Subscription import Subscription
 from itsdangerous import (JSONWebSignatureSerializer,
                           TimedJSONWebSignatureSerializer as Serializer)
+from mongoengine import StringField, BooleanField, DateTimeField, MapField
 
 #First Party Imports
 from src import feryvDB
@@ -36,6 +39,7 @@ class User(feryvDB.Document):
     canTrain = BooleanField(default=False)
     confirmed = BooleanField(default=False)
     createdAt = DateTimeField(default=datetime.utcnow)
+    subscriptions = MapField(ReferenceField(Subscription))
 
     meta = {
         'db_alias': FERYV_DB_ALIAS,
