@@ -1,6 +1,6 @@
 #pylint: disable=C0103, C0301
 """
-The Categories Request Data Model for the Shift API
+The Shift Category Request Data Model for the Shift API
 """
 __author__ = "Noupin"
 
@@ -12,7 +12,7 @@ from src.DataModels.Request.BasePaginationRequest import BasePaginationRequest
 
 
 @dataclass(frozen=True)
-class CategoriesRequest(BasePaginationRequest):
+class ShiftCategoryRequest(BasePaginationRequest):
     pass
 
-CategoryRequestDescription = """The page of categories to get."""
+ShiftCategoryRequestDescription = """The page of shifts to get from the chosen category."""
