@@ -8,11 +8,11 @@ __author__ = "Noupin"
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, doc, use_kwargs
-from src.DataModels.Marshmallow.Shift import ShiftSchema
 
 #First Party Imports
 from src.DataModels.MongoDB.Shift import Shift
 from src.variables.constants import ITEMS_PER_PAGE
+from src.DataModels.Marshmallow.Shift import ShiftSchema
 from src.DataModels.MongoDB.ShiftCategory import ShiftCategory as ShiftCategoryModel
 from src.DataModels.Request.ShiftCategoryRequest import (ShiftCategoryRequest,
                                                          ShiftCategoryRequestDescription)

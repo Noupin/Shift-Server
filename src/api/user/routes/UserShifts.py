@@ -7,13 +7,16 @@ __author__ = "Noupin"
 #Third Party Imports
 from typing import List, Union
 from flask_restful import Resource
-from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
-from src.DataModels.Marshmallow.Shift import ShiftSchema
+from flask_apispec import marshal_with, doc, use_kwargs
 
 #First Party Imports
 from src.DataModels.MongoDB.User import User
 from src.DataModels.MongoDB.Shift import Shift
+from src.variables.constants import ITEMS_PER_PAGE
+from src.DataModels.Marshmallow.Shift import ShiftSchema
+from src.DataModels.Request.UserShiftsRequest import (UserShiftsRequest,
+                                                      UserShiftsRequestDescription)
 from src.DataModels.Response.UserShiftsResponse import (UserShiftsResponse,
                                                         UserShiftsResponseDescription)
 
@@ -28,16 +31,19 @@ class UserShifts(MethodResource, Resource):
             return {}
 
 
+    @use_kwargs(UserShiftsRequest.Schema(), location='query',
+                description=UserShiftsRequestDescription)
     @marshal_with(UserShiftsResponse,
                   description=UserShiftsResponseDescription)
     @doc(description="""The shifts associated with the queried user.""",
          tags=["User"], operationId="userShifts")
-    def get(self, username: str):
+    def get(self, queryParams: UserShiftsRequest, username: str):
         user = self.userExists(username)
         if not isinstance(user, User):
             return UserShiftsResponse()
 
-        userShifts = Shift.objects(author__in=[user])
+        offset = (queryParams.page - 1)*ITEMS_PER_PAGE
+        userShifts = Shift.objects(author__in=[user]).skip(offset).limit(ITEMS_PER_PAGE)
         userShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in userShifts]
 
         return UserShiftsResponse().load(dict(shifts=userShiftsJSON))
