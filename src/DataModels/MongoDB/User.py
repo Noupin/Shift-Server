@@ -11,9 +11,9 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import itsdangerous
-from typing import Union
 from flask import current_app
 from datetime import datetime
+from typing import Union, Tuple
 from src.config import FERYV_DB_ALIAS
 from mongoengine import StringField, BooleanField, DateTimeField
 from itsdangerous import (JSONWebSignatureSerializer,
@@ -62,7 +62,7 @@ class User(feryvDB.Document):
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
             userID = s.loads(token)['user-id']
-        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature, KeyError):
             return None
 
         return User.objects(id=userID).first()
@@ -75,31 +75,33 @@ class User(feryvDB.Document):
 
 
     @staticmethod
-    def verifyConfimationToken(token) -> Union[User]:
+    def verifyConfimationToken(token) -> Tuple[str, Union[User]]:
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
             email = s.loads(token)['email']
-        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature, KeyError):
             return None, None
 
         return email, User.objects(email=email).first()
     
     
-    def getChangeEmailToken(self, expiresSec=1800) -> JSONWebSignatureSerializer:
+    def getChangeEmailToken(self, nextEmail: str, expiresSec=1800) -> JSONWebSignatureSerializer:
         s = Serializer(current_app.config["JWT_SECRET_KEY"], expiresSec)
         
-        return s.dumps({'email': str(self.email)}).decode('utf-8')
+        return s.dumps({'email': str(self.email), 'nextEmail': nextEmail}).decode('utf-8')
 
 
     @staticmethod
-    def verifyChangeEmailToken(token) -> Union[User]:
+    def verifyChangeEmailToken(token) -> Tuple[str, Union[User]]:
         s = Serializer(current_app.config["JWT_SECRET_KEY"])
         try:
-            email = s.loads(token)['email']
-        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature):
+            loadedMessage = s.loads(token)
+            email = loadedMessage['email']
+            nextEmail = loadedMessage['nextEmail']
+        except (itsdangerous.SignatureExpired, itsdangerous.BadSignature, KeyError):
             return None, None
 
-        return email, User.objects(email=email).first()
+        return nextEmail, User.objects(email=email).first()
 
 
     def get_id(self) -> str:

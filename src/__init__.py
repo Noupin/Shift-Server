@@ -131,14 +131,16 @@ def generateSwagger() -> FlaskApiSpec:
     from src.api.inference.blueprint import Inference, InferenceCDN, InferenceStatus
     from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
-    from src.api.authenticate.blueprint import Register, Login, Logout, Refresh, ConfirmEmail, ResendConfirmEmail
-    from src.api.user.blueprint import UpdatePicture, IndividualUser, UserShifts, ChangePassword, ForgotPassword, ResetPassword
+    from src.api.authenticate.blueprint import (Register, Login, Logout, Refresh, ConfirmEmail,
+                                                ResendConfirmEmail)
+    from src.api.user.blueprint import (UpdatePicture, IndividualUser, UserShifts, ChangePassword,
+                                        ForgotPassword, ResetPassword, VerifyEmailChange, ConfirmEmailChange)
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
     docs.register(Train, blueprint=BLUEPRINT_NAMES.get("train"))
-    docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
     docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))
+    docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
 
     docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
     docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
@@ -154,6 +156,8 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(ChangePassword, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(ForgotPassword, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(VerifyEmailChange, blueprint=BLUEPRINT_NAMES.get("user"))
+    docs.register(ConfirmEmailChange, blueprint=BLUEPRINT_NAMES.get("user"))
 
     docs.register(Inference, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceCDN, blueprint=BLUEPRINT_NAMES.get("inference"))

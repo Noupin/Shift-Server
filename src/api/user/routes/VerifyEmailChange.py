@@ -5,34 +5,38 @@ Confirmation Email endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+from src.utils.email import sendEmail
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
 from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
+from src import mail
 from src.DataModels.MongoDB.User import User
-from src.variables.constants import AUTHORIZATION_TAG
-from src.DataModels.Response.ConfirmEmailResponse import (ConfirmEmailResponse,
-                                                          ConfirmEmailResponseDescription)
+from src.decorators.confirmationRequired import confirmationRequired
+from src.variables.constants import (AUTHORIZATION_TAG, VERIFY_EMAIL_CHANGE_SUBJECT,
+                                     confirmEmailChangeMessageTemplate)
+from src.DataModels.Response.VerifyEmailChangeResponse import (VerifyEmailChangeResponse,
+                                                               VerifyEmailChangeResponseDescription)
 
 
-class ConfirmEmail(MethodResource, Resource):
+class VerifyEmailChange(MethodResource, Resource):
 
-    @marshal_with(ConfirmEmailResponse.Schema(),
-                  description=ConfirmEmailResponseDescription)
-    @doc(description="""Confirms the users email.""", tags=["Authenticate"],
-operationId="confirmEmail", security=AUTHORIZATION_TAG)
+    @marshal_with(VerifyEmailChangeResponse.Schema(),
+                  description=VerifyEmailChangeResponseDescription)
+    @doc(description="""Verifies the server to send a confirmation email to the next email
+address.""", tags=["User"], operationId="verifyEmailChange", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
+    @confirmationRequired
     def get(self, token) -> dict:
-        email, user = User.verifyConfimationToken(token)
+        nextEmail, user = User.verifyChangeEmailToken(token)
         
         if user is None:
-            return ConfirmEmailResponse(msg="The token has expired.")
+            return VerifyEmailChangeResponse(msg="The token has expired or is invalid.")
         
-        if user.confirmed:
-            return ConfirmEmailResponse(msg="Your account has already been confirmed please login.", confirmed=True)
-        else:
-            user.update(set__confirmed=True, set__email=email)
+        sendEmail(mail, subject=VERIFY_EMAIL_CHANGE_SUBJECT, recipients=[nextEmail],
+                  msg=confirmEmailChangeMessageTemplate(user.getChangeEmailToken(nextEmail)))
 
-        return ConfirmEmailResponse(msg=f"You have confirmed your account. Thank you {current_user.username}.", confirmed=True)
+        return VerifyEmailChangeResponse(msg=f"You have verified your email to be changed. Please confirm your new email.",
+                                         nextEmail=nextEmail)

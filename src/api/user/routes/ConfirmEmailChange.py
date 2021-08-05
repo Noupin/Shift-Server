@@ -14,27 +14,26 @@ from flask_jwt_extended import jwt_required, current_user
 from src.DataModels.MongoDB.User import User
 from src.variables.constants import AUTHORIZATION_TAG
 from src.decorators.confirmationRequired import confirmationRequired
-from src.DataModels.Response.ConfirmEmailResponse import (ConfirmEmailResponse,
-                                                          ConfirmEmailResponseDescription)
+from src.DataModels.Response.ConfirmEmailChangeResponse import (ConfirmEmailChangeResponse,
+                                                                ConfirmEmailChangeResponseDescription)
 
 
-class ConfirmEmail(MethodResource, Resource):
+class ConfirmEmailChange(MethodResource, Resource):
 
-    @marshal_with(ConfirmEmailResponse.Schema(),
-                  description=ConfirmEmailResponseDescription)
-    @doc(description="""Confirms the users email.""", tags=["Authenticate"],
-operationId="confirmEmail", security=AUTHORIZATION_TAG)
+    @marshal_with(ConfirmEmailChangeResponse.Schema(),
+                  description=ConfirmEmailChangeResponseDescription)
+    @doc(description="""Confirms the change to the new users email.""", tags=["User"],
+operationId="confirmEmailChange", security=AUTHORIZATION_TAG)
     @jwt_required(locations=['headers'])
     @confirmationRequired
     def get(self, token) -> dict:
-        email, user = User.verifyConfimationToken(token)
+        nextEmail, user = User.verifyChangeEmailToken(token)
         
         if user is None:
-            return ConfirmEmailResponse(msg="The token has expired.")
+            if User.objects(email=nextEmail).first():
+                return ConfirmEmailChangeResponse(msg="Your email has already been changed.", confirmed=True)
+            return ConfirmEmailChangeResponse(msg="The token has expired or is invalid.")
         
-        if user.confirmed:
-            return ConfirmEmailResponse(msg="Your account has already been confirmed please login.", confirmed=True)
-        else:
-            user.update(set__confirmed=True, set__email=email)
+        user.update(set__email=nextEmail)
 
-        return ConfirmEmailResponse(msg=f"You have confirmed your account. Thank you {current_user.username}.", confirmed=True)
+        return ConfirmEmailChangeResponse(msg=f"You have confirmed your new email. Thank you {current_user.username}.", confirmed=True)

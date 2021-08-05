@@ -18,12 +18,12 @@ from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 #First Party Imports
 from src import mail
+from src.utils.email import sendEmail
 from src.DataModels.MongoDB.User import User
-from src.utils.email import sendConfirmRegistrationEmail
 from src.utils.validators import validateEmail, validateUsername
 from src.DataModels.MongoDB.TokenBlocklist import TokenBlocklist
 from src.decorators.confirmationRequired import confirmationRequired
-from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
+from src.variables.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS, VERIFY_EMAIL_CHANGE_SUBJECT, verifyEmailChangeMessageTemplate
 from src.DataModels.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
                                                                IndividualUserPatchRequestDescription)
 from src.DataModels.Response.IndividualUserGetResponse import (IndividualUserGetResponse,
@@ -132,9 +132,9 @@ is not you.""")
                     return IndividualUserPatchResponse(msg=emailMsg)
                 if User.objects(email=value).first():
                     return IndividualUserPatchResponse(msg="A user with that email already exists")
-                sendConfirmRegistrationEmail(mail, user, value)
-                mailMessage = " Please verify your new email address to change it."
-                #queries[f"set__{field}"] = value
+                sendEmail(mail, subject=VERIFY_EMAIL_CHANGE_SUBJECT, recipients=[user.email],
+                          msg=verifyEmailChangeMessageTemplate(user.getChangeEmailToken(value)))
+                mailMessage = " Please verify this request from your current email."
         
         if 'email' not in requestBody.data:
             try:
