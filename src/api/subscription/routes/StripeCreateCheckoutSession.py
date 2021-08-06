@@ -38,9 +38,9 @@ tags=["Subscription"], operationId="createCheckoutSession", security=AUTHORIZATI
                 # the user saved in your database
                 #
                 # example: client_reference_id=user.id,
-                client_reference_id=current_user.id,
-                success_url=FRONT_END_URL + "/subscription/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=FRONT_END_URL + "/subscription/cancel",
+                #client_reference_id=current_user.id,
+                success_url=FRONT_END_URL + "/subscription-confirmed",
+                cancel_url=FRONT_END_URL + "/",
                 payment_method_types=["card"],
                 mode="subscription",
                 line_items=[
