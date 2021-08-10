@@ -3,7 +3,7 @@ from functools import wraps
 from flask_jwt_extended import current_user
 
 #Third Party Imports
-from src.DataModels.Response.DefaultResponse import DefaultResponse
+from src.models.Response.DefaultResponse import DefaultResponse
 
 
 def confirmationRequired(func):

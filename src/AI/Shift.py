@@ -17,19 +17,19 @@ from src.AI.AVA import AVA
 from src.AI.TFModel import TFModel
 from src.AI.Encoder import Encoder
 from src.AI.Decoder import Decoder
+from TFMultiImage import TFMultiImage
 from src.utils.video import videoToImages
 from src.utils.memory import chunkIterable
-from src.utils.MultiImage import MultiImage
 from src.AI.Discriminator import Discriminator
 from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
 from src.utils.detection import detectObject, getFacialLandmarks
-from src.utils.image import (resizeImage, blendImageAndColor,
-                             flipImage, cropImage, loadImage,
-                             replaceAreaOfImage, viewImage,
-                             drawPolygon, applyMask,
-                             imagesToVideo)
-from src.variables.constants import (OBJECT_DETECTOR, SHIFT_PATH,
+from TFMultiImage.utils.image import (resizeImage, blendImageAndColor,
+                                    flipImage, cropImage, loadImage,
+                                    replaceAreaOfImage, viewImage,
+                                    drawPolygon, applyMask,
+                                    imagesToVideo)
+from src.constants import (OBJECT_DETECTOR, SHIFT_PATH,
                                      VIDEO_FRAME_GRAB_INTERVAL,
                                      HUE_ADJUSTMENT)
 
@@ -111,14 +111,14 @@ class Shift:
         self.codingLayers -= 1
 
 
-    def formatTrainingData(self, images: Iterator[MultiImage], objectClassifier=OBJECT_DETECTOR,
+    def formatTrainingData(self, images: Iterator[TFMultiImage], objectClassifier=OBJECT_DETECTOR,
                            flipCodes=["y"], **kwargs) -> Generator[np.ndarray, None, None]:
         """
         Formats and shuffles images with objectClassifier ready to train the Shift models. Converts \
-        images from MultiImage to np.ndarray or MultiImage.CVImage.
+        images from TFMultiImage to np.ndarray or TFMultiImage.CVImage.
 
         Args:
-            images (Generator of MultiImage or list of MultiImage): The images to be formatted for Shift model training
+            images (Generator of TFMultiImage or list of TFMultiImage): The images to be formatted for Shift model training
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             flipCodes (list of str): The codes to flip the image for augmentation. Defaults to ["x"].
@@ -129,7 +129,7 @@ class Shift:
         """
 
         for image in images:
-            if isinstance(image, MultiImage):
+            if isinstance(image, TFMultiImage):
                 objects = detectObject(objectClassifier, image=image.CVImage, **kwargs)
             else:
                 objects = detectObject(objectClassifier, image=image, **kwargs)
@@ -137,7 +137,7 @@ class Shift:
             if len(objects) < 1:
                 continue
             
-            if isinstance(image, MultiImage):
+            if isinstance(image, TFMultiImage):
                 image.crop(getLargestRectangle(objects))
                 image.resize(self.imageShape[0], self.imageShape[1])
             else:
@@ -145,7 +145,7 @@ class Shift:
                 image = resizeImage(image, (self.imageShape[0], self.imageShape[1]))
 
             for hue in HUE_ADJUSTMENT:
-                tfImage = image.TFImage if isinstance(image, MultiImage) else (image/255.).astype(np.float32)
+                tfImage = image.TFImage if isinstance(image, TFMultiImage) else (image/255.).astype(np.float32)
                 huedImage = tf.image.adjust_hue(tfImage, hue)
 
                 yield np.array(tf.image.adjust_hue(tfImage, hue))
@@ -181,7 +181,7 @@ class Shift:
             self.maskDiscriminator.addDiscriminatorLayer(filters=self.convolutionFilters)
 
 
-    def inference(self, model: TFModel, image: np.ndarray) -> MultiImage:
+    def inference(self, model: TFModel, image: np.ndarray) -> TFMultiImage:
         """
         Uses model to inference on image
 
@@ -198,12 +198,12 @@ class Shift:
                                                                    self.imageShape[2]))
         image = image[0].reshape(self.imageShape[0], self.imageShape[1], self.imageShape[2])
         
-        return MultiImage(image)
+        return TFMultiImage(image)
 
     
-    def shiftImages(self, model: tf.keras.Model, images: Iterator[MultiImage],
+    def shiftImages(self, model: tf.keras.Model, images: Iterator[TFMultiImage],
                     objectClassifier=OBJECT_DETECTOR, imageResizer=resizeImage,
-                    asNumpy=False, **kwargs) -> Generator[MultiImage, None, None]:
+                    asNumpy=False, **kwargs) -> Generator[TFMultiImage, None, None]:
         """
         Given an image the classifier will determine an area of the image to replace
         with the shifted object.
@@ -215,7 +215,7 @@ class Shift:
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
             asNumpy (bool, optional): Whether or not to yield np.ndarray as opposed to the default
-                                      MultiImage. Defaults to False.
+                                      TFMultiImage. Defaults to False.
             **kwargs: The key word arguments to pass into detectObject function
 
         Yields:
@@ -233,7 +233,7 @@ class Shift:
             originalCroppedImage = cropImage(image.CVImage, replaceArea)
             replaceImageXY = (originalCroppedImage.shape[1], originalCroppedImage.shape[0])
 
-            replaceImage = MultiImage(originalCroppedImage)
+            replaceImage = TFMultiImage(originalCroppedImage)
             replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
             replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
@@ -246,18 +246,18 @@ class Shift:
             maskedImage = applyMask(originalCroppedImage, replaceImage.CVImage, mask)
             shiftedImage = replaceAreaOfImage(image.CVImage, replaceArea, maskedImage)
             
-            yield shiftedImage if asNumpy else MultiImage(shiftedImage)
+            yield shiftedImage if asNumpy else TFMultiImage(shiftedImage)
     
 
-    def shift(self, model: tf.keras.Model, media: Union[Iterator[MultiImage], MultiImage],
+    def shift(self, model: tf.keras.Model, media: Union[Iterator[TFMultiImage], TFMultiImage],
               fps=30.0, objectClassifier=OBJECT_DETECTOR, imageResizer=resizeImage,
-              **kwargs)-> Union[mediaEditor.VideoFileClip, MultiImage]:
+              **kwargs)-> Union[mediaEditor.VideoFileClip, TFMultiImage]:
         """
         Shifts the desired objects in the media.
 
         Args:
             model (tf.keras.Model): The model used to shift the objects.
-            media (generator of MultiImage or list of MultiImage or MultiImage]): The media to be shifted
+            media (generator of TFMultiImage or list of TFMultiImage or TFMultiImage]): The media to be shifted
             objectClassifier (function): The classifier used to detect the are of the image
                                          to shift. Defaults to OBJECT_CLASSIFIER.
             imageResizer (function): The function used to resize images. Defaults to resizeImage.
@@ -265,15 +265,15 @@ class Shift:
             **kwargs: The key word arguments to pass into detectObject function
 
         Returns:
-            mediaEditor.VideoFileClip or MultiImage: The shifted media
+            mediaEditor.VideoFileClip or TFMultiImage: The shifted media
         """
 
         isImage = False
 
-        if isinstance(media, MultiImage) and media.CVImage.ndim == 3:
+        if isinstance(media, TFMultiImage) and media.CVImage.ndim == 3:
             mediaGenerator = self.shiftImages(model, [media], objectClassifier, imageResizer, **kwargs)
             isImage = True
-        elif len(media) == 1 and isinstance(media[0], MultiImage) and media[0].CVImage.ndim == 3:
+        elif len(media) == 1 and isinstance(media[0], TFMultiImage) and media[0].CVImage.ndim == 3:
             mediaGenerator = self.shiftImages(model, [media[0]], objectClassifier, imageResizer, **kwargs)
             isImage = True
         else:
@@ -379,7 +379,7 @@ class Shift:
 
 
     def loadData(self, dataPath: str, interval=VIDEO_FRAME_GRAB_INTERVAL, action=None, firstMedia=False,
-                 firstImage=False, **kwargs) -> Generator[MultiImage, None, None]:
+                 firstImage=False, **kwargs) -> Generator[TFMultiImage, None, None]:
         """
         Loads the images and videos for either the mask or base model
 
@@ -398,7 +398,7 @@ class Shift:
             kwargs: The additional keyword arguments to pass to the action.
 
         Returns:
-            Generator of MultiImage: The images to load in.
+            Generator of TFMultiImage: The images to load in.
         """
 
         files = os.listdir(dataPath)
@@ -408,9 +408,9 @@ class Shift:
 
             if mediaType == 'video':
                 for image in videoToImages(os.path.join(dataPath, media), interval=interval, firstImage=firstImage, action=action, **kwargs):
-                    yield MultiImage(image)
+                    yield TFMultiImage(image)
             elif mediaType == "image":
-                yield MultiImage(os.path.join(dataPath, media))
+                yield TFMultiImage(os.path.join(dataPath, media))
             
             if firstMedia:
                 break

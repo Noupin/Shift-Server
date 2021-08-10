@@ -3,7 +3,9 @@
 #flask run --host=0.0.0.0 --port="PORT"
 
 #turn RabbitMQ off then on, then remove celery collection from
-#MongoDB & "celery amqp queue.delete queue1" finally, "celery purge"
+#SQL Alchemy & "celery amqp queue.delete queue1" finally, "celery purge"
+
+#Kill NGinx taskkill /f /IM nginx.exe
 """
 Runs the server for Shift
 """

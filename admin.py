@@ -10,20 +10,14 @@ from mongoengine import connect
 from src.config import Config, SHIFT_DB_ALIAS
 
 #First Party Imports
-from src.DataModels.MongoDB.Shift import Shift
-from src.DataModels.MongoDB.ShiftCategory import ShiftCategory
+from src.models.SQL.Shift import Shift
+from src.models.SQL.ShiftCategory import ShiftCategory
 
-host = "HOST"
-port = "PORT"
-db = "DB"
-
-connect(host=f"mongodb://{Config.MONGODB_SETTINGS[0][host]}:{Config.MONGODB_SETTINGS[0][port]}/{Config.MONGODB_SETTINGS[0][db]}",
-        alias=SHIFT_DB_ALIAS)
 
 def saveCategory(categoryName: str, queryTitles: List[str]):
     shifts = []
     for queryString in queryTitles:
-        shifts.append(Shift.objects.get(title=queryString))
+        shifts.append(Shift.query.filter_by.get(title=queryString))
 
     category = ShiftCategory(name=categoryName, shifts=shifts)
     category.save()

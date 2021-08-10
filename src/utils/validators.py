@@ -2,68 +2,22 @@
 """
 API Validators
 """
-__author__ = "https://stackoverflow.com/users/5811078/zipa, Noupin"
+__author__ = "Noupin"
 
 #Third Party Imports
-import re
 import os
+import re
 from flask import current_app
-from src.AI.Shift import Shift
-from typing import List, Tuple, Union
+from typing import List, Union, Tuple
 from werkzeug.datastructures import FileStorage
-from src.DataModels.Request.TrainRequest import TrainRequest
-from email_validator import validate_email, EmailNotValidError
-from src.DataModels.Request.InferenceRequest import InferenceRequest
 
 #First Party Imports
-from src.variables.constants import (
-    ALLOWED_EXTENSIONS, MINIMUM_PASSWORD_LENGTH, ALLOWED_NUMBERS,
-    ALLOWED_CAPITALS, ALLOWED_SPECIAL_CHARS, SHIFT_PATH
-    )
-
-
-def validatePassword(password: str) -> Tuple[bool, str]:
-    """
-    The given password will be determined valid or invalid
-
-    Args:
-        passsword (str): The password to validate
-
-    Returns:
-        tuple of bool, str: Whether or not the password is valid with a description message
-    """
-
-    valid = True
-    msg = "Success"
-
-    if len(password) < MINIMUM_PASSWORD_LENGTH:
-        valid, msg =  False, "Make sure your password is at lest 8 letters"
-    elif not re.search(ALLOWED_NUMBERS, password):
-        valid, msg = False, "Make sure your password has a number in it"
-    elif not re.search(ALLOWED_CAPITALS, password): 
-        valid, msg = False, "Make sure your password has a capital letter in it"
-    elif not re.search(ALLOWED_SPECIAL_CHARS, password):
-        valid, msg = False, "Make sure your password has a special character in it"
-
-    return valid, msg
-
-
-def validateEmail(email: str) -> Tuple[bool, str]:
-    """
-    The given email will be determined valid or invalid
-
-    Args:
-        email (str): The email to validate
-
-    Returns:
-        tuple of bool, str: Whether or not the email is valid with a description message
-    """
-
-    try:
-        validate_email(email)
-        return True, email
-    except EmailNotValidError as error:
-        return False, str(error)
+from src.AI.Shift import Shift
+from src.models.Request.TrainRequest import TrainRequest
+from src.models.Request.InferenceRequest import InferenceRequest
+from src.constants import (ALLOWED_EXTENSIONS, ALLOWED_SHIFT_TITLE_CHARACTERS, SHIFT_PATH,
+                           ALLOWED_SHIFT_TITLE_SPECIAL_CHARACTERS, MAXIMUM_SHIFT_TITLE_LENGTH,
+                           MINIMUM_SHIFT_TITLE_LENGTH)
 
 
 def validateFilename(filename: str) -> bool:
@@ -164,20 +118,6 @@ def validateBaseTrainRequest(requestData: TrainRequest) -> Union[TrainRequest, s
     return requestData
 
 
-def validateUsername(username: str) -> bool:
-    """
-    Determines the validity of the username.
-
-    Args:
-        username (str): The username to determine the validity of.
-
-    Returns:
-        bool: Whether the username is valid or not.
-    """
-    
-    return len(username) > 0
-
-
 def validateShiftTitle(title: str) -> bool:
     """
     Determines the validity of the shift title.
@@ -189,4 +129,27 @@ def validateShiftTitle(title: str) -> bool:
         bool: Whether the title is valid or not.
     """
     
-    return len(title) > 0
+    return len(title) >= MINIMUM_SHIFT_TITLE_LENGTH or len(title) <= MAXIMUM_SHIFT_TITLE_LENGTH
+
+
+def validateShiftTitle(username: str) -> Tuple[bool, str]:
+    """
+    Determines the validity of the username.
+
+    Args:
+        username (str): The username to determine the validity of.
+
+    Returns:
+        tuple of bool, str: Whether or not the username is valid with a description message.
+    """
+    
+    if len(username) < MINIMUM_SHIFT_TITLE_LENGTH:
+        return False, f'Please make sure your title is more than {MINIMUM_SHIFT_TITLE_LENGTH} character.'
+
+    elif len(username) > MAXIMUM_SHIFT_TITLE_LENGTH:
+        return False, f'Please make sure your title is less than {MAXIMUM_SHIFT_TITLE_LENGTH} characters.'
+    
+    elif not re.match(ALLOWED_SHIFT_TITLE_CHARACTERS, username):
+        return False, f"Please make sure your title is only letters, numbers or of these characters'{ALLOWED_SHIFT_TITLE_SPECIAL_CHARACTERS}'"
+
+    return True, 'Success'

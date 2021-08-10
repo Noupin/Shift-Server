@@ -14,7 +14,7 @@ from typing import Union, List
 from werkzeug.utils import secure_filename
 
 #First Party Imports
-from src.variables.constants import EXTENSION_FILE_TYPES, SHIFT_PATH
+from src.constants import EXTENSION_FILE_TYPES, SHIFT_PATH
 
 
 def generateUniqueFilename(generator=uuid.uuid4, urlSafe=False) -> Union[uuid.UUID, str]:

@@ -11,11 +11,11 @@ import moviepy.editor as mediaEditor
 
 #First Party Imports
 from src.AI.Shift import Shift
-from src.utils.video import loadVideo, videoToImages
-from src.utils.MultiImage import MultiImage
+from TFMultiImage import TFMultiImage
 from src.utils.detection import detectObject
 from src.utils.math import getLargestRectangle
-from src.variables.constants import OBJECT_DETECTOR_KWARGS, OBJECT_DETECTOR
+from src.utils.video import loadVideo, videoToImages
+from src.constants import OBJECT_DETECTOR_KWARGS, OBJECT_DETECTOR
 
 
 def test_EmptyConstructor():
@@ -37,15 +37,15 @@ def test_EmptyConstructorOneLayers():
 
 
 def test_FormatTrainingData():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
 
@@ -72,15 +72,15 @@ def test_Compile():
 
 
 def test_TFTraining():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
 
@@ -94,15 +94,15 @@ def test_TFTraining():
 
 
 def test_TFTrainingLoadedModel():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
@@ -124,7 +124,7 @@ def test_PredictUntrainedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
@@ -135,15 +135,15 @@ def test_PredictUntrainedModel():
 
 
 def test_PredictTFTrainedModel():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
 
@@ -157,7 +157,7 @@ def test_PredictTFTrainedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
@@ -176,7 +176,7 @@ def test_PredictLoadedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
@@ -187,15 +187,15 @@ def test_PredictLoadedModel():
 
 
 def test_PredictTFTrainedLoadedModel():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
@@ -213,7 +213,7 @@ def test_PredictTFTrainedLoadedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
     image.crop(getLargestRectangle(objects))
     image.resize(width=shft.imageShape[0], height=shft.imageShape[1])
@@ -228,22 +228,22 @@ def test_ShiftImageUntrainedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
     assert predicted.CVImage.shape == image.CVImage.shape
 
 
 def test_ShiftImageTFTrainedModel():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
 
@@ -257,7 +257,7 @@ def test_ShiftImageTFTrainedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
     assert predicted.CVImage.shape == image.CVImage.shape
@@ -272,22 +272,22 @@ def test_ShiftImageLoadedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
     assert predicted.CVImage.shape == image.CVImage.shape
 
 
 def test_ShiftImageTFTrainedLoadedModel():
-    baseMedia: List[MultiImage] = []
-    maskMedia: List[MultiImage] = []
+    baseMedia: List[TFMultiImage] = []
+    maskMedia: List[TFMultiImage] = []
 
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        baseMedia.append(MultiImage(image))
+        baseMedia.append(TFMultiImage(image))
     for image in videoToImages(r"src\static\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
-        maskMedia.append(MultiImage(image))
+        maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
@@ -305,7 +305,7 @@ def test_ShiftImageTFTrainedLoadedModel():
 
     images = videoToImages(r"src\static\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
-    image = MultiImage(next(images))
+    image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
     
     assert predicted.CVImage.shape == image.CVImage.shape

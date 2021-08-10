@@ -8,31 +8,40 @@ __author__ = "Noupin"
 import flask
 from flask import Flask
 from celery import Celery
-from flask_mail import Mail
 from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
-from flask_mongoengine import MongoEngine
 from flask_apispec.extension import FlaskApiSpec
 from werkzeug.middleware.proxy_fix import ProxyFix
+from sqlalchemy_utils import database_exists, create_database
 
 #First Party Imports
 from src.config import Config
-from src.utils.MJSONEncoder import MongoJSONEncoder
-from src.variables.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND,
-                                     USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
-                                     CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME,
-                                     REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME,)
+from src.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND,
+                           USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
+                           CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME,
+                           REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME)
 
 
-mail = Mail()
+db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 docs = FlaskApiSpec()
-shiftDB = MongoEngine()
-feryvDB = MongoEngine()
 
 
-def initApp(appName=__name__, configClass=Config) -> flask.app.Flask:
+def initDatabase(uri: str):
+    """
+    Checks if the database for uri exists and if not makes the database.
+
+    Args:
+        uri (str): The uri of the database to check if is in existance.
+    """    
+
+    if not database_exists(uri):
+        create_database(uri)
+
+
+def initApp(appName=__name__, configClass: Config=Config) -> flask.app.Flask:
     """
     Creates the Shift Flask App and if given a config class the default config \
 class is overridden.
@@ -45,17 +54,26 @@ Defaults to Config.
     Returns:
         flask.app.Flask: The created Flask app.
     """
+    
+    initDatabase(configClass.SQLALCHEMY_DATABASE_URI)
 
     app = Flask(appName)
-    app.json_encoder = MongoJSONEncoder
     app.config.from_object(configClass)
 
 
+    db.init_app(app)
     jwt.init_app(app)
-    mail.init_app(app)
     docs.init_app(app)
     bcrypt.init_app(app)
-    shiftDB.init_app(app)
+    
+    from src.models.SQL.User import User
+    from src.models.SQL.Shift import Shift
+    from src.models.SQL.TrainWorker import TrainWorker
+    from src.models.SQL.ShiftCategory import ShiftCategory
+    from src.models.SQL.InferenceWorker import InferenceWorker
+    
+    with app.app_context():
+        db.create_all()
 
     return app
 
@@ -77,27 +95,21 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
         app = initApp(appName, configClass)
 
 
-    from src.api.load.blueprint import loadBP
-    from src.api.user.blueprint import userBP
-    from src.api.shift.blueprint import shiftBP
-    from src.api.train.blueprint import trainBP
-    from src.api.content.blueprint import contentBP
-    from src.api.category.blueprint import categoryBP
-    from src.api.inference.blueprint import inferenceBP
-    from src.api.extensions.blueprint import extenstionBP
-    from src.api.authenticate.blueprint import authenticateBP
-    from src.api.subscription.blueprint import subscriptionBP
+    from src.blueprints.load.blueprint import loadBP
+    from src.blueprints.user.blueprint import userBP
+    from src.blueprints.shift.blueprint import shiftBP
+    from src.blueprints.train.blueprint import trainBP
+    from src.blueprints.content.blueprint import contentBP
+    from src.blueprints.category.blueprint import categoryBP
+    from src.blueprints.inference.blueprint import inferenceBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
-    app.register_blueprint(extenstionBP, url_prefix="")
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift')
     app.register_blueprint(contentBP, url_prefix='/api/content')
     app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
-    app.register_blueprint(authenticateBP, url_prefix='/api/authenticate')
-    app.register_blueprint(subscriptionBP, url_prefix='/api/subscription')
 
     return app
 
@@ -127,40 +139,22 @@ def generateSwagger() -> FlaskApiSpec:
         FlaskApiSpec: The updates docs to create yaml file.
     """
 
-    from src.api.load.blueprint import LoadData
-    from src.api.shift.blueprint import IndividualShift
-    from src.api.train.blueprint import Train, TrainStatus, StopTrain
-    from src.api.inference.blueprint import Inference, InferenceCDN, InferenceStatus
-    from src.api.content.blueprint import Image, Video, ImageDownload, VideoDownload
-    from src.api.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
-    from src.api.authenticate.blueprint import (Register, Login, Logout, Refresh, ConfirmEmail,
-                                                ResendConfirmEmail)
-    from src.api.subscription.blueprint import StripePublishableKey, StripeCreateCheckoutSession
-    from src.api.user.blueprint import (UpdatePicture, IndividualUser, UserShifts, ChangePassword,
-                                        ForgotPassword, ResetPassword, VerifyEmailChange, ConfirmEmailChange)
+    from src.blueprints.load.blueprint import LoadData
+    from src.blueprints.shift.blueprint import IndividualShift
+    from src.blueprints.user.blueprint import IndividualUser, UserShifts
+    from src.blueprints.train.blueprint import Train, TrainStatus, StopTrain
+    from src.blueprints.inference.blueprint import Inference, InferenceCDN, InferenceStatus
+    from src.blueprints.content.blueprint import Image, Video, ImageDownload, VideoDownload
+    from src.blueprints.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
 
     docs.register(Train, blueprint=BLUEPRINT_NAMES.get("train"))
     docs.register(StopTrain, blueprint=BLUEPRINT_NAMES.get("train"))
-    docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))
-
-    docs.register(Login, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(Logout, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(Refresh, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(Register, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(ConfirmEmail, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    docs.register(ResendConfirmEmail, blueprint=BLUEPRINT_NAMES.get("authenticate"))
-    
+    docs.register(TrainStatus, blueprint=BLUEPRINT_NAMES.get("train"))    
 
     docs.register(UserShifts, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(ResetPassword, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(UpdatePicture, blueprint=BLUEPRINT_NAMES.get("user"))
     docs.register(IndividualUser, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(ChangePassword, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(ForgotPassword, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(VerifyEmailChange, blueprint=BLUEPRINT_NAMES.get("user"))
-    docs.register(ConfirmEmailChange, blueprint=BLUEPRINT_NAMES.get("user"))
 
     docs.register(Inference, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceCDN, blueprint=BLUEPRINT_NAMES.get("inference"))
@@ -177,9 +171,6 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(ShiftCategory, blueprint=BLUEPRINT_NAMES.get("category"))
 
     docs.register(IndividualShift, blueprint=BLUEPRINT_NAMES.get("shift"))
-    
-    docs.register(StripePublishableKey, blueprint=BLUEPRINT_NAMES.get("subscription"))
-    docs.register(StripeCreateCheckoutSession, blueprint=BLUEPRINT_NAMES.get("subscription"))
 
     docs.spec.components.security_scheme(AUTHORIZATION_SCHEME_NAME, USER_AUTHORIZATION_SCHEME)
     docs.spec.components.security_scheme(REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME)

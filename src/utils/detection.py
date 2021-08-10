@@ -13,7 +13,7 @@ from typing import Iterable, List
 
 #First Party Imports
 from src.utils.math import xywhTotrblRectangle
-from src.variables.constants import FACIAL_LANDMARK_DETECTOR
+from src.constants import FACIAL_LANDMARK_DETECTOR
 
 
 def detectObject(classifier, image: np.ndarray, **kwargs) -> Iterable[int]:

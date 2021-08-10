@@ -9,18 +9,12 @@ import os
 import yaml
 import datetime
 from apispec import APISpec
-from typing import Dict, List
 from dotenv import load_dotenv
 from apispec.ext.marshmallow import MarshmallowPlugin
 
 #First Party Imports
-from src.utils.ObjectIdConverter import ObjectIdConverter
-from src.variables.constants import (ACCESS_EXPIRES, CELERY_RESULT_BACKEND,
-                                     USER_CSRF_REFRESH_SCHEME, USER_REFRESH_TOKEN_COOKIE_SCHEME)
+from src.constants import CELERY_RESULT_BACKEND
 
-
-FERYV_DB_ALIAS = 'feryv'
-SHIFT_DB_ALIAS = 'shift'
 
 load_dotenv()
 marshmallowPlugin = MarshmallowPlugin()
@@ -29,38 +23,25 @@ class Config:
     #JWT
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = False #Should always be set to true in production.
-    JWT_SECRET_KEY = open('keys/jwt-key').read()
-    JWT_ACCESS_TOKEN_EXPIRES = ACCESS_EXPIRES
-    JWT_COOKIE_CSRF_PROTECT = True
-    JWT_REFRESH_COOKIE_NAME = USER_REFRESH_TOKEN_COOKIE_SCHEME.get('name')
-    JWT_REFRESH_CSRF_COOKIE_NAME = USER_CSRF_REFRESH_SCHEME.get('name')
+    JWT_SECRET_KEY = open(f"{os.path.join(os.pardir, 'keys', 'jwt.key')}").read()
+    
 
-    #MongoDB
-    MONGODB_SETTINGS: List[Dict[str, str]] = [
-        {
-            'ALIAS': SHIFT_DB_ALIAS,
-            'DB': os.environ.get('DB_PROJECT'),
-            'HOST': os.environ.get('DB_HOST'),
-            'PORT': int(os.environ.get('DB_PORT'))
-        },
-        {
-            'ALIAS': FERYV_DB_ALIAS,
-            'DB': os.environ.get('FERYV_DB_PROJECT'),
-            'HOST': os.environ.get('FERYV_DB_HOST'),
-            'PORT': int(os.environ.get('FERYV_DB_PORT'))
-        }
-    ]
-    OBJECTID = ObjectIdConverter
+    #SQLAlchemy
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URI')
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+
 
     #Authentication
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=5)
     SEND_FILE_MAX_AGE_DEFAULT = 0
 
+
     #Celery
     CELERY_BROKER_URL = "amqp://localhost//"
     result_backend = CELERY_RESULT_BACKEND
     timezone = 'UTC'
-    
+
+
     #OpenAPI
     OPENAPI_SPEC = f"""
     info:
@@ -79,14 +60,8 @@ class Config:
     )
     APISPEC_SWAGGER_URL = '/api/oas/'  # URI to access API Doc JSON 
     APISPEC_SWAGGER_UI_URL = '/api/oasUI/'  # URI to access UI of API Doc
-    
-    #Mail
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    
+
+
     #Stripe
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
     STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
