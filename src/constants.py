@@ -7,17 +7,16 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import cv2
-import dlib
 import yaml
 import piexif
 import datetime
 import numpy as np
 import mediapipe as mp
 from mtcnn import MTCNN
+from typing import Tuple, List
 
 
 MP_FACE_DETECTION = mp.solutions.mediapipe.python.solutions.face_detection
-
 def googleLightweightFacialDetection(img: np.ndarray, **kwargs):
     with MP_FACE_DETECTION.FaceDetection(**kwargs) as faceDetection:
         results = faceDetection.process(img)
@@ -52,6 +51,37 @@ def mtcnnDetection(pixels: np.ndarray):
 
     del results
     return rects
+
+MP_FACE_SILHOUETTE = mp.solutions.mediapipe.python.solutions.face_mesh.FaceMesh #468 points total
+def getSilhouette(image: np.ndarray, **kwargs) -> List[Tuple[int, int]]:
+    points = []
+
+    with MP_FACE_SILHOUETTE(**SILHOUETTE_DETECTOR_KWARGS) as faceMesh:
+        height, width, _ = image.shape
+
+        image.flags.writeable = False
+        results = faceMesh.process(image)
+        image.flags.writeable = True
+
+        if not results.multi_face_landmarks:
+            return points
+
+        if kwargs.get('landmarkList'):
+            for point in kwargs.get('landmarkList'):
+                point = results.multi_face_landmarks[0].landmark[point]
+                relativeX = int(point.x * width)
+                relativeY = int(point.y * height)
+                points.append((relativeX, relativeY))
+        else:
+            for lms in results.multi_face_landmarks:
+                for index in range(len(lms.landmark)):
+                    point = lms.landmark[index]
+                    relativeX = int(point.x * width)
+                    relativeY = int(point.y * height)
+                    points.append((relativeX, relativeY))
+                break
+
+        return points
 
 
 #Files
@@ -133,8 +163,17 @@ DEFAULT_FPS = 30
 CV_WAIT_KEY = 1
 
 #Facial Landmark Model & Detector
-FACIAL_LANDMARK_MODEL = r"shape_predictor_68_face_landmarks.dat"
-FACIAL_LANDMARK_DETECTOR = dlib.shape_predictor(FACIAL_LANDMARK_MODEL)
+FACIAL_SILHOUETTE_POINTS = [
+    10,  338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
+    397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136,
+    172, 58,  132, 93,  234, 127, 162, 21,  54,  103, 67,  109
+] #Mediapipe Landmarks https://github.com/tensorflow/tfjs-models/blob/master/facemesh/src/keypoints.ts
+
+
+#Silhouette Detection
+SILHOUETTE_DETECTOR = getSilhouette
+SILHOUETTE_DETECTOR_KWARGS = {'min_detection_confidence': 0.5, 'min_tracking_confidence': 0.5}
+
 
 #Folder Paths
 IMAGE_PATH = os.path.join("static", "image")
@@ -144,6 +183,7 @@ INFERENCE_IMAGE_PATH = os.path.join("static", "inferenceImages")
 PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
 PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
+
 
 #Blueprint
 BLUEPRINT_NAMES = {
@@ -159,11 +199,13 @@ BLUEPRINT_NAMES = {
     'subscription': 'subscription',
 }
 
+
 #Shift Category Limits
 AMOUNT_OF_NEW = 10
 AMOUNT_OF_POPULAR = 10
 PAGINATION_AMOUNT = 30
 ITEMS_PER_PAGE = 30
+
 
 #OpenAPI
 USER_AUTHORIZATION_SCHEME = {"type": "apiKey", "in": "header", "name": "Authorization"}
@@ -178,6 +220,7 @@ COOKIE_REFRESH_TAG = yaml.safe_load(f"""- {REFRESH_TOKEN_COOKIE_SCHEME_NAME}: []
 SERVER_URL = "localhost" #os.environ.get("SERVER_URL")
 SERVER_PORT = "5000" ##os.environ.get("SERVER_PORT")
 
+
 #Database
 USER_EDITABLE_USER_FIELDS = []
 COSNTANT_USER_FIELDS = ["id"]
@@ -188,17 +231,21 @@ COSNTANT_SHIFT_FIELDS = ["uuid", "id", "author", "dateCreated"]
 BACKEND_ACCESS_SHIFT_FIELDS = ["views"]
 ADMIN_ACCESS_SHIFT_FIELDS = ["verified"]
 
+
 #JWT
 ACCESS_EXPIRES = datetime.timedelta(minutes=15)
+
 
 #Redis
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
 
+
 #Celery
 CELERY_RESULT_BACKEND = os.environ.get("CELEY_BACKEND_URI")
 CELERY_DELETE_SCHEDULE = datetime.timedelta(minutes=10).seconds
+
 
 #AI Settings
 LATENT_SPACE_DIM = 1024

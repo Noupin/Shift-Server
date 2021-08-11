@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import tensorflow as tf
-from colorama import Fore
 
 #First Party Imports
 from src.AI.TFModel import TFModel

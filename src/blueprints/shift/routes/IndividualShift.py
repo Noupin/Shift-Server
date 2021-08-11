@@ -13,14 +13,14 @@ from flask import current_app
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, doc, use_kwargs
-from src.models.Marshmallow.Shift import ShiftSchema
 from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src import db
-from src.utils.files import getMediaType
 from src.models.SQL.Shift import Shift
+from src.utils.files import getMediaType
 from src.utils.validators import validateShiftTitle
+from src.models.Marshmallow.Shift import ShiftSchema
 from src.decorators.confirmationRequired import confirmationRequired
 from src.constants import (IMAGE_PATH, USER_EDITABLE_SHIFT_FIELDS, 
                                      VIDEO_PATH, SHIFT_PATH, AUTHORIZATION_TAG)

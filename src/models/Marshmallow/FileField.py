@@ -6,7 +6,10 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from marshmallow import fields
+
+#First Party Imports
 from src.config import marshmallowPlugin
+
 
 @marshmallowPlugin.map_to_openapi_type('file', None)
 class FileField(fields.Raw):

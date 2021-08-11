@@ -15,8 +15,8 @@ from typing import List, Tuple
 from src import db
 from src.run import celery
 from src.AI.Shift import Shift
-from TFMultiImage import TFMultiImage
 from src.models.SQL.User import User
+from TFMultiImage import TFMultiImage
 from src.utils.dataset import datasetFrom
 from src.utils.files import generateUniqueFilename
 from src.models.SQL.TrainWorker import TrainWorker

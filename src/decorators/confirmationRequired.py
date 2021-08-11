@@ -1,3 +1,9 @@
+#pylint: disable=C0103, C0301, E1101
+"""
+The decorator for use confirmation
+"""
+__author__ = "Noupin"
+
 #Third Party Imports
 from functools import wraps
 from flask_jwt_extended import current_user

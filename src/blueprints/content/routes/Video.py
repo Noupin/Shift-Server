@@ -6,7 +6,6 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import os
-import json
 from flask import current_app
 from werkzeug import Response
 from flask_restful import Resource

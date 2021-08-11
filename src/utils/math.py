@@ -5,9 +5,7 @@ The utility functions related to math
 __author__ = "Noupin"
 
 #Third Party Imports
-import dlib
 import operator
-import _dlib_pybind11
 from functools import reduce
 from typing import List, Tuple, Iterable, Any
 
@@ -81,20 +79,3 @@ def getLargestRectangle(rectangles: List[Tuple[int]]) -> Tuple[int]:
         largestRectangleArea = rectangleArea(rectangle)
     
     return largestRectangle
-
-
-def xywhTotrblRectangle(rectangle: List[int]) -> _dlib_pybind11.rectangle:
-    """
-    Given a rectangle in the x, y, widht, height format it will be converted to the top-left and bottom-right coordinates.
-
-    Args:
-        rectangle (Tuple[int]): A list of the x, y, width, and height for the rectangle.
-
-    Returns:
-        _dlib_pybind11.rectangle: The top-left and bottom-right rectangle.
-    """
-
-    return dlib.rectangle(rectangle[0],
-                          rectangle[1],
-                          rectangle[0]+rectangle[2],
-                          rectangle[1]+rectangle[3])

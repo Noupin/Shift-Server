@@ -20,18 +20,17 @@ from src.AI.Decoder import Decoder
 from TFMultiImage import TFMultiImage
 from src.utils.video import videoToImages
 from src.utils.memory import chunkIterable
+from src.utils.detection import detectObject
 from src.AI.Discriminator import Discriminator
 from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
-from src.utils.detection import detectObject, getFacialLandmarks
 from TFMultiImage.utils.image import (resizeImage, blendImageAndColor,
-                                    flipImage, cropImage, loadImage,
-                                    replaceAreaOfImage, viewImage,
-                                    drawPolygon, applyMask,
-                                    imagesToVideo)
-from src.constants import (OBJECT_DETECTOR, SHIFT_PATH,
-                                     VIDEO_FRAME_GRAB_INTERVAL,
-                                     HUE_ADJUSTMENT)
+                                      flipImage, cropImage, loadImage,
+                                      replaceAreaOfImage, viewImage,
+                                      drawPolygon, applyMask,
+                                      imagesToVideo)
+from src.constants import (OBJECT_DETECTOR, SHIFT_PATH, SILHOUETTE_DETECTOR, SILHOUETTE_DETECTOR_KWARGS,
+                           VIDEO_FRAME_GRAB_INTERVAL, HUE_ADJUSTMENT)
 
 
 class Shift:
@@ -237,10 +236,10 @@ class Shift:
             replaceImage.resize(self.imageShape[0], self.imageShape[1], resizer=imageResizer)
             replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
-
-            landmarks = getFacialLandmarks(image.CVImage, replaceArea, xywh2tlbr=True)
-            maskLandmarks = np.array(landmarks[17:26][::-1]+landmarks[0:16]) #Eyebrows and Jawline Landmarks
-            mask = drawPolygon(image.CVImage, maskLandmarks, mask=True)
+            ## Test with replace image and orignal cropped image for faster accurate inferencing
+            landmarks = SILHOUETTE_DETECTOR(image.CVImage, **SILHOUETTE_DETECTOR_KWARGS)
+            npLandmarks = np.array(landmarks) #Eyebrows and Jawline Landmarks
+            mask = drawPolygon(image.CVImage, npLandmarks, mask=True)
             mask = cropImage(mask, replaceArea) #Cropping the mask to fit the shifted image
 
             maskedImage = applyMask(originalCroppedImage, replaceImage.CVImage, mask)
