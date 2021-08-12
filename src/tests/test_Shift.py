@@ -15,7 +15,7 @@ from TFMultiImage import TFMultiImage
 from src.utils.detection import detectObject
 from src.utils.math import getLargestRectangle
 from src.utils.video import loadVideo, videoToImages
-from src.constants import OBJECT_DETECTOR_KWARGS, OBJECT_DETECTOR
+from src.constants import OBJECT_DETECTOR_KWARGS, OBJECT_DETECTOR, SHIFT_STATIC_PATH, FERYV_STATIC_PATH
 
 
 def test_EmptyConstructor():
@@ -40,10 +40,10 @@ def test_FormatTrainingData():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
@@ -59,9 +59,9 @@ def test_FormatTrainingData():
 def test_LoadModel():
     shft = Shift()
 
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
 
 def test_Compile():
@@ -75,10 +75,10 @@ def test_TFTraining():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
@@ -97,18 +97,18 @@ def test_TFTrainingLoadedModel():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
@@ -122,7 +122,7 @@ def test_TFTrainingLoadedModel():
 def test_PredictUntrainedModel():
     shft = Shift()
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
@@ -138,10 +138,10 @@ def test_PredictTFTrainedModel():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
@@ -155,7 +155,7 @@ def test_PredictTFTrainedModel():
     shft.baseAE.fit(baseTrainingData, baseTrainingData, batch_size=16, epochs=1)
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
@@ -170,11 +170,11 @@ def test_PredictTFTrainedModel():
 def test_PredictLoadedModel():
     shft = Shift()
 
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
@@ -190,18 +190,18 @@ def test_PredictTFTrainedLoadedModel():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
@@ -211,7 +211,7 @@ def test_PredictTFTrainedLoadedModel():
     shft.baseAE.fit(baseTrainingData, baseTrainingData, batch_size=16, epochs=1)
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     objects = detectObject(OBJECT_DETECTOR, image=image.CVImage, **OBJECT_DETECTOR_KWARGS)
@@ -226,7 +226,7 @@ def test_PredictTFTrainedLoadedModel():
 def test_ShiftImageUntrainedModel():
     shft = Shift()
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
@@ -238,10 +238,10 @@ def test_ShiftImageTFTrainedModel():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
@@ -255,7 +255,7 @@ def test_ShiftImageTFTrainedModel():
     shft.baseAE.fit(baseTrainingData, baseTrainingData, batch_size=16, epochs=1)
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
@@ -266,11 +266,11 @@ def test_ShiftImageTFTrainedModel():
 def test_ShiftImageLoadedModel():
     shft = Shift()
 
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)
@@ -282,18 +282,18 @@ def test_ShiftImageTFTrainedLoadedModel():
     baseMedia: List[TFMultiImage] = []
     maskMedia: List[TFMultiImage] = []
 
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         baseMedia.append(TFMultiImage(image))
-    for image in videoToImages(r"src\static\video\default.mp4",
+    for image in videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                             action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100):
         maskMedia.append(TFMultiImage(image))
 
     shft = Shift()
     
-    shft.load(encoderPath=r"src\static\shift\PTM\Encoder\Encoder",
-              basePath=r"src\static\shift\PTM\Decoder\Decoder",
-              maskPath=r"src\static\shift\PTM\Decoder\Decoder")
+    shft.load(encoderPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Encoder\Encoder",
+              basePath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder",
+              maskPath=f"{SHIFT_STATIC_PATH}\shift\PTM\Decoder\Decoder")
 
     baseTrainingData = np.array(list(shft.formatTrainingData(baseMedia, **OBJECT_DETECTOR_KWARGS)))
     maskTrainingData = np.array(list(shft.formatTrainingData(maskMedia, **OBJECT_DETECTOR_KWARGS)))
@@ -303,7 +303,7 @@ def test_ShiftImageTFTrainedLoadedModel():
     shft.baseAE.fit(baseTrainingData, baseTrainingData, batch_size=16, epochs=1)
     shft.maskAE.fit(maskTrainingData, maskTrainingData, batch_size=16, epochs=1)
 
-    images = videoToImages(r"src\static\video\default.mp4",
+    images = videoToImages(f"{FERYV_STATIC_PATH}\video\default.mp4",
                           action=OBJECT_DETECTOR, **OBJECT_DETECTOR_KWARGS, interval=100)
     image = TFMultiImage(next(images))
     predicted = shft.shift(shft.baseAE, image)

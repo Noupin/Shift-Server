@@ -53,7 +53,7 @@ def mtcnnDetection(pixels: np.ndarray):
     return rects
 
 MP_FACE_SILHOUETTE = mp.solutions.mediapipe.python.solutions.face_mesh.FaceMesh #468 points total
-def getSilhouette(image: np.ndarray, **kwargs) -> List[Tuple[int, int]]:
+def getSilhouette(image: np.ndarray, landmarkList=None, **kwargs) -> List[Tuple[int, int]]:
     points = []
 
     with MP_FACE_SILHOUETTE(**SILHOUETTE_DETECTOR_KWARGS) as faceMesh:
@@ -66,8 +66,8 @@ def getSilhouette(image: np.ndarray, **kwargs) -> List[Tuple[int, int]]:
         if not results.multi_face_landmarks:
             return points
 
-        if kwargs.get('landmarkList'):
-            for point in kwargs.get('landmarkList'):
+        if landmarkList:
+            for point in landmarkList:
                 point = results.multi_face_landmarks[0].landmark[point]
                 relativeX = int(point.x * width)
                 relativeY = int(point.y * height)
@@ -176,10 +176,13 @@ SILHOUETTE_DETECTOR_KWARGS = {'min_detection_confidence': 0.5, 'min_tracking_con
 
 
 #Folder Paths
-IMAGE_PATH = os.path.join("static", "image")
-VIDEO_PATH = os.path.join("static", "video")
-SHIFT_PATH = os.path.join("static", "shift")
-INFERENCE_IMAGE_PATH = os.path.join("static", "inferenceImages")
+BLOB_PATH = os.path.join("D:", "Azure Blob")
+FERYV_STATIC_PATH = os.path.join(BLOB_PATH, "Feryv")
+SHIFT_STATIC_PATH = os.path.join(BLOB_PATH, "Shift")
+IMAGE_PATH = os.path.join(FERYV_STATIC_PATH, "image")
+VIDEO_PATH = os.path.join(FERYV_STATIC_PATH, "video")
+SHIFT_PATH = os.path.join(SHIFT_STATIC_PATH, "shift")
+INFERENCE_IMAGE_PATH = os.path.join(SHIFT_STATIC_PATH, "inferenceImages")
 PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
 PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
