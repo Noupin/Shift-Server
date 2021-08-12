@@ -24,13 +24,11 @@ from src.utils.detection import detectObject
 from src.AI.Discriminator import Discriminator
 from src.utils.math import getLargestRectangle, flattenList
 from src.utils.files import generateUniqueFilename, getMediaType
-from TFMultiImage.utils.image import (resizeImage, blendImageAndColor,
-                                      flipImage, cropImage, loadImage,
-                                      replaceAreaOfImage, viewImage,
-                                      drawPolygon, applyMask,
-                                      imagesToVideo)
-from src.constants import (OBJECT_DETECTOR, SHIFT_PATH, SILHOUETTE_DETECTOR, SILHOUETTE_DETECTOR_KWARGS,
-                           VIDEO_FRAME_GRAB_INTERVAL, HUE_ADJUSTMENT)
+from TFMultiImage.utils.image import (resizeImage, blendImageAndColor, flipImage,
+                                      cropImage, loadImage, replaceAreaOfImage,
+                                      drawPolygon, applyMask, imagesToVideo)
+from src.constants import (FACIAL_SILHOUETTE_POINTS, OBJECT_DETECTOR, SHIFT_PATH,
+                           SILHOUETTE_DETECTOR, VIDEO_FRAME_GRAB_INTERVAL, HUE_ADJUSTMENT)
 
 
 class Shift:
@@ -237,7 +235,7 @@ class Shift:
             replaceImage = self.inference(model, replaceImage.TFImage)
             replaceImage.resize(replaceImageXY[0], replaceImageXY[1], resizer=imageResizer)
             ## Test with replace image and orignal cropped image for faster accurate inferencing
-            landmarks = SILHOUETTE_DETECTOR(image.CVImage, **SILHOUETTE_DETECTOR_KWARGS)
+            landmarks = SILHOUETTE_DETECTOR(image.CVImage, landmarkList=FACIAL_SILHOUETTE_POINTS)
             npLandmarks = np.array(landmarks) #Eyebrows and Jawline Landmarks
             mask = drawPolygon(image.CVImage, npLandmarks, mask=True)
             mask = cropImage(mask, replaceArea) #Cropping the mask to fit the shifted image

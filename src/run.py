@@ -11,6 +11,9 @@ Runs the server for Shift
 """
 __author__ = "Noupin"
 
+#Third Party Imports
+import os
+
 #First Party Imports
 from src.utils.swagger import swaggerToYAML
 from src import initApp, createApp, makeCelery, generateSwagger, addMiddleware
@@ -21,7 +24,7 @@ celery = makeCelery(app)
 app = createApp(app)
 app = addMiddleware(app)
 docs = generateSwagger()
-swaggerToYAML(docs.spec)
+swaggerToYAML(docs.spec, filename="shift.yaml", path=os.path.join(os.getcwd(), os.pardir))
 
 if __name__ == '__main__':
     app.run()
