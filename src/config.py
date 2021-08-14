@@ -23,7 +23,7 @@ class Config:
     #JWT
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = False #Should always be set to true in production.
-    JWT_SECRET_KEY = open(f"{os.path.join(os.pardir, os.pardir, 'keys', 'jwt.key')}").read()
+    JWT_SECRET_KEY = open(os.path.join(os.pardir, os.pardir, 'keys', 'jwt.key')).read()
     
 
     #SQLAlchemy

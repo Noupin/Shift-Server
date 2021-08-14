@@ -56,7 +56,7 @@ MP_FACE_SILHOUETTE = mp.solutions.mediapipe.python.solutions.face_mesh.FaceMesh 
 def getSilhouette(image: np.ndarray, landmarkList=None, **kwargs) -> List[Tuple[int, int]]:
     points = []
 
-    with MP_FACE_SILHOUETTE(**SILHOUETTE_DETECTOR_KWARGS) as faceMesh:
+    with MP_FACE_SILHOUETTE(**kwargs) as faceMesh:
         height, width, _ = image.shape
 
         image.flags.writeable = False
