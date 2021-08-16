@@ -30,7 +30,7 @@ class ShiftCategory(MethodResource, Resource):
     @doc(description="""The shifts for the queried category to display on the \
 home page.""", tags=["Category"], operationId="Category")
     def get(self, queryParams: ShiftCategoryRequest, categoryName: str) -> dict:
-        shiftCategories: List[ShiftCategoryModel] = ShiftCategoryModel.query.filter_by(name=categoryName).all()
+        shiftCategories: List[ShiftCategoryModel] = ShiftCategoryModel.query.filter_by(name=categoryName).paginate(queryParams.page, ITEMS_PER_PAGE).all()
         categoryShifts = []
 
         if not shiftCategories:
