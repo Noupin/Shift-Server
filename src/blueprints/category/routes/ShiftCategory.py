@@ -5,6 +5,7 @@ Shift Category endpoint for the Users part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+from typing import List
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, doc, use_kwargs
@@ -29,18 +30,14 @@ class ShiftCategory(MethodResource, Resource):
     @doc(description="""The shifts for the queried category to display on the \
 home page.""", tags=["Category"], operationId="Category")
     def get(self, queryParams: ShiftCategoryRequest, categoryName: str) -> dict:
-        offset = (queryParams.page - 1)*ITEMS_PER_PAGE
-        category: ShiftCategoryModel = ShiftCategoryModel.query.filter_by(name=categoryName).fields(slice__shifts=[offset, ITEMS_PER_PAGE]).first()
+        shiftCategories: List[ShiftCategoryModel] = ShiftCategoryModel.query.filter_by(name=categoryName).all()
         categoryShifts = []
 
-        if not category:
+        if not shiftCategories:
             return ShiftCategoryResponse().load(dict(shifts=categoryShifts))
 
-        for shift in category.shifts:
-            try:
-                shift = Shift.query.filter_by(uuid=shift.uuid).first()
-                categoryShifts.append(ShiftSchema().dump(shift))
-            except AttributeError:
-                category.update(pull__shifts=shift)
+        for shiftCategory in shiftCategories:
+            shift = Shift.query.filter_by(uuid=shiftCategory.shift_id).first()
+            categoryShifts.append(ShiftSchema().dump(shift))
 
         return ShiftCategoryResponse().load(dict(shifts=categoryShifts))

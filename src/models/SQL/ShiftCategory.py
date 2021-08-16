@@ -4,6 +4,9 @@ The SQLAlchemy data model for a Shifts Category
 """
 __author__ = "Noupin"
 
+#Third Party Imports
+from sqlalchemy.dialects.postgresql import UUID
+
 #First Party Imports
 from src import db
 from src.models.SQL.Shift import Shift
@@ -14,7 +17,7 @@ class ShiftCategory(db.Model):
     __tablename__ = 'shiftcategory'
     
     id = db.Column(db.Integer, primary_key=True)
-    shift_id = db.Column(db.Integer, db.ForeignKey('shift.id'))
+    shift_id = db.Column(UUID(as_uuid=True), db.ForeignKey('shift.uuid'))
     category_name = db.Column(db.String, db.ForeignKey('category.name'))
 
     shift = db.relationship('Shift', backref='shiftCategories')

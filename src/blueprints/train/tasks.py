@@ -18,6 +18,7 @@ from src.AI.Shift import Shift
 from src.models.SQL.User import User
 from TFMultiImage import TFMultiImage
 from src.utils.dataset import datasetFrom
+from src.models.SQL.FeryvUser import FeryvUser
 from src.utils.files import generateUniqueFilename
 from src.models.SQL.TrainWorker import TrainWorker
 from src.models.SQL.Shift import Shift as ShiftDataModel
@@ -179,7 +180,10 @@ def trainShift(requestJSON: dict, userID: str):
         userID (str): The id of the user to query and save with the shift model
     """
 
-    author = User.query.filter_by(id=userID).first()
+    author: User = User.query.filter_by(id=userID).first()
+    feryvUser = FeryvUser.filter_by(id=author.feryvId)
+    author.feryvUser = feryvUser
+
     requestData: TrainRequest = TrainRequest(**requestJSON)
     worker: TrainWorker = TrainWorker.query.filter_by.get(shiftUUID=requestData.shiftUUID)
 

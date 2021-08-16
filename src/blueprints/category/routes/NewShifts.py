@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from typing import List
+from sqlalchemy import desc
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
@@ -25,7 +26,7 @@ class NewShifts(MethodResource, Resource):
     @doc(description="""The new shifts to display on the home page.""", tags=["Category"],
 operationId="new")
     def get(self) -> dict:
-        newShifts = Shift.query.filter_by().order_by('-id').limit(AMOUNT_OF_NEW)
+        newShifts = Shift.query.order_by(desc(Shift.dateCreated)).limit(AMOUNT_OF_NEW)
         newShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in newShifts]
 
         return NewShiftsResponse().dump(dict(shifts=newShiftsJSON))

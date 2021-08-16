@@ -16,8 +16,7 @@ from src.constants import MAXIMUM_FILENAME_LENGTH, MAXIMUM_SHIFT_TITLE_LENGTH
 class Shift(db.Model):
     __tablename__ = 'shift'
 
-    id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(UUID(as_uuid=True), nullable=False)
+    uuid = db.Column(UUID(as_uuid=True), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(MAXIMUM_SHIFT_TITLE_LENGTH), unique=True, nullable=False)
     dateCreated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

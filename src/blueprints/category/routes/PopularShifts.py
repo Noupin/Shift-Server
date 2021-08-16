@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from typing import List
+from sqlalchemy import desc
 from flask_restful import Resource
 from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
@@ -25,7 +26,7 @@ class PopularShifts(MethodResource, Resource):
     @doc(description="""The popular shifts to display on the home page.""", tags=["Category"],
 operationId="popular")
     def get(self) -> dict:
-        popularShifts = Shift.query.filter_by().order_by('-views').limit(AMOUNT_OF_POPULAR)
+        popularShifts = Shift.query.order_by(desc(Shift.views)).limit(AMOUNT_OF_POPULAR)
         popularShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in popularShifts]
 
         return PopularShiftsResponse().dump(dict(shifts=popularShiftsJSON))
