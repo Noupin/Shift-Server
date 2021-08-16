@@ -17,6 +17,7 @@ from flask_jwt_extended import jwt_required, current_user
 #First Party Imports
 from src import db
 from src.models.SQL.User import User
+from src.models.SQL.FeryvUser import FeryvUser
 from src.decorators.confirmationRequired import confirmationRequired
 from src.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
 from src.models.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
@@ -34,7 +35,11 @@ class IndividualUser(MethodResource, Resource):
     @staticmethod
     def userExists(username: str) -> Union[User, dict]:
         try:
-            return User.query.filter_by(username=username).first()
+            feryvUser = FeryvUser.filter_by(username=username)
+            user = User.query.filter_by(feryvId=feryvUser.id).first()
+            user.feryvUser = feryvUser
+
+            return UserSchema().load(user, db.session)
         except ValueError:
             return {}
 
@@ -71,7 +76,7 @@ class IndividualUser(MethodResource, Resource):
             return IndividualUserDeleteResponse(msg="User was not deleted because \
 it does not exist.")
         
-        if(current_user.id != user.id):
+        if current_user.id != user.id:
             return IndividualUserDeleteResponse(msg="You cannot delete a user that \
 is not you.")
         
@@ -98,7 +103,7 @@ is not you.")
             return IndividualUserPatchResponse(msg="""User was not modified because \
 it does not exist.""")
 
-        if(current_user.id != user.id):
+        if current_user.id != user.id:
             return IndividualUserPatchResponse(msg="""You cannot modify a user that \
 is not you.""")
 

@@ -54,4 +54,4 @@ operationId="inference", security=AUTHORIZATION_TAG)
         worker.workerID = job.id
         db.session.commit()
 
-        return InferenceResponse(msg=f"Shifting as {current_user.username}")
+        return InferenceResponse(msg=f"Shifting as {current_user.feryvUser.username}")

@@ -197,9 +197,7 @@ BLUEPRINT_NAMES = {
     'user': 'user',
     'category': 'category',
     'shift': 'shift',
-    'authenticate': 'authenticate',
     'extension': 'extension',
-    'subscription': 'subscription',
 }
 
 

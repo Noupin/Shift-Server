@@ -27,7 +27,7 @@ class Shift(db.Model):
     private = db.Column(db.Boolean, nullable=False, default=False)
     views = db.Column(db.Integer, nullable=False, default=0)
     verified = db.Column(db.Boolean, nullable=False, default=False)
-    
+
     categories = db.relationship('Category', secondary='shiftcategory')
 
 

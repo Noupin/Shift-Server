@@ -11,9 +11,12 @@ from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, doc, use_kwargs
 
 #First Party Imports
+from src import db
 from src.models.SQL.User import User
 from src.models.SQL.Shift import Shift
 from src.constants import ITEMS_PER_PAGE
+from src.models.SQL.FeryvUser import FeryvUser
+from src.models.Marshmallow.User import UserSchema
 from src.models.Marshmallow.Shift import ShiftSchema
 from src.models.Request.UserShiftsRequest import (UserShiftsRequest,
                                                       UserShiftsRequestDescription)
@@ -24,9 +27,13 @@ from src.models.Response.UserShiftsResponse import (UserShiftsResponse,
 class UserShifts(MethodResource, Resource):
     
     @staticmethod
-    def userExists(username: str) -> Union[User, dict]:
+    def userExists(username: str) -> Union[UserSchema, dict]:
         try:
-            return User.query.filter_by(username=username).first()
+            feryvUser = FeryvUser.filter_by(username=username)
+            user = User.query.filter_by(feryvId=feryvUser.id).first()
+            user.feryvUser = feryvUser
+
+            return UserSchema().load(user, db.session)
         except ValueError:
             return {}
 

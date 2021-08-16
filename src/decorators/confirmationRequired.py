@@ -15,7 +15,7 @@ from src.models.Response.DefaultResponse import DefaultResponse
 def confirmationRequired(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if current_user.confirmed is False:
+        if current_user.feryvUser.confirmed is False:
             return DefaultResponse(msg="Please confirm your account.")
 
         return func(*args, **kwargs)

@@ -72,4 +72,4 @@ takes longer.""", tags=["Train"], operationId="train", security=AUTHORIZATION_TA
         worker.workerID = job.id
         db.session.commit()
 
-        return TrainResponse(msg=f"Training as {current_user.username}")
+        return TrainResponse(msg=f"Training as {current_user.feryvUser.username}")

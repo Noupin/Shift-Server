@@ -107,7 +107,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(trainBP, url_prefix="/api")
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(userBP, url_prefix='/api/user')
-    app.register_blueprint(shiftBP, url_prefix='/api/shift')
+    app.register_blueprint(shiftBP, url_prefix='/api/shift') #Get user from querying the feryv database
     app.register_blueprint(contentBP, url_prefix='/api/content')
     app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
 

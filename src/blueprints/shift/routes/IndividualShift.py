@@ -79,7 +79,7 @@ class IndividualShift(MethodResource, Resource):
             return IndividualShiftDeleteResponse(msg="""Shift was not \
 deleted because it does not exist.""")
 
-        if(current_user.id != shift.author.id):
+        if current_user.id != shift.author.id :
             return IndividualShiftDeleteResponse(msg="""You cannot \
 delete a shift which you did not create.""")
 
@@ -121,7 +121,7 @@ delete a shift which you did not create.""")
             return IndividualShiftPatchResponse(msg="""Shift was not \
 updated because it does not exist.""")
 
-        if(current_user.id != shift.author.id):
+        if current_user.id != shift.author.id:
             return IndividualShiftPatchResponse(msg="""You cannot \
 delete a shift which you did not create.""")
 

@@ -28,6 +28,9 @@ class Config:
 
     #SQLAlchemy
     SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URI')
+    SQLALCHEMY_BINDS = {
+        'feryvDB': os.environ.get("FERYV_DB_URI")
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 

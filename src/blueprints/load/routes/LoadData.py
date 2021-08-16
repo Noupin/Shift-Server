@@ -66,5 +66,5 @@ operationId="loadData", consumes=['multipart/form-data'], security=AUTHORIZATION
             else:
                 return LoadDataResponse(msg="File not valid")
 
-        return LoadDataResponse(msg=f"Loaded data as {current_user.username}",
+        return LoadDataResponse(msg=f"Loaded data as {current_user.feryvUser.username}",
                                 shiftUUID=shiftUUID)
