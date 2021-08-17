@@ -8,6 +8,7 @@ __author__ = "Noupin"
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, fields
 
 #First Party Imports
+from src import db
 from src.models.SQL.User import User
 from FeryvOAuthUser import FeryvUserSchema
 
@@ -16,6 +17,7 @@ class UserSchema(SQLAlchemyAutoSchema):
     feryvUser = fields.Nested(FeryvUserSchema)
     class Meta:
         model = User
+        sqla_session = db.session
         include_relationships = True
         load_instance = True
         exclude = ("feryvId",)

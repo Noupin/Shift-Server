@@ -9,6 +9,7 @@ from marshmallow import fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 #First Party Imports
+from src import db
 from src.models.SQL.Shift import Shift
 from src.models.Marshmallow.User import UserSchema
 
@@ -16,6 +17,7 @@ from src.models.Marshmallow.User import UserSchema
 class ShiftSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Shift
+        sqla_session = db.session
         include_relationships = True
         load_instance = True
 
