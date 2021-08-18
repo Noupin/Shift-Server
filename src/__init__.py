@@ -99,7 +99,6 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.blueprints.user.blueprint import userBP
     from src.blueprints.shift.blueprint import shiftBP
     from src.blueprints.train.blueprint import trainBP
-    from src.blueprints.content.blueprint import contentBP
     from src.blueprints.category.blueprint import categoryBP
     from src.blueprints.inference.blueprint import inferenceBP
 
@@ -108,7 +107,6 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     app.register_blueprint(inferenceBP, url_prefix="/api")
     app.register_blueprint(userBP, url_prefix='/api/user')
     app.register_blueprint(shiftBP, url_prefix='/api/shift') #Get user from querying the feryv database
-    app.register_blueprint(contentBP, url_prefix='/api/content')
     app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
 
     return app
@@ -144,7 +142,6 @@ def generateSwagger() -> FlaskApiSpec:
     from src.blueprints.user.blueprint import IndividualUser, UserShifts
     from src.blueprints.train.blueprint import Train, TrainStatus, StopTrain
     from src.blueprints.inference.blueprint import Inference, InferenceCDN, InferenceStatus
-    from src.blueprints.content.blueprint import Image, Video, ImageDownload, VideoDownload
     from src.blueprints.category.blueprint import ShiftCategory, NewShifts, PopularShifts, Categories
 
     docs.register(LoadData, blueprint=BLUEPRINT_NAMES.get("load"))
@@ -159,11 +156,6 @@ def generateSwagger() -> FlaskApiSpec:
     docs.register(Inference, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceCDN, blueprint=BLUEPRINT_NAMES.get("inference"))
     docs.register(InferenceStatus, blueprint=BLUEPRINT_NAMES.get("inference"))
-
-    docs.register(Image, blueprint=BLUEPRINT_NAMES.get("content"))
-    docs.register(Video, blueprint=BLUEPRINT_NAMES.get("content"))
-    docs.register(ImageDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="imageBool")
-    docs.register(VideoDownload, blueprint=BLUEPRINT_NAMES.get("content"), endpoint="videoBool")
 
     docs.register(NewShifts, blueprint=BLUEPRINT_NAMES.get("category"))
     docs.register(Categories, blueprint=BLUEPRINT_NAMES.get("category"))

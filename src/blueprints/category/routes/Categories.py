@@ -28,7 +28,7 @@ class Categories(MethodResource, Resource):
     @doc(description="""The shifts for the queried category to display on the \
 home page.""", tags=["Category"], operationId="Categories")
     def get(self, queryParams: CategoriesRequest) -> dict:
-        categories: List[ShiftCategoryModel] = ShiftCategoryModel.query.paginate(queryParams.page, ITEMS_PER_PAGE)
-        categoryNames: List[str] = [x.name for x in categories]
+        categories: List[ShiftCategoryModel] = ShiftCategoryModel.query.paginate(queryParams.page, ITEMS_PER_PAGE).items
+        categoryNames: List[str] = [x.category_name for x in categories]
 
         return CategoriesResponse().dump(dict(categories=categoryNames))

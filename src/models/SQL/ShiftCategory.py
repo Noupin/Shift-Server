@@ -25,8 +25,8 @@ class ShiftCategory(db.Model):
 
 
     def __repr__(self) -> str:
-        return f"ShiftCategory(name='{self.name}')"
+        return f"ShiftCategory(name='{self.category_name}')"
 
 
     def __str__(self) -> str:
-        return f"ShiftCategory(name='{self.name}')"
+        return f"ShiftCategory(name='{self.category_name}')"
