@@ -44,6 +44,7 @@ def check_if_token_is_revoked(jwt_header, jwt_payload: Dict[str, str]):
 
     return token is not None
 
+
 @jwt.expired_token_loader
 def my_expired_token_callback(_jwt_header, jwt_data):
     """

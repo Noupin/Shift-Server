@@ -16,7 +16,6 @@ from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src import db
-from src.models.SQL.User import User
 from src.models.Marshmallow.User import UserSchema
 from src.decorators.confirmationRequired import confirmationRequired
 from src.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
@@ -39,7 +38,7 @@ class IndividualUser(MethodResource, Resource):
     @jwt_required(optional=True)
     def get(self, username: str):
         user = UserSchema.getUserByUsername(username)
-        if not isinstance(user, User):
+        if not user:
             return IndividualUserGetResponse(), 404
 
         userModel: UserSchema = UserSchema().dump(user)
@@ -60,7 +59,7 @@ class IndividualUser(MethodResource, Resource):
     @confirmationRequired
     def delete(self, username: str):
         user = UserSchema.getUserByUsername(username)
-        if not isinstance(user, User):
+        if not user:
             return IndividualUserDeleteResponse(msg="User was not deleted because \
 it does not exist.")
         
@@ -87,7 +86,7 @@ is not you.")
     @confirmationRequired
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
         user = UserSchema.getUserByUsername(username)
-        if not isinstance(user, User):
+        if not user:
             return IndividualUserPatchResponse(msg="""User was not modified because \
 it does not exist.""")
 

@@ -19,7 +19,7 @@ from src.models.SQL.FeryvUser import FeryvUser
 
 
 class UserSchema(SQLAlchemyAutoSchema):
-    feryvUser = fields.Nested(FeryvUserSchema)
+    feryvUser = fields.Nested(FeryvUserSchema, optional=True)
     class Meta:
         model = User
         sqla_session = db.session
@@ -32,23 +32,25 @@ class UserSchema(SQLAlchemyAutoSchema):
     def getUserByUsername(username: str) -> Union[UserSchema, dict]:
         try:
             feryvUser = FeryvUser.filter_by_username(username)
-            user = User.query.filter_by(feryvId=feryvUser.get('id')).first()
-            userSchema = UserSchema.load(user, db.session)
-            userSchema.feryvUser = feryvUser
+            user: User = User.query.filter_by(feryvId=feryvUser.get('id')).first()
+            setattr(user, 'feryvUser', feryvUser)
+            userSchema = UserSchema().dump(user)
+            userObject = UserSchema().load(userSchema)
 
-            return userSchema
-        except (ValueError, AttributeError):
-            return {}
+            return userObject
+        except ValueError:
+            return None
 
 
     @staticmethod
     def getUserById(id: int) -> Union[UserSchema, dict]:
         try:
             feryvUser = FeryvUser.filter_by_id(id)
-            user = User.query.filter_by(feryvId=feryvUser.get('id')).first()
-            userSchema = UserSchema.load(user, db.session)
-            userSchema.feryvUser = feryvUser
+            user: User = User.query.filter_by(feryvId=feryvUser.get('id')).first()
+            setattr(user, 'feryvUser', feryvUser)
+            userSchema = UserSchema().dump(user)
+            userObject = UserSchema().load(userSchema)
 
-            return userSchema
-        except (ValueError, AttributeError):
-            return {}
+            return userObject
+        except ValueError:
+            return None

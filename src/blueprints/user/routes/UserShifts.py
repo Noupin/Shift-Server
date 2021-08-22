@@ -11,7 +11,6 @@ from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, doc, use_kwargs
 
 #First Party Imports
-from src.models.SQL.User import User
 from src.models.SQL.Shift import Shift
 from src.constants import ITEMS_PER_PAGE
 from src.models.Marshmallow.User import UserSchema
@@ -32,7 +31,7 @@ class UserShifts(MethodResource, Resource):
          tags=["User"], operationId="userShifts")
     def get(self, queryParams: UserShiftsRequest, username: str):
         user = UserSchema.getUserByUsername(username)
-        if not isinstance(user, User):
+        if not user:
             return UserShiftsResponse()
 
         userShifts = Shift.query.filter_by(author__in=[user]).paginate(queryParams.page, ITEMS_PER_PAGE)
