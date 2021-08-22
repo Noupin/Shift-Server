@@ -2,22 +2,22 @@
 """
 Individual user endpoint for the user part of the Shift API
 """
+
 __author__ = "Noupin"
 
 #Third Party Imports
 import os
-from typing import Union
 from flask import current_app
+from flask_jwt_extended.utils import get_jwt
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
-from src.models.Marshmallow.User import UserSchema
 from flask_apispec import marshal_with, doc, use_kwargs
 from flask_jwt_extended import jwt_required, current_user
 
 #First Party Imports
 from src import db
 from src.models.SQL.User import User
-from src.models.SQL.FeryvUser import FeryvUser
+from src.models.Marshmallow.User import UserSchema
 from src.decorators.confirmationRequired import confirmationRequired
 from src.constants import IMAGE_PATH, AUTHORIZATION_TAG, USER_EDITABLE_USER_FIELDS
 from src.models.Request.IndividualUserPatchRequest import (IndividualUserPatchRequest,
@@ -31,18 +31,6 @@ from src.models.Response.IndividualUserDeleteResponse import (IndividualUserDele
 
 
 class IndividualUser(MethodResource, Resource):
-    
-    @staticmethod
-    def userExists(username: str) -> Union[User, dict]:
-        try:
-            feryvUser = FeryvUser.filter_by(username=username)
-            user = User.query.filter_by(feryvId=feryvUser.id).first()
-            user.feryvUser = feryvUser
-
-            return UserSchema().load(user, db.session)
-        except ValueError:
-            return {}
-
 
     @marshal_with(IndividualUserGetResponse,
                   description=IndividualUserGetResponseDescription)
@@ -50,7 +38,7 @@ class IndividualUser(MethodResource, Resource):
          operationId="getIndivdualUser", security=AUTHORIZATION_TAG)
     @jwt_required(optional=True)
     def get(self, username: str):
-        user = self.userExists(username)
+        user = UserSchema.getUserByUsername(username)
         if not isinstance(user, User):
             return IndividualUserGetResponse(), 404
 
@@ -71,7 +59,7 @@ class IndividualUser(MethodResource, Resource):
     @jwt_required()
     @confirmationRequired
     def delete(self, username: str):
-        user = self.userExists(username)
+        user = UserSchema.getUserByUsername(username)
         if not isinstance(user, User):
             return IndividualUserDeleteResponse(msg="User was not deleted because \
 it does not exist.")
@@ -98,7 +86,7 @@ is not you.")
     @jwt_required()
     @confirmationRequired
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
-        user = self.userExists(username)
+        user = UserSchema.getUserByUsername(username)
         if not isinstance(user, User):
             return IndividualUserPatchResponse(msg="""User was not modified because \
 it does not exist.""")

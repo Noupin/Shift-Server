@@ -29,7 +29,6 @@ operationId="inferenceCDN")
         try:
             file = open(filepath, 'rb')
             mimetype = mimetypes.MimeTypes().guess_type(secureFilename)[0]
-            print(mimetype)
         except FileNotFoundError:
             return abort(404)
 

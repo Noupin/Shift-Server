@@ -5,7 +5,6 @@ The SQLAlchemy data model for a Shift User
 
 from __future__ import annotations
 
-
 __author__ = "Noupin"
 
 #First Party Imports
@@ -16,7 +15,7 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    feryvId = db.Column(db.Integer, nullable=False)
+    feryvId = db.Column(db.Integer, nullable=False, unique=True)
     verified = db.Column(db.Boolean, nullable=False, default=False)
     admin = db.Column(db.Boolean, nullable=False, default=False)
     canTrain = db.Column(db.Boolean, nullable=False, default=False)
@@ -25,8 +24,8 @@ class User(db.Model):
 
 
     def __repr__(self) -> str:
-        return f"User(verified='{self.verified}'', admin='{self.admin}', canTrain='{self.canTrain}')"
+        return f"User(verified='{self.verified}', admin='{self.admin}', canTrain='{self.canTrain}')"
 
 
     def __str__(self) -> str:
-        return f"User(verified='{self.verified}'', admin='{self.admin}', canTrain='{self.canTrain}')"
+        return f"User(verified='{self.verified}', admin='{self.admin}', canTrain='{self.canTrain}')"

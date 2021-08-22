@@ -4,16 +4,24 @@ The SQLQueries for a Feryv User
 """
 __author__ = "Noupin"
 
+#Third Party Imports
+from sqlalchemy import text
+
 #First Party Imports
 from src import db
 
 
 class FeryvUser:
     @staticmethod
-    def filter_by(**kwargs):
-        key, value = kwargs.items()[0]
-        feryvUser = db.session.execute('select * from public."user" where :key = :value',
-                                       {'key': key, 'value': value},
-                                       bind='feryvDB')
-        
+    def filter_by_id(id: int):
+        feryvUser = db.get_engine(bind='feryvDB').execute(text('select * from "user" where id = :id'),
+                                                          {'id': id})
+
+        return feryvUser
+    
+    @staticmethod
+    def filter_by_username(username: str):
+        feryvUser = db.get_engine(bind='feryvDB').execute(text('select * from "user" where username = :username'),
+                                                          {'username': username}).first()._asdict()
+
         return feryvUser

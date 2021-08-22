@@ -12,6 +12,7 @@ from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
 
 #First Party Imports
+from src import db
 from src.models.SQL.Shift import Shift
 from src.constants import AMOUNT_OF_NEW
 from src.models.Marshmallow.Shift import ShiftSchema

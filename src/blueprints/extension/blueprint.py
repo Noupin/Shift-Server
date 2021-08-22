@@ -6,6 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 from flask import Blueprint
+from sqlalchemy import text
 from flask_restful import Api
 from typing import Dict, Union
 
@@ -13,7 +14,6 @@ from typing import Dict, Union
 from src import jwt, db
 from src.models.SQL.User import User
 from src.constants import BLUEPRINT_NAMES
-from src.models.SQL.FeryvUser import FeryvUser
 from src.models.Marshmallow.User import UserSchema
 
 
@@ -22,7 +22,7 @@ extensionAPI = Api(extenstionBP)
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(user: User) -> str:
+def user_identity_lookup(user) -> str:
     return user.id
 
 
@@ -31,11 +31,7 @@ def user_lookup_callback(_jwt_header, jwt_data: Dict[str, str]) -> Union[User, N
     identity = jwt_data["sub"]
 
     try:
-        user: User = User.query.filter_by(feryvId=identity).first()
-        feryvUser = FeryvUser.filter_by(id=identity)
-        user.feryvUser = feryvUser
-
-        return UserSchema().load(user, db.session)
+        return UserSchema.getUserById(identity)
     except:
         return None
 
@@ -43,9 +39,8 @@ def user_lookup_callback(_jwt_header, jwt_data: Dict[str, str]) -> Union[User, N
 @jwt.token_in_blocklist_loader
 def check_if_token_is_revoked(jwt_header, jwt_payload: Dict[str, str]):
     jti = jwt_payload["jti"]
-    token = db.session.execute('select * from public."tokenblocklist" where jti = :jti',
-                               {'jti': jti},
-                               bind='feryvDB')
+    token = db.get_engine(bind='feryvDB').execute(text('select * from "tokenblocklist" where jti = :jti'),
+                                                  {'jti': jti}).first()
 
     return token is not None
 
@@ -74,3 +69,21 @@ def my_revoked_token_callback(_jwt_header, jwt_data):
     """
 
     return dict(msg="You have logged out please login."), 401
+
+
+@jwt.token_verification_loader
+def createUserAfterVeification(jwt_header, jwt_data: Dict[str, str]):
+    verified = True
+
+    if not jwt_data.get('user'):
+        return verified
+    if not jwt_data.get('user').get('id'):
+        return verified
+    if User.query.filter_by(feryvId=jwt_data.get('user').get('id')).first():
+        return verified
+
+    user = User(feryvId=jwt_data.get('user').get('id'))
+    db.session.add(user)
+    db.session.commit()
+
+    return verified

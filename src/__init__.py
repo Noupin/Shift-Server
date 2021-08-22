@@ -6,7 +6,8 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import flask
-from flask import Flask
+import jwt as pyJWT
+from flask import Flask, request
 from celery import Celery
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +15,7 @@ from flask_jwt_extended import JWTManager
 from flask_apispec.extension import FlaskApiSpec
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy_utils import database_exists, create_database
+from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 #First Party Imports
 from src.config import Config
@@ -101,6 +103,7 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.blueprints.train.blueprint import trainBP
     from src.blueprints.category.blueprint import categoryBP
     from src.blueprints.inference.blueprint import inferenceBP
+    from src.blueprints.extension.blueprint import extenstionBP
 
     app.register_blueprint(loadBP, url_prefix="/api")
     app.register_blueprint(trainBP, url_prefix="/api")
