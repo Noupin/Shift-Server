@@ -15,7 +15,6 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    feryvId = db.Column(db.Integer, nullable=False, unique=True)
     verified = db.Column(db.Boolean, nullable=False, default=False)
     admin = db.Column(db.Boolean, nullable=False, default=False)
     canTrain = db.Column(db.Boolean, nullable=False, default=False)

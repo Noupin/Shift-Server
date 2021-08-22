@@ -13,15 +13,22 @@ from src import db
 
 class FeryvUser:
     @staticmethod
-    def filter_by_id(id: int):
+    def filterById(id: int):
         feryvUser = db.get_engine(bind='feryvDB').execute(text('select * from "user" where id = :id'),
-                                                          {'id': id})
+                                                          {'id': id}).first()
+        if not feryvUser:
+            return {}
 
-        return feryvUser
+        feryvDict = feryvUser._asdict()
+        return feryvDict
     
     @staticmethod
-    def filter_by_username(username: str):
+    def filterByUsername(username: str):
         feryvUser = db.get_engine(bind='feryvDB').execute(text('select * from "user" where username = :username'),
-                                                          {'username': username}).first()._asdict()
+                                                          {'username': username}).first()
 
-        return feryvUser
+        if not feryvUser:
+            return {}
+
+        feryvDict = feryvUser._asdict()
+        return feryvDict

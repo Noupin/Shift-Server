@@ -37,18 +37,16 @@ class IndividualUser(MethodResource, Resource):
          operationId="getIndivdualUser", security=AUTHORIZATION_TAG)
     @jwt_required(optional=True)
     def get(self, username: str):
-        user = UserSchema.getUserByUsername(username)
+        userModel, user = UserSchema.getUserByUsername(username)
         if not user:
             return IndividualUserGetResponse(), 404
 
-        userModel: UserSchema = UserSchema().dump(user)
-        
         userID = ""
         if current_user:
             userID = current_user.id
 
-        return IndividualUserGetResponse().load(dict(user=userModel,
-                                                     owner=userID==user.id))
+        return IndividualUserGetResponse().load(dict(user=UserSchema().dump(userModel),
+                                                     owner=userID==userModel.id))
 
 
     @marshal_with(IndividualUserDeleteResponse.Schema(),
@@ -58,21 +56,22 @@ class IndividualUser(MethodResource, Resource):
     @jwt_required()
     @confirmationRequired
     def delete(self, username: str):
-        user = UserSchema.getUserByUsername(username)
+        userModel, user = UserSchema.getUserByUsername(username)
         if not user:
             return IndividualUserDeleteResponse(msg="User was not deleted because \
 it does not exist.")
-        
-        if current_user.id != user.id:
+
+        if current_user.id != userModel.id:
             return IndividualUserDeleteResponse(msg="You cannot delete a user that \
 is not you.")
-        
-        username = user.username
-        
-        if user.mediaFilename.find("default") == -1:
-            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, user.mediaFilename))
+
+        username = userModel.username
+
+        if userModel.mediaFilename.find("default") == -1:
+            os.remove(os.path.join(current_app.root_path, IMAGE_PATH, userModel.mediaFilename))
         user.delete()
-        
+        db.session.commit()
+
         return IndividualUserDeleteResponse(msg=f"User: {username} has been deleted")
 
 
@@ -85,12 +84,12 @@ is not you.")
     @jwt_required()
     @confirmationRequired
     def patch(self, requestBody: IndividualUserPatchRequest, username: str):
-        user = UserSchema.getUserByUsername(username)
+        userModel, user = UserSchema.getUserByUsername(username)
         if not user:
             return IndividualUserPatchResponse(msg="""User was not modified because \
 it does not exist.""")
 
-        if current_user.id != user.id:
+        if current_user.id != userModel.id:
             return IndividualUserPatchResponse(msg="""You cannot modify a user that \
 is not you.""")
 
@@ -114,4 +113,4 @@ not the same type as the value you submitted"), 500
 this would remove data."), 500
 
         return IndividualUserPatchResponse(msg=f"The fields \
-{[field for field, _ in queries.items()]} for the User: {user.username} have been modified.")
+{[field for field, _ in queries.items()]} for the User: {userModel.username} have been modified.")

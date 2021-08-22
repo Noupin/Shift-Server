@@ -181,7 +181,7 @@ def trainShift(requestJSON: dict, userID: str):
     """
 
     author: User = User.query.filter_by(id=userID).first()
-    feryvUser = FeryvUser.filter_by_id(id=author.feryvId)
+    feryvUser = FeryvUser.filterById(id=author.id)
     author.feryvUser = feryvUser
 
     requestData: TrainRequest = TrainRequest(**requestJSON)

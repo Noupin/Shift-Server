@@ -80,10 +80,10 @@ def createUserAfterVeification(jwt_header, jwt_data: Dict[str, str]):
         return verified
     if not jwt_data.get('user').get('id'):
         return verified
-    if User.query.filter_by(feryvId=jwt_data.get('user').get('id')).first():
+    if User.query.filter_by(id=jwt_data.get('user').get('id')).first():
         return verified
 
-    user = User(feryvId=jwt_data.get('user').get('id'))
+    user = User(id=jwt_data.get('user').get('id'))
     db.session.add(user)
     db.session.commit()
 

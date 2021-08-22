@@ -30,11 +30,11 @@ class UserShifts(MethodResource, Resource):
     @doc(description="""The shifts associated with the queried user.""",
          tags=["User"], operationId="userShifts")
     def get(self, queryParams: UserShiftsRequest, username: str):
-        user = UserSchema.getUserByUsername(username)
+        userModel, user = UserSchema.getUserByUsername(username)
         if not user:
             return UserShiftsResponse()
 
-        userShifts = Shift.query.filter_by(author__in=[user]).paginate(queryParams.page, ITEMS_PER_PAGE)
+        userShifts = Shift.query.filter_by(user_id=userModel.id).paginate(queryParams.page, ITEMS_PER_PAGE)
         userShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in userShifts]
 
         return UserShiftsResponse().load(dict(shifts=userShiftsJSON))

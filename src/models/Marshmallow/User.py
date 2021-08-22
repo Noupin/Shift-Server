@@ -5,10 +5,12 @@ The Marshmallow Schema for a user
 
 from __future__ import annotations
 
+from marshmallow_dataclass import NoneType
+
 __author__ = "Noupin"
 
 #Third Party Imports
-from typing import Union
+from typing import Union, Tuple
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, fields
 
 #First Party Imports
@@ -25,32 +27,33 @@ class UserSchema(SQLAlchemyAutoSchema):
         sqla_session = db.session
         include_relationships = True
         load_instance = True
-        exclude = ("feryvId",)
 
 
     @staticmethod
-    def getUserByUsername(username: str) -> Union[UserSchema, dict]:
-        try:
-            feryvUser = FeryvUser.filter_by_username(username)
-            user: User = User.query.filter_by(feryvId=feryvUser.get('id')).first()
-            setattr(user, 'feryvUser', feryvUser)
-            userSchema = UserSchema().dump(user)
-            userObject = UserSchema().load(userSchema)
+    def getUserByUsername(username: str) -> Tuple[Union[UserSchema, NoneType], User]:
+        feryvUser = FeryvUser.filterByUsername(username)
+        user: User = User.query.filter_by(id=feryvUser.get('id')).first()
 
-            return userObject
-        except ValueError:
-            return None
+        if not user:
+            return None, None
+
+        setattr(user, 'feryvUser', feryvUser)
+        userSchema = UserSchema().dump(user)
+        userObject = UserSchema().load(userSchema)
+
+        return userObject, user
 
 
     @staticmethod
-    def getUserById(id: int) -> Union[UserSchema, dict]:
-        try:
-            feryvUser = FeryvUser.filter_by_id(id)
-            user: User = User.query.filter_by(feryvId=feryvUser.get('id')).first()
-            setattr(user, 'feryvUser', feryvUser)
-            userSchema = UserSchema().dump(user)
-            userObject = UserSchema().load(userSchema)
+    def getUserById(id: int) -> Tuple[Union[UserSchema, dict], User]:
+        feryvUser = FeryvUser.filterById(id)
+        user: User = User.query.filter_by(id=feryvUser.get('id')).first()
 
-            return userObject
-        except ValueError:
-            return None
+        if not user:
+            return None, None
+
+        setattr(user, 'feryvUser', feryvUser)
+        userSchema = UserSchema().dump(user)
+        userObject = UserSchema().load(userSchema)
+
+        return userObject, user
