@@ -30,10 +30,8 @@ def user_identity_lookup(user) -> str:
 def user_lookup_callback(_jwt_header, jwt_data: Dict[str, str]) -> Union[User, None]:
     identity = jwt_data["sub"]
 
-    try:
-        return UserSchema.getUserById(identity)
-    except:
-        return None
+    userSchema, _ = UserSchema.getUserById(identity)
+    return userSchema
 
 
 @jwt.token_in_blocklist_loader
