@@ -34,7 +34,7 @@ class UserShifts(MethodResource, Resource):
         if not user:
             return UserShiftsResponse()
 
-        userShifts = Shift.query.filter_by(user_id=userModel.id).paginate(queryParams.page, ITEMS_PER_PAGE)
+        userShifts = Shift.query.filter_by(user_id=userModel.id).paginate(queryParams.page, ITEMS_PER_PAGE).items
         userShiftsJSON: List[ShiftSchema] = [ShiftSchema().dump(x) for x in userShifts]
 
         return UserShiftsResponse().load(dict(shifts=userShiftsJSON))
