@@ -32,9 +32,9 @@ class UserSchema(SQLAlchemyAutoSchema):
     @staticmethod
     def getUserByUsername(username: str) -> Tuple[Union[UserSchema, NoneType], User]:
         feryvUser = FeryvUser.filterByUsername(username)
-        user: User = User.query.filter_by(id=feryvUser.get('id')).first()
+        user: User = User.query.filter_by(id=feryvUser.id).first()
 
-        if not user:
+        if not user or not feryvUser:
             return None, None
 
         setattr(user, 'feryvUser', feryvUser)
@@ -47,9 +47,9 @@ class UserSchema(SQLAlchemyAutoSchema):
     @staticmethod
     def getUserById(id: int) -> Tuple[Union[UserSchema, dict], User]:
         feryvUser = FeryvUser.filterById(id)
-        user: User = User.query.filter_by(id=feryvUser.get('id')).first()
+        user: User = User.query.filter_by(id=feryvUser.id).first()
 
-        if not user:
+        if not user or not feryvUser:
             return None, None
 
         setattr(user, 'feryvUser', feryvUser)
@@ -57,3 +57,11 @@ class UserSchema(SQLAlchemyAutoSchema):
         userObject = UserSchema().load(userSchema)
 
         return userObject, user
+
+
+    def __repr__(self):
+        return f"UserSchema(username='{self.feryvUser.username}', email='{self.feryvUser.email}', confirmed='{self.feryvUser.confirmed}')"
+
+
+    def __str__(self):
+        return f"UserSchema(username='{self.feryvUser.username}', email='{self.feryvUser.email}', confirmed='{self.feryvUser.confirmed}')"

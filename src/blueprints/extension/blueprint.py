@@ -31,6 +31,7 @@ def user_lookup_callback(_jwt_header, jwt_data: Dict[str, str]) -> Union[User, N
     identity = jwt_data["sub"]
 
     userSchema, _ = UserSchema.getUserById(identity)
+    print(userSchema.feryvUser.confirmed)
     return userSchema
 
 
