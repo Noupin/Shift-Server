@@ -7,6 +7,7 @@ __author__ = "Noupin"
 #Third Party Imports
 import os
 import re
+import gc
 from flask import current_app
 from typing import List, Union, Tuple
 from werkzeug.datastructures import FileStorage
@@ -89,9 +90,11 @@ def validateInferenceRequest(requestData: InferenceRequest) -> Union[InferenceRe
                                                    requestData.prebuiltShiftModel),
                       maskDecoderPath=os.path.join(current_app.root_path, SHIFT_PATH,
                                                    requestData.prebuiltShiftModel))
+            del shft
+            gc.collect()
         except OSError:
             return "That model does not exist"
-    
+
     return requestData
 
 

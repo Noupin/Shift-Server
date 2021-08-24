@@ -5,6 +5,7 @@ Tasks for the inference endpoint of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import gc
 import os
 import shutil
 import numpy as np
@@ -50,8 +51,6 @@ def loadModels(shiftInstance: Shift, requestData: InferenceRequest, shiftFilePat
         shiftInstance.load(encoderPath=shiftFilePath,
                            baseDecoderPath=shiftFilePath,
                            maskDecoderPath=shiftFilePath)
-    
-    return shiftInstance
 
 
 @celery.task(name="inference.shift")
@@ -66,25 +65,22 @@ def shiftMedia(requestJSON: dict) -> str:
     Returns:
         str: The encoded shift
     """
-
+    print(requestJSON)
     requestData: InferenceRequest = InferenceRequest(**requestJSON)
 
     shft = Shift(id_=requestData.shiftUUID, latentSpaceDimension=LATENT_SPACE_DIM)
     inferencingData = [np.ones(shft.imageShape)]
     shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, shft.id_)
 
-    shft = loadModels(shft, requestData, shiftFilePath)
+    loadModels(shft, requestData, shiftFilePath)
 
     if requestData.training:
         try:
-            mongoShift: ShiftDataModel = ShiftDataModel.query.filter_by.get(uuid=requestData.shiftUUID)
+            mongoShift: ShiftDataModel = ShiftDataModel.query.filter_by(uuid=requestData.shiftUUID).first()
         except Exception:
             return "That shift model does not exist"
     else:
-        try:
-            worker: InferenceWorker = InferenceWorker.query.filter_by.get(shiftUUID=requestData.shiftUUID)
-        except Exception:
-            return "That inference worker does not exist"
+        worker: InferenceWorker = InferenceWorker.query.filter_by(shiftUUID=requestData.shiftUUID).first()
 
     baseMediaFilename = os.path.join(shiftFilePath, "tmp", "original", os.listdir(os.path.join(shiftFilePath, "tmp", "original"))[0])
     _, extension = os.path.splitext(baseMediaFilename)
@@ -130,3 +126,4 @@ def shiftMedia(requestJSON: dict) -> str:
         db.session.commit()
 
     del shft
+    gc.collect()

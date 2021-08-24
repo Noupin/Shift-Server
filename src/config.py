@@ -12,9 +12,6 @@ from apispec import APISpec
 from dotenv import load_dotenv
 from apispec.ext.marshmallow import MarshmallowPlugin
 
-#First Party Imports
-from src.constants import CELERY_RESULT_BACKEND
-
 
 load_dotenv()
 marshmallowPlugin = MarshmallowPlugin()
@@ -40,8 +37,6 @@ class Config:
 
 
     #Celery
-    CELERY_BROKER_URL = "amqp://localhost//"
-    result_backend = CELERY_RESULT_BACKEND
     timezone = 'UTC'
 
 

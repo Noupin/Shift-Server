@@ -8,14 +8,15 @@ __author__ = "Noupin"
 from sqlalchemy import text
 
 #First Party Imports
-from src import db
+from src import db, feryvDB
 from FeryvOAuthUser import FeryvUserSchema
 
 
 class FeryvUser:
+
     @staticmethod
     def filterById(id: int):
-        feryvUser = db.get_engine(bind='feryvDB').execute(
+        feryvUser = feryvDB.db.execute(
             text('select * from "user" where id = :id'),
             {'id': id}
         ).first()
@@ -23,7 +24,7 @@ class FeryvUser:
         if not feryvUser:
             return {}
 
-        userLicenses = db.get_engine(bind='feryvDB').execute(
+        userLicenses = feryvDB.db.execute(
             text('select * from "license" where "userId" = :userId'),
             {'userId': feryvUser.id}
         ).all()
@@ -32,12 +33,13 @@ class FeryvUser:
         feryvDict['licenses'] = userLicenses
         feryvSchema = FeryvUserSchema().load(feryvDict, unknown='exclude')
 
+        del feryvUser, userLicenses
         return feryvSchema
 
 
     @staticmethod
     def filterByUsername(username: str):
-        feryvUser = db.get_engine(bind='feryvDB').execute(
+        feryvUser = feryvDB.db.execute(
             text('select * from "user" where username = :username'),
             {'username': username}
         ).first()
@@ -45,7 +47,7 @@ class FeryvUser:
         if not feryvUser:
             return {}
 
-        userLicenses = db.get_engine(bind='feryvDB').execute(
+        userLicenses = feryvDB.db.execute(
             text('select * from "license" where "userId" = :userId'),
             {'userId': feryvUser.id}
         ).all()
@@ -54,4 +56,5 @@ class FeryvUser:
         feryvDict['licenses'] = userLicenses
         feryvSchema = FeryvUserSchema().load(feryvDict, unknown='exclude')
 
+        del feryvUser, userLicenses
         return feryvSchema

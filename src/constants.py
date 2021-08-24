@@ -182,7 +182,7 @@ SHIFT_STATIC_PATH = os.path.join(BLOB_PATH, "Shift")
 IMAGE_PATH = os.path.join(FERYV_STATIC_PATH, "image")
 VIDEO_PATH = os.path.join(FERYV_STATIC_PATH, "video")
 SHIFT_PATH = os.path.join(SHIFT_STATIC_PATH, "shift")
-INFERENCE_IMAGE_PATH = os.path.join(SHIFT_STATIC_PATH, "inferenceImages")
+INFERENCE_IMAGE_PATH = os.path.join(SHIFT_STATIC_PATH, "inferenceImage")
 PTM_ENCODER_REALTIVE_PATH = os.path.join("PTM", "encoder")
 PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
@@ -244,8 +244,9 @@ REDIS_DB = 0
 
 
 #Celery
-CELERY_RESULT_BACKEND = os.environ.get("CELEY_BACKEND_URI")
-CELERY_DELETE_SCHEDULE = datetime.timedelta(minutes=10).seconds
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+#CELERY_DELETE_SCHEDULE = datetime.timedelta(minutes=10).seconds
 
 
 #AI Settings

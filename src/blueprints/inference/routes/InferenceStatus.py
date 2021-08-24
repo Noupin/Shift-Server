@@ -45,12 +45,12 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
         requestModel = DataModelAdapter(requestData)
 
         try:
-            worker: InferenceWorker = InferenceWorker.query.filter_by.get(shiftUUID=requestModel.getModel().shiftUUID)
+            worker: InferenceWorker = InferenceWorker.query.filter_by(shiftUUID=requestModel.getModel().shiftUUID).first()
         except Exception:
             return InferenceStatusResponse(msg="That inference worker does not exist", stopped=True)
         
         try:
-            mongoShift: ShiftDataModel = ShiftDataModel.query.filter_by.get(uuid=requestModel.getModel().shiftUUID)
+            mongoShift: ShiftDataModel = ShiftDataModel.query.filter_by(uuid=requestModel.getModel().shiftUUID).first()
         except Exception:
             if requestModel.getModel().training:
                 return InferenceStatusResponse(msg="A shift does not exist for the given UUID", stopped=True)

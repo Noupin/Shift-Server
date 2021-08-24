@@ -11,9 +11,10 @@ from flask_restful import Api
 from typing import Dict, Union
 
 #First Party Imports
-from src import jwt, db
+from src import jwt, db, feryvDB
 from src.models.SQL.User import User
 from src.constants import BLUEPRINT_NAMES
+from src.models.SQL.FeryvUser import FeryvUser
 from src.models.Marshmallow.User import UserSchema
 
 
@@ -31,15 +32,14 @@ def user_lookup_callback(_jwt_header, jwt_data: Dict[str, str]) -> Union[User, N
     identity = jwt_data["sub"]
 
     userSchema, _ = UserSchema.getUserById(identity)
-    print(userSchema.feryvUser.confirmed)
     return userSchema
 
 
 @jwt.token_in_blocklist_loader
 def check_if_token_is_revoked(jwt_header, jwt_payload: Dict[str, str]):
     jti = jwt_payload["jti"]
-    token = db.get_engine(bind='feryvDB').execute(text('select * from "tokenblocklist" where jti = :jti'),
-                                                  {'jti': jti}).first()
+    token = feryvDB.db.execute(text('select * from "tokenblocklist" where jti = :jti'),
+                               {'jti': jti}).first()
 
     return token is not None
 

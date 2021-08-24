@@ -6,8 +6,7 @@ __author__ = "Noupin"
 
 #Third Party Imports
 import flask
-import jwt as pyJWT
-from flask import Flask, request
+from flask import Flask
 from celery import Celery
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -15,19 +14,21 @@ from flask_jwt_extended import JWTManager
 from flask_apispec.extension import FlaskApiSpec
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy_utils import database_exists, create_database
-from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 #First Party Imports
+from FeryvDB import FeryvDB
 from src.config import Config
 from src.constants import (BLUEPRINT_NAMES, CELERY_RESULT_BACKEND,
                            USER_AUTHORIZATION_SCHEME, AUTHORIZATION_SCHEME_NAME,
                            CSRF_REFRESH_SCHEME_NAME, USER_CSRF_REFRESH_SCHEME,
-                           REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME)
+                           REFRESH_TOKEN_COOKIE_SCHEME_NAME, USER_REFRESH_TOKEN_COOKIE_SCHEME,
+                           CELERY_BROKER_URL)
 
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
+feryvDB = FeryvDB()
 docs = FlaskApiSpec()
 
 
@@ -76,6 +77,7 @@ Defaults to Config.
     
     with app.app_context():
         db.create_all()
+        feryvDB.init_db(db)
 
     return app
 
@@ -177,9 +179,7 @@ def generateSwagger() -> FlaskApiSpec:
 def makeCelery(app: flask.app.Flask) -> Celery:
     celery = Celery(app.import_name,
                     backend=CELERY_RESULT_BACKEND,
-                    broker=app.config['CELERY_BROKER_URL'])
-
-    celery.conf.update(app.config)
+                    broker=CELERY_BROKER_URL)
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):

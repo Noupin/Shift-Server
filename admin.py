@@ -17,7 +17,7 @@ from src.models.SQL.ShiftCategory import ShiftCategory
 def saveCategory(categoryName: str, queryTitles: List[str]):
     shifts = []
     for queryString in queryTitles:
-        shifts.append(Shift.query.filter_by.get(title=queryString))
+        shifts.append(Shift.query.filter_by(title=queryString).first())
 
     category = ShiftCategory(name=categoryName, shifts=shifts)
     category.save()

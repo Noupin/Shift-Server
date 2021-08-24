@@ -46,7 +46,7 @@ trained.""", tags=["Train"], operationId="stopTrain", security=AUTHORIZATION_TAG
         requestData = DataModelAdapter(requestData)
 
         try:
-            worker: TrainWorker = TrainWorker.query.filter_by.get(shiftUUID=requestData.getModel().shiftUUID)
+            worker: TrainWorker = TrainWorker.query.filter_by(shiftUUID=requestData.getModel().shiftUUID).first()
         except Exception:
             return StopTrainResponse(msg="That training worker does not exist")
         worker.training = False

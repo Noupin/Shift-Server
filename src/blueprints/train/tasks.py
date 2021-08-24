@@ -5,6 +5,7 @@ Tasks for the training endpoint of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import gc
 import os
 import numpy as np
 import tensorflow as tf
@@ -185,7 +186,7 @@ def trainShift(requestJSON: dict, userID: str):
     author.feryvUser = feryvUser
 
     requestData: TrainRequest = TrainRequest(**requestJSON)
-    worker: TrainWorker = TrainWorker.query.filter_by.get(shiftUUID=requestData.shiftUUID)
+    worker: TrainWorker = TrainWorker.query.filter_by(shiftUUID=requestData.shiftUUID).first()
 
     shiftFilePath = os.path.join(current_app.root_path, SHIFT_PATH, requestData.shiftUUID)
 
@@ -260,3 +261,4 @@ def trainShift(requestJSON: dict, userID: str):
     del baseGen
     del maskGen
     del shft
+    gc.collect()

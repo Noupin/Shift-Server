@@ -5,6 +5,7 @@ Inference endpoint for the Inference part of the Shift API
 __author__ = "Noupin"
 
 #Third Party Imports
+import sqlalchemy
 from flask_restful import Resource
 from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs, doc
@@ -47,9 +48,9 @@ operationId="inference", security=AUTHORIZATION_TAG)
         try:
             db.session.add(worker)
             db.session.commit()
-        except Exception:
+        except sqlalchemy.exc.IntegrityError:
             return InferenceResponse(msg="That media is already being shifted.")
-
+        print(worker.__dict__)
         job = shiftMedia.delay(requestModel.getSerializable())
         worker.workerID = job.id
         db.session.commit()
