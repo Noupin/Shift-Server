@@ -12,6 +12,7 @@ from flask_apispec.views import MethodResource
 from flask_apispec import marshal_with, use_kwargs, doc
 
 #First Party Import
+from src import db
 from src.run import celery
 from src.constants import AUTHORIZATION_TAG
 from src.models.DataModelAdapter import DataModelAdapter
@@ -61,19 +62,25 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
             status = job.status
 
             if status == "SUCCESS":
-                worker.delete()
+                db.session.delete(worker)
+                db.session.commit()
                 if requestModel.getModel().training:
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                                    mediaFilename=mongoShift.mediaFilename,
                                                    baseMediaFilename=mongoShift.baseMediaFilename,
                                                    maskMediaFilename=mongoShift.maskMediaFilename)
                 else:
+                    resp = InferenceStatusResponse(msg="Shifting completed", stopped=True,
+                                                   mediaFilename=worker.mediaFilename,
+                                                   baseMediaFilename=worker.baseMediaFilename)
+                    
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                                    mediaFilename=worker.mediaFilename,
                                                    baseMediaFilename=worker.baseMediaFilename)
 
             elif status == "FAILURE":
-                worker.delete()
+                db.session.delete(worker)
+                db.session.commit()
                 
                 return InferenceStatusResponse(msg="The shifting task failed.", stopped=True)
 

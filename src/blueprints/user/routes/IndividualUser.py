@@ -69,7 +69,7 @@ is not you.")
 
         if userModel.mediaFilename.find("default") == -1:
             os.remove(os.path.join(current_app.root_path, IMAGE_PATH, userModel.mediaFilename))
-        user.delete()
+        db.session.delete(user)
         db.session.commit()
 
         return IndividualUserDeleteResponse(msg=f"User: {username} has been deleted")

@@ -102,7 +102,8 @@ delete a shift which you did not create.""")
         except FileNotFoundError:
             pass
 
-        shift.delete()
+        db.session.delete(shift)
+        db.session.commit()
 
         return IndividualShiftDeleteResponse(msg=f"The Shift named: {title} has been deleted.")
 

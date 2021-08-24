@@ -50,7 +50,7 @@ operationId="inference", security=AUTHORIZATION_TAG)
             db.session.commit()
         except sqlalchemy.exc.IntegrityError:
             return InferenceResponse(msg="That media is already being shifted.")
-        print(worker.__dict__)
+
         job = shiftMedia.delay(requestModel.getSerializable())
         worker.workerID = job.id
         db.session.commit()

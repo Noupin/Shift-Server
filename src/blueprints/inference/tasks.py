@@ -65,7 +65,7 @@ def shiftMedia(requestJSON: dict) -> str:
     Returns:
         str: The encoded shift
     """
-    print(requestJSON)
+
     requestData: InferenceRequest = InferenceRequest(**requestJSON)
 
     shft = Shift(id_=requestData.shiftUUID, latentSpaceDimension=LATENT_SPACE_DIM)

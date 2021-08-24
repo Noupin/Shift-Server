@@ -76,12 +76,14 @@ operationId="trainStatus", security=AUTHORIZATION_TAG)
                                                exhibit=worker.exhibitImages)
                 
             elif status == "SUCCESS":
-                worker.delete()
+                db.session.delete(worker)
+                db.session.commit()
 
                 return TrainStatusResponse(msg="Training stopped", stopped=True)
 
             elif status == "FAILURE":
-                worker.delete()
+                db.session.delete(worker)
+                db.session.commit()
 
                 return TrainStatusResponse(msg="The training of your shift has encountered and error")
 
