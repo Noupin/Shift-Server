@@ -107,31 +107,30 @@ def createApp(app=None, appName=__name__, configClass=Config) -> flask.app.Flask
     from src.blueprints.inference.blueprint import inferenceBP
     from src.blueprints.extension.blueprint import extenstionBP
 
-    app.register_blueprint(loadBP, url_prefix="/api")
-    app.register_blueprint(trainBP, url_prefix="/api")
-    app.register_blueprint(inferenceBP, url_prefix="/api")
-    app.register_blueprint(userBP, url_prefix='/api/user')
-    app.register_blueprint(shiftBP, url_prefix='/api/shift') #Get user from querying the feryv database
-    app.register_blueprint(categoryBP, url_prefix="/api/shift/category")
+    app.register_blueprint(loadBP, url_prefix="")
+    app.register_blueprint(trainBP, url_prefix="")
+    app.register_blueprint(inferenceBP, url_prefix="")
+    app.register_blueprint(userBP, url_prefix='/user')
+    app.register_blueprint(shiftBP, url_prefix='/shift') #Get user from querying the feryv database
+    app.register_blueprint(categoryBP, url_prefix="/shift/category")
 
     return app
 
 
-def addMiddleware(app: flask.app.Flask, middleware=ProxyFix) -> flask.app.Flask:
+def addMiddleware(app: flask.app.Flask, middleware=ProxyFix, **kwargs):
     """
     Adds middleware to an already created flask app.
 
     Args:
         app (flask.app.Flask): The application to add middleware to.
         middleware (class): The middleware to be applied to the app. Defaults to ProxyFix.
+        kwargs: The keyword arguments to pass to the middleware argument.
 
-    Returns:
-        flask.app.Flask: The Flask app with middleware.
+    Modifies:
+        app (flask.app.Flask): The Flask app with middleware.
     """
 
-    app.wsgi_app = middleware(app.wsgi_app)
-
-    return app
+    app.wsgi_app = middleware(app.wsgi_app, **kwargs)
 
 
 def generateSwagger() -> FlaskApiSpec:

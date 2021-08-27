@@ -12,6 +12,9 @@ from apispec import APISpec
 from dotenv import load_dotenv
 from apispec.ext.marshmallow import MarshmallowPlugin
 
+#First Party Imports
+from src.constants import URL_PREFIX
+
 
 load_dotenv()
 marshmallowPlugin = MarshmallowPlugin()
@@ -45,6 +48,7 @@ class Config:
     info:
         description: Shift Server API documentation
     host: \\
+    basePath: {URL_PREFIX}
     schemes:
         - http
         - https
@@ -56,8 +60,8 @@ class Config:
         openapi_version='2.0',
         **yaml.safe_load(OPENAPI_SPEC)
     )
-    APISPEC_SWAGGER_URL = '/api/oas/'  # URI to access API Doc JSON 
-    APISPEC_SWAGGER_UI_URL = '/api/oasUI/'  # URI to access UI of API Doc
+    APISPEC_SWAGGER_URL = '/oas/'  # URI to access API Doc JSON 
+    APISPEC_SWAGGER_UI_URL = '/oasUI/'  # URI to access UI of API Doc
 
 
     #Stripe

@@ -15,14 +15,16 @@ __author__ = "Noupin"
 import os
 
 #First Party Imports
+from src.constants import URL_PREFIX
 from src.utils.swagger import swaggerToYAML
+from src.middleware.URLPrefix import URLPrefixMiddleware
 from src import initApp, createApp, makeCelery, generateSwagger, addMiddleware
 
 
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)
-app = addMiddleware(app)
+addMiddleware(app, middleware=URLPrefixMiddleware, prefix=URL_PREFIX)
 docs = generateSwagger()
 swaggerToYAML(docs.spec, filename="shift.yaml", path=os.path.join(os.getcwd(), os.pardir))
 

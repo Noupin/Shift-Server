@@ -8,7 +8,7 @@ __author__ = "Noupin"
 from sqlalchemy import text
 
 #First Party Imports
-from src import db, feryvDB
+from src import feryvDB
 from FeryvOAuthUser import FeryvUserSchema
 
 

@@ -188,6 +188,10 @@ PTM_DECODER_REALTIVE_PATH = os.path.join("PTM", "decoder")
 PTM_DISCRIMINATOR_REALTIVE_PATH = os.path.join("PTM", "discriminator")
 
 
+#Flask
+URL_PREFIX = '/api'
+
+
 #Blueprint
 BLUEPRINT_NAMES = {
     'inference': 'inference',
