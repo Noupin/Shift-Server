@@ -47,6 +47,9 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
 
         try:
             worker: InferenceWorker = InferenceWorker.query.filter_by(shiftUUID=requestModel.getModel().shiftUUID).first()
+            
+            if not worker:
+                return InferenceStatusResponse(msg="That inference worker does not exist", stopped=True)
         except Exception:
             return InferenceStatusResponse(msg="That inference worker does not exist", stopped=True)
         
@@ -70,10 +73,6 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
                                                    baseMediaFilename=mongoShift.baseMediaFilename,
                                                    maskMediaFilename=mongoShift.maskMediaFilename)
                 else:
-                    resp = InferenceStatusResponse(msg="Shifting completed", stopped=True,
-                                                   mediaFilename=worker.mediaFilename,
-                                                   baseMediaFilename=worker.baseMediaFilename)
-                    
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                                    mediaFilename=worker.mediaFilename,
                                                    baseMediaFilename=worker.baseMediaFilename)
