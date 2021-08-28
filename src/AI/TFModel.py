@@ -246,6 +246,7 @@ class TFModel(tf.keras.Model):
 
         self.call(testTensor)
         self.set_weights(loadedModel.get_weights())
+        del testTensor
         
         if compile:
             self.compileModel()
