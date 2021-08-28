@@ -64,12 +64,12 @@ takes longer.""", tags=["Train"], operationId="train", security=AUTHORIZATION_TA
         worker = TrainWorker(shiftUUID=requestData.getModel().shiftUUID, training=True, inferencing=False)
         try:
             db.session.add(worker)
-            db.session.commit()
+            db.session.flush()
         except Exception:
             return TrainResponse(msg="That AI is already training.")
 
         job = trainShift.delay(requestData.getSerializable(), str(current_user.id))
         worker.workerID = job.id
-        db.session.commit()
+        db.session.flush()
 
         return TrainResponse(msg=f"Training as {current_user.feryvUser.username}")

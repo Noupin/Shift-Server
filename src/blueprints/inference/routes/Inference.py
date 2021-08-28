@@ -47,12 +47,12 @@ operationId="inference", security=AUTHORIZATION_TAG)
         worker = InferenceWorker(shiftUUID=requestModel.getModel().shiftUUID)
         try:
             db.session.add(worker)
-            db.session.commit()
+            db.session.flush()
         except sqlalchemy.exc.IntegrityError:
             return InferenceResponse(msg="That media is already being shifted.")
 
         job = shiftMedia.delay(requestModel.getSerializable())
         worker.workerID = job.id
-        db.session.commit()
+        db.session.flush()
 
         return InferenceResponse(msg=f"Shifting as {current_user.feryvUser.username}")

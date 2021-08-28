@@ -133,6 +133,21 @@ def addMiddleware(app: flask.app.Flask, middleware=ProxyFix, **kwargs):
     app.wsgi_app = middleware(app.wsgi_app, **kwargs)
 
 
+def addAfterRequestFunction(app: flask.app.Flask, func):
+    """
+    Adds function to the after request functions of an already created flask app.
+
+    Args:
+        app (flask.app.Flask): The application to the after request function to.
+        func (function): The func to be added to the after request.
+
+    Modifies:
+        app (flask.app.Flask): The Flask app with after app requests.
+    """
+
+    app.after_request(func)
+
+
 def generateSwagger() -> FlaskApiSpec:
     """
     Generates all the swagger documentation for eeach endpoint.

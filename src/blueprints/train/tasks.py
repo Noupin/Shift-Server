@@ -51,7 +51,7 @@ def saveShiftToDatabase(uuid: str, author: User, title: str, path: str,
                                 baseMediaFilename=baseImageFilename,
                                 maskMediaFilename=maskImageFilename)
     db.session.add(mongoShift)
-    db.session.commit()
+    db.session.flush()
 
 
 def loadPTM(requestData: TrainRequest, shiftAI: Shift):
@@ -248,7 +248,7 @@ def trainShift(requestJSON: dict, userID: str):
 
             worker.inferencing = False
             worker.imagesUpdated = True
-            db.session.commit()
+            db.session.flush()
             #Reload was taken out may need replacement
 
     shft.save(shiftFilePath, shiftFilePath, shiftFilePath)

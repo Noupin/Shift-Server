@@ -112,7 +112,7 @@ def shiftMedia(requestJSON: dict) -> str:
 
     if requestData.training:
         mongoShift.mediaFilename = f"{requestData.shiftUUID}{extension}"
-        db.session.commit()
+        db.session.flush()
     else:
         try:
             shutil.rmtree(os.path.join(current_app.root_path, SHIFT_PATH, str(worker.shiftUUID)))
@@ -123,7 +123,7 @@ def shiftMedia(requestJSON: dict) -> str:
         inferencingData[0].save(os.path.join(current_app.root_path, INFERENCE_IMAGE_PATH, baseMediaFilename))
         worker.mediaFilename = f"{requestData.shiftUUID}{extension}"
         worker.baseMediaFilename = baseMediaFilename
-        db.session.commit()
+        db.session.flush()
 
     del shft
     gc.collect()

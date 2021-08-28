@@ -1,7 +1,11 @@
+#pylint: disable=C0103, C0301, R0903, E1101
+"""
+Sets app wide prefix.
+"""
 __author__ = "https://stackoverflow.com/users/783794/su27"
 
 
-class URLPrefixMiddleware(object):
+class URLPrefixMiddleware:
 
     def __init__(self, app, prefix=''):
         self.app = app

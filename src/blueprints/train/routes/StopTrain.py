@@ -51,6 +51,6 @@ trained.""", tags=["Train"], operationId="stopTrain", security=AUTHORIZATION_TAG
             return StopTrainResponse(msg="That training worker does not exist")
         worker.training = False
         worker.imagesUpdated = False
-        db.session.commit()
+        db.session.flush()
 
         return StopTrainResponse(msg="Stop signal sent!")

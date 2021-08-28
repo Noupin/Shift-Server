@@ -60,7 +60,7 @@ operationId="trainStatus", security=AUTHORIZATION_TAG)
 
             if status == "PENDING":
                 worker.inferencing = True
-                db.session.commit()
+                db.session.flush()
 
                 imagesUpdated = worker.imagesUpdated
                 while not imagesUpdated and status == "PENDING":
@@ -70,20 +70,20 @@ operationId="trainStatus", security=AUTHORIZATION_TAG)
 
                 if len(worker.exhibitImages) > 0 and worker.imagesUpdated:
                     worker.imagesUpdated = False
-                    db.session.commit()
+                    db.session.flush()
 
                     return TrainStatusResponse(msg=f"Update for current shift",
                                                exhibit=worker.exhibitImages)
                 
             elif status == "SUCCESS":
                 db.session.delete(worker)
-                db.session.commit()
+                db.session.flush()
 
                 return TrainStatusResponse(msg="Training stopped", stopped=True)
 
             elif status == "FAILURE":
                 db.session.delete(worker)
-                db.session.commit()
+                db.session.flush()
 
                 return TrainStatusResponse(msg="The training of your shift has encountered and error")
 

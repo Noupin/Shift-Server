@@ -70,7 +70,7 @@ is not you.")
         if userModel.mediaFilename.find("default") == -1:
             os.remove(os.path.join(current_app.root_path, IMAGE_PATH, userModel.mediaFilename))
         db.session.delete(user)
-        db.session.commit()
+        db.session.flush()
 
         return IndividualUserDeleteResponse(msg=f"User: {username} has been deleted")
 
@@ -101,7 +101,7 @@ is not you.""")
         try:
             for key in queries.keys():
                 setattr(user, key, queries[key])
-            db.session.commit()
+            db.session.flush()
         except ValueError:
             return IndividualUserPatchResponse(msg=f"The field you are changing is \
 not the same type as the value you submitted"), 500

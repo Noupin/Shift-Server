@@ -66,7 +66,7 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
 
             if status == "SUCCESS":
                 db.session.delete(worker)
-                db.session.commit()
+                db.session.flush()
                 if requestModel.getModel().training:
                     return InferenceStatusResponse(msg="Shifting completed", stopped=True,
                                                    mediaFilename=mongoShift.mediaFilename,
@@ -79,7 +79,7 @@ operationId="inferenceStatus", security=AUTHORIZATION_TAG)
 
             elif status == "FAILURE":
                 db.session.delete(worker)
-                db.session.commit()
+                db.session.flush()
                 
                 return InferenceStatusResponse(msg="The shifting task failed.", stopped=True)
 

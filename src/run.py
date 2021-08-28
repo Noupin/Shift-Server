@@ -17,14 +17,17 @@ import os
 #First Party Imports
 from src.constants import URL_PREFIX
 from src.utils.swagger import swaggerToYAML
+from src.middleware.SQLAlchemy import commitOrRollback
 from src.middleware.URLPrefix import URLPrefixMiddleware
-from src import initApp, createApp, makeCelery, generateSwagger, addMiddleware
+from src import (addAfterRequestFunction, initApp, createApp,
+                 makeCelery, generateSwagger, addMiddleware)
 
 
 app = initApp()
 celery = makeCelery(app)
 app = createApp(app)
 addMiddleware(app, middleware=URLPrefixMiddleware, prefix=URL_PREFIX)
+addAfterRequestFunction(app, commitOrRollback)
 docs = generateSwagger()
 swaggerToYAML(docs.spec, filename="shift.yaml", path=os.path.join(os.getcwd(), os.pardir))
 

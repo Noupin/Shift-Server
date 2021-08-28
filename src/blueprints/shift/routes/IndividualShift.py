@@ -55,7 +55,7 @@ class IndividualShift(MethodResource, Resource):
             return IndividualShiftGetResponse()
 
         shift.views += 1
-        db.session.commit()
+        db.session.flush()
 
         shiftModel: ShiftSchema = ShiftSchema().dump(shift)
 
@@ -103,7 +103,7 @@ delete a shift which you did not create.""")
             pass
 
         db.session.delete(shift)
-        db.session.commit()
+        db.session.flush()
 
         return IndividualShiftDeleteResponse(msg=f"The Shift named: {title} has been deleted.")
 
@@ -140,7 +140,7 @@ delete a shift which you did not create.""")
         try:
             for key in queries.keys():
                 setattr(shift, key, queries[key])
-            db.session.commit()
+            db.session.flush()
         except ValueError:
             return IndividualShiftPatchResponse(msg=f"The field you are changing is \
 not the same type as the value you submitted"), 500

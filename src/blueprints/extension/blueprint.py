@@ -84,6 +84,6 @@ def createUserAfterVeification(jwt_header, jwt_data: Dict[str, str]):
 
     user = User(id=jwt_data.get('user').get('id'))
     db.session.add(user)
-    db.session.commit()
+    db.session.flush()
 
     return verified
